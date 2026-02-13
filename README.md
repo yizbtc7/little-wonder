@@ -26,3 +26,6 @@ npm run dev
 
 - Set **Root Directory** to `next-app`
 - Redeploy from latest `main`
+
+
+<!-- deploy-trigger: 2026-02-12T22:51-05:00 -->
