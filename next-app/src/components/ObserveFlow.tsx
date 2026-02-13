@@ -57,6 +57,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, insi
   const [insight, setInsight] = useState('');
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
 
   const mergedInsights = useMemo(() => {
     if (!insight) {
@@ -122,6 +123,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, insi
 
       setStatus('Done ✨');
       setObservation('');
+      setIsComposerOpen(false);
     } catch {
       setStatus('Request failed. Try again.');
     } finally {
@@ -152,41 +154,82 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, insi
       </header>
 
       <section style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px 34px' }}>
-        <div
-          style={{
-            background: '#FFF',
-            border: '1px solid #EBE9F3',
-            borderRadius: 18,
-            padding: 16,
-            marginBottom: 18,
-            boxShadow: '0 6px 18px rgba(27,17,84,0.05)',
-          }}
-        >
-          <p style={{ fontSize: 30, fontWeight: 700, marginBottom: 8 }}>What&apos;s {childName} up to?</p>
-          <p style={{ color: '#7A768E', fontSize: 20, marginBottom: 10 }}>Log a moment of wonder</p>
-          <textarea
-            value={observation}
-            onChange={(event) => setObservation(event.target.value)}
-            placeholder="Type a quick observation..."
-            style={{ width: '100%', minHeight: 96, borderRadius: 14, border: '1px solid #E5E2F0', padding: 12, fontSize: 20 }}
-          />
+        <div style={{ marginBottom: 18 }}>
           <button
-            disabled={isLoading}
-            onClick={generateInsight}
+            type="button"
+            onClick={() => setIsComposerOpen(true)}
             style={{
-              marginTop: 10,
-              border: 'none',
-              borderRadius: 12,
-              padding: '12px 18px',
-              background: '#5F4AE6',
-              color: '#FFF',
-              fontSize: 24,
-              fontWeight: 700,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
+              width: '100%',
+              textAlign: 'left',
+              background: '#FFF',
+              border: '1px solid #EBE9F3',
+              borderRadius: 18,
+              padding: 16,
+              boxShadow: '0 6px 18px rgba(27,17,84,0.05)',
+              cursor: 'pointer',
             }}
           >
-            Ver la maravilla ✨
+            <p style={{ fontSize: 30, fontWeight: 700, marginBottom: 8 }}>What&apos;s {childName} up to?</p>
+            <p style={{ color: '#7A768E', fontSize: 20 }}>Log a moment of wonder</p>
           </button>
+
+          {isComposerOpen ? (
+            <div
+              style={{
+                background: '#FFF',
+                border: '1px solid #EBE9F3',
+                borderRadius: 18,
+                padding: 16,
+                marginTop: 12,
+              }}
+            >
+              <textarea
+                value={observation}
+                onChange={(event) => setObservation(event.target.value)}
+                placeholder={`What does ${childName} do over and over again?`}
+                style={{ width: '100%', minHeight: 120, borderRadius: 14, border: '1px solid #E5E2F0', padding: 12, fontSize: 20 }}
+              />
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setObservation('');
+                    setIsComposerOpen(false);
+                    setStatus('');
+                  }}
+                  style={{
+                    border: '1px solid #E5E2F0',
+                    background: '#FFF',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    color: '#5D5A70',
+                    fontSize: 22,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isLoading}
+                  onClick={generateInsight}
+                  style={{
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '12px 18px',
+                    background: '#AFA2F9',
+                    color: '#FFF',
+                    fontSize: 24,
+                    fontWeight: 700,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  See the wonder ✨
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {status ? <p style={{ marginTop: 10, color: '#625E79', fontSize: 19 }}>{status}</p> : null}
         </div>
 
