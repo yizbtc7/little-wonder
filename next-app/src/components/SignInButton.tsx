@@ -7,10 +7,8 @@ export default function SignInButton() {
   const supabase = createSupabaseBrowserClient();
   const [error, setError] = useState<string>('');
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL && process.env.NEXT_PUBLIC_APP_URL.length > 0
-      ? process.env.NEXT_PUBLIC_APP_URL
-      : window.location.origin;
+  const envAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const appUrl = envAppUrl && envAppUrl.length > 0 ? envAppUrl : window.location.origin;
 
   const handleGoogleSignIn = async () => {
     setError('');
