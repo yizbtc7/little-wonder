@@ -2,65 +2,101 @@
 
 import { useState } from 'react';
 
-type Props = { userId: string; childId: string; childName: string };
+type ObserveFlowProps = {
+  childName: string;
+};
 
-export default function ObserveFlow({ childId, childName }: Props) {
+export default function ObserveFlow({ childName }: ObserveFlowProps) {
   const [observation, setObservation] = useState('');
   const [insight, setInsight] = useState('');
   const [status, setStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateInsight = async () => {
     if (!observation.trim()) {
-      setStatus('Write an observation first.');
+      setStatus('Escribe primero una observación.');
       return;
     }
 
-    setStatus('Generating insight…');
+    setIsLoading(true);
+    setStatus('Generando maravilla...');
     setInsight('');
 
     try {
-      const res = await fetch('/api/insight', {
+      const response = await fetch('/api/insight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId, observation }),
+        body: JSON.stringify({ observation: observation.trim() }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setStatus(data.error || 'Failed to generate insight');
+      if (!response.ok) {
+        const errorPayload = (await response.json()) as { error?: string };
+        setStatus(errorPayload.error ?? 'No pudimos generar el insight.');
+        setIsLoading(false);
         return;
       }
 
-      setInsight(data.insightText || JSON.stringify(data, null, 2));
-      setStatus('Done');
+      if (!response.body) {
+        setStatus('No recibimos respuesta del servidor.');
+        setIsLoading(false);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedInsight = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedInsight += chunk;
+        setInsight(accumulatedInsight);
+      }
+
+      setStatus('Listo.');
     } catch {
-      setStatus('Request failed');
+      setStatus('Falló la solicitud. Intenta otra vez.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <main style={{ padding: 24, maxWidth: 720, margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1>Today with {childName}</h1>
-      <p>Log an observation to generate a personalized insight.</p>
+    <section style={{ marginTop: 16 }}>
+      <p style={{ marginBottom: 10 }}>
+        ¿Qué viste hoy en <strong>{childName}</strong>?
+      </p>
 
       <textarea
         value={observation}
-        onChange={(e) => setObservation(e.target.value)}
-        placeholder="Hoy Leo tiró la cuchara muchas veces desde la silla..."
-        style={{ width: '100%', minHeight: 120, padding: 12, marginBottom: 10 }}
+        onChange={(event) => setObservation(event.target.value)}
+        placeholder="Ejemplo: hoy se quedó 10 minutos pasando agua entre dos vasos y sonriendo cuando se derramaba un poco..."
+        style={{ width: '100%', minHeight: 120, padding: 12, marginBottom: 12 }}
       />
 
-      <button onClick={generateInsight} style={{ padding: '10px 14px' }}>
-        Generate insight
+      <button disabled={isLoading} onClick={generateInsight} style={{ padding: '10px 14px' }}>
+        Ver la maravilla ✨
       </button>
 
       {status ? <p style={{ marginTop: 10 }}>{status}</p> : null}
 
       {insight ? (
-        <section style={{ marginTop: 20, whiteSpace: 'pre-wrap', border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+        <article
+          style={{
+            marginTop: 20,
+            whiteSpace: 'pre-wrap',
+            border: '1px solid #2c2c2c',
+            borderRadius: 8,
+            padding: 12,
+          }}
+        >
           {insight}
-        </section>
+        </article>
       ) : null}
-    </main>
+    </section>
   );
 }
