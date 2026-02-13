@@ -52,6 +52,30 @@ type ApiChatMessage = {
   created_at: string;
 };
 
+type ExploreBrainCardRow = {
+  id: string;
+  icon: string;
+  title: string;
+  domain: string;
+  preview: string;
+  article: {
+    whats_happening: string;
+    fascinating_part: string;
+    youll_see_it_when: string[];
+    how_to_be_present: string;
+  };
+};
+
+type ExploreDailyTipRow = {
+  id: string;
+  article: {
+    tip: string;
+    why: string;
+    source: string;
+  };
+  source?: string;
+};
+
 type Props = {
   parentName: string;
   childName: string;
@@ -219,6 +243,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
+  const [exploreCards, setExploreCards] = useState<ExploreBrainCardRow[]>([]);
+  const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -260,21 +286,36 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     },
   ];
 
-  const personalizedCards = useMemo(
-    () =>
-      STAGE_CONTENT.cards.map((card) => ({
-        ...card,
-        title: withChildName(card.title, childName),
-        preview: withChildName(card.preview, childName),
-        full: {
-          whats_happening: withChildName(card.full.whats_happening, childName),
-          youll_see_it_when: card.full.youll_see_it_when.map((v) => withChildName(v, childName)),
-          fascinating_part: withChildName(card.full.fascinating_part, childName),
-          how_to_be_present: withChildName(card.full.how_to_be_present, childName),
-        },
-      })),
-    [childName]
-  );
+  const personalizedCards = useMemo(() => {
+    const sourceCards =
+      exploreCards.length > 0
+        ? exploreCards.map((card) => ({
+            icon: card.icon,
+            title: card.title,
+            domain: card.domain,
+            color: theme.colors.lavenderBg,
+            preview: card.preview,
+            full: {
+              whats_happening: card.article.whats_happening,
+              youll_see_it_when: card.article.youll_see_it_when,
+              fascinating_part: card.article.fascinating_part,
+              how_to_be_present: card.article.how_to_be_present,
+            },
+          }))
+        : STAGE_CONTENT.cards;
+
+    return sourceCards.map((card) => ({
+      ...card,
+      title: withChildName(card.title, childName),
+      preview: withChildName(card.preview, childName),
+      full: {
+        whats_happening: withChildName(card.full.whats_happening, childName),
+        youll_see_it_when: card.full.youll_see_it_when.map((v) => withChildName(v, childName)),
+        fascinating_part: withChildName(card.full.fascinating_part, childName),
+        how_to_be_present: withChildName(card.full.how_to_be_present, childName),
+      },
+    }));
+  }, [childName, exploreCards]);
 
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
@@ -309,6 +350,24 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setMessages([]);
     void fetchConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'explore') return;
+    void (async () => {
+      try {
+        const response = await fetch(apiUrl('/api/explore'));
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          brain_cards?: ExploreBrainCardRow[];
+          daily_tip?: ExploreDailyTipRow | null;
+        };
+        setExploreCards(payload.brain_cards ?? []);
+        setExploreDailyTip(payload.daily_tip ?? null);
+      } catch {
+        // ignore fetch errors in non-browser test environments
+      }
+    })();
   }, [activeTab]);
 
   const ensureConversation = async (previewText: string): Promise<string | null> => {
@@ -843,10 +902,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌻 Today&apos;s tip</p>
-              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
+              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? DAILY_INSIGHT.tip, childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>💡 Why this matters</p>
-                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(DAILY_INSIGHT.why, childName)}</p> : null}
+                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? DAILY_INSIGHT.why, childName)}</p> : null}
               </div>
             </div>
 
