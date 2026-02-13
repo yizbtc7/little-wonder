@@ -88,6 +88,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
     `🎭 ${childName} was pretending to cook me dinner`,
   ];
 
+  const timeline = [
+    {
+      date: 'Today',
+      title: `${childName} just invented the scientific method`,
+      obs: `${childName} explored blocks by weight and size, then adjusted strategy after each collapse.`,
+      schemas: ['Connecting', 'Positioning'],
+    },
+    {
+      date: 'Yesterday',
+      title: 'The physics of bath time',
+      obs: `${childName} kept pouring water between cups and watching flow changes.`,
+      schemas: ['Trajectory', 'Transporting'],
+    },
+  ];
+
   const personalizedCards = useMemo(
     () =>
       STAGE_CONTENT.cards.map((card) => ({
@@ -273,19 +288,103 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
 
       {activeTab === 'profile' ? (
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          <div style={{ background: `linear-gradient(160deg, ${theme.colors.blush} 0%, ${theme.colors.blushMid} 50%, rgba(232,160,144,0.25) 100%)`, padding: '20px 20px 24px', borderRadius: '0 0 32px 32px' }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{childName}</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText }}>{childAgeLabel}</p>
-          </div>
-          <div style={{ display: 'flex', padding: '0 20px', marginTop: 20, borderBottom: `1px solid ${theme.colors.divider}` }}>
-            {(['overview', 'timeline'] as const).map((tab) => (
-              <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab}</button>
-            ))}
-          </div>
-          <div style={{ padding: 20 }}>
-            {profileTab === 'overview' ? <p style={{ fontFamily: theme.fonts.sans, color: theme.colors.midText }}>Overview content</p> : null}
-            {profileTab === 'timeline' ? <p style={{ fontFamily: theme.fonts.sans, color: theme.colors.midText }}>Timeline content</p> : null}
-          </div>
+          {profileTab === 'settings' ? (
+            <div style={{ padding: 20 }}>
+              <button onClick={() => setProfileTab('overview')} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>← Back</button>
+              <h1 style={{ margin: '0 0 24px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Settings</h1>
+              {[
+                { label: 'Your name', value: parentName },
+                { label: 'Role', value: 'Dad' },
+                { label: 'Language', value: 'English' },
+              ].map((field) => (
+                <div key={field.label} style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{field.label}</label>
+                  <input defaultValue={field.value} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+                </div>
+              ))}
+              <SoftButton variant='soft' full style={{ color: theme.colors.roseDark }}>Sign Out</SoftButton>
+            </div>
+          ) : (
+            <>
+              <div style={{ background: `linear-gradient(160deg, ${theme.colors.blush} 0%, ${theme.colors.blushMid} 50%, rgba(232,160,144,0.25) 100%)`, padding: '20px 20px 24px', borderRadius: '0 0 32px 32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{childName}</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText }}>{childAgeLabel}</span>
+                      <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setProfileTab('settings')} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>⚙️</button>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
+                  {[
+                    { n: timeline.length, l: 'Moments' },
+                    { n: 4, l: 'Schemas' },
+                    { n: 87, l: 'Days' },
+                  ].map((s) => (
+                    <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.5)', borderRadius: 18, padding: 12, textAlign: 'center' }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
+                      <p style={{ margin: '2px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.midText }}>{s.l}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', padding: '0 20px', marginTop: 20, borderBottom: `1px solid ${theme.colors.divider}` }}>
+                {(['overview', 'timeline'] as const).map((tab) => (
+                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab}</button>
+                ))}
+              </div>
+
+              <div style={{ padding: 20 }}>
+                {profileTab === 'overview' ? (
+                  <>
+                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Schemas detected</h3>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                      {[
+                        { name: 'Trajectory', count: 5, bg: theme.colors.lavenderBg },
+                        { name: 'Connecting', count: 3, bg: theme.colors.sageBg },
+                        { name: 'Positioning', count: 2, bg: theme.colors.blush },
+                        { name: 'Transporting', count: 2, bg: '#E8F0E4' },
+                      ].map((schema) => (
+                        <div key={schema.name} style={{ background: schema.bg, borderRadius: 18, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{schema.name}</span>
+                          <span style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 10, padding: '2px 7px', fontSize: 11, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Interests</h3>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books'].map((interest) => (
+                        <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+
+                {profileTab === 'timeline' ? (
+                  <>
+                    {timeline.map((entry, i) => (
+                      <div key={`${entry.date}-${entry.title}`}>
+                        {(i === 0 || timeline[i - 1].date !== entry.date) ? <p style={{ margin: '16px 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>{entry.date}</p> : null}
+                        <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                          <h4 style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>{entry.title}</h4>
+                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.obs}</p>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {entry.schemas.map((schema) => (
+                              <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{schema}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
       ) : null}
 
