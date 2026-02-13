@@ -64,16 +64,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ conversations: [] });
   }
 
-  const { data: linkedMessages } = await db
+  const { data: conversationMessages } = await db
     .from('chat_messages')
-    .select('conversation_id,wonder_id')
-    .in('conversation_id', conversationIds)
-    .not('wonder_id', 'is', null);
+    .select('conversation_id,role,content,wonder_id')
+    .in('conversation_id', conversationIds);
 
-  const linkedCounts = (linkedMessages ?? []).reduce<Record<string, Set<string>>>((acc, row) => {
-    if (!row.wonder_id) return acc;
+  const linkedCounts = (conversationMessages ?? []).reduce<Record<string, Set<string>>>((acc, row) => {
     if (!acc[row.conversation_id]) acc[row.conversation_id] = new Set();
-    acc[row.conversation_id].add(row.wonder_id);
+
+    if (row.wonder_id) {
+      acc[row.conversation_id].add(`id:${row.wonder_id}`);
+      return acc;
+    }
+
+    if (row.role === 'assistant') {
+      try {
+        const parsed = JSON.parse(row.content) as { wonder?: { title?: string } | null };
+        const wonderTitle = parsed?.wonder?.title?.trim();
+        if (wonderTitle) {
+          acc[row.conversation_id].add(`title:${wonderTitle.toLowerCase()}`);
+        }
+      } catch {
+        // ignore legacy/plain text messages
+      }
+    }
+
     return acc;
   }, {});
 
