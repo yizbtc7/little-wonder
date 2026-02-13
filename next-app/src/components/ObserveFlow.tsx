@@ -6,6 +6,7 @@ import SoftButton from '@/components/ui/SoftButton';
 import WonderCard from '@/components/ui/WonderCard';
 import { DAILY_INSIGHT } from '@/data/daily-insights';
 import { STAGE_CONTENT } from '@/data/stage-content';
+import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 
@@ -77,9 +78,11 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   const [tipExpanded, setTipExpanded] = useState(false);
   const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
+  const [signOutError, setSignOutError] = useState('');
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const supabase = createSupabaseBrowserClient();
 
   const prompts = [
     `🧱 ${childName} keeps stacking and knocking down blocks`,
@@ -157,6 +160,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
       }
     }, 0);
+  };
+
+  const handleSignOut = async () => {
+    setSignOutError('');
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setSignOutError(error.message);
+      return;
+    }
+    window.location.href = '/';
   };
 
   if (activeTab === 'explore' && selectedExploreCard !== null) {
@@ -512,7 +525,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
                   <input defaultValue={field.value} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
                 </div>
               ))}
-              <SoftButton variant='soft' full style={{ color: theme.colors.roseDark }}>Sign Out</SoftButton>
+              <SoftButton variant='soft' full onClick={() => void handleSignOut()} style={{ color: theme.colors.roseDark }}>Sign Out</SoftButton>
+              {signOutError ? <p style={{ marginTop: 10, fontFamily: theme.fonts.sans, fontSize: 12, color: 'crimson' }}>{signOutError}</p> : null}
             </div>
           ) : (
             <>

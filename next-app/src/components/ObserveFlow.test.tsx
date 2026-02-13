@@ -1,5 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import ObserveFlow from './ObserveFlow';
+
+vi.mock('@/lib/supabaseClient', () => ({
+  createSupabaseBrowserClient: () => ({
+    auth: {
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+    },
+  }),
+}));
 
 describe('ObserveFlow v3 explore behavior', () => {
   it('shows Today\'s tip before Inside child brain in Explore tab', () => {
