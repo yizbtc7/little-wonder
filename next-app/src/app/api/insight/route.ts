@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
@@ -20,6 +19,14 @@ type ChildRow = {
 type ProfileRow = {
   user_id: string;
   parent_name: string;
+};
+
+type OpenAIChunk = {
+  choices?: Array<{
+    delta?: {
+      content?: string;
+    };
+  }>;
 };
 
 let systemPromptCache: string | null = null;
@@ -54,8 +61,31 @@ function buildPromptContext(params: {
     .replaceAll('{{output_format}}', 'text');
 }
 
+function extractTextChunk(chunkData: string): string {
+  if (!chunkData.startsWith('data: ')) {
+    return '';
+  }
+
+  const payload = chunkData.slice(6).trim();
+  if (payload === '[DONE]' || payload.length === 0) {
+    return '';
+  }
+
+  try {
+    const parsed = JSON.parse(payload) as OpenAIChunk;
+    return parsed.choices?.[0]?.delta?.content ?? '';
+  } catch {
+    return '';
+  }
+}
+
 export async function POST(request: Request) {
   try {
+    const openAiApiKey = process.env.OPENAI_API_KEY;
+    if (!openAiApiKey) {
+      return NextResponse.json({ error: 'OPENAI_API_KEY no configurada.' }, { status: 500 });
+    }
+
     const supabaseAuth = await createSupabaseServerClient();
     const {
       data: { user },
@@ -140,25 +170,53 @@ export async function POST(request: Request) {
       'Incluye celebración, explicación, actividad concreta, versión rápida y una pregunta para seguir observando.',
     ].join('\n');
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const anthropicStream = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-latest',
-      max_tokens: 900,
-      temperature: 0.4,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-      stream: true,
+    const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openAiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        stream: true,
+        temperature: 0.4,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
     });
 
+    if (!openAiResponse.ok || !openAiResponse.body) {
+      const errorText = await openAiResponse.text();
+      return NextResponse.json({ error: errorText || 'Error llamando OpenAI.' }, { status: 500 });
+    }
+
     const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const reader = openAiResponse.body.getReader();
     let fullResponse = '';
+    let sseBuffer = '';
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         try {
-          for await (const event of anthropicStream) {
-            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-              const textChunk = event.delta.text;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+
+            sseBuffer += decoder.decode(value, { stream: true });
+            const lines = sseBuffer.split('\n\n');
+            sseBuffer = lines.pop() ?? '';
+
+            for (const line of lines) {
+              const textChunk = extractTextChunk(line.trim());
+              if (!textChunk) {
+                continue;
+              }
+
               fullResponse += textChunk;
               controller.enqueue(encoder.encode(textChunk));
             }
@@ -169,7 +227,8 @@ export async function POST(request: Request) {
             content: fullResponse,
             insight_text: fullResponse,
             json_response: {
-              source: 'claude_stream',
+              source: 'openai_stream',
+              model: 'gpt-4o',
             },
             schema_detected: null,
             domain: null,
