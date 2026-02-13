@@ -258,8 +258,9 @@ function getDailyParentingInsight(childAgeMonths: number, childName: string) {
 
   if (filteredInsights.length === 0) {
     return {
-      text: `Today, follow ${childName}'s lead for 10 focused minutes. Describe what you see, pause, and let ${childName} take the next step.`,
-      source: '📚 Responsive caregiving — early development foundations',
+      advice: `Hoy sigue la iniciativa de ${childName} durante 10 minutos y nombra lo que observas.`,
+      why: `Cuando ${childName} siente que su iniciativa cuenta, su cerebro sostiene mejor la atención y el vínculo. Esa combinación acelera aprendizaje y confianza al mismo tiempo.`,
+      source: '📚 Harvard Center on the Developing Child',
     };
   }
 
@@ -267,7 +268,8 @@ function getDailyParentingInsight(childAgeMonths: number, childName: string) {
   const selected = filteredInsights[index];
 
   return {
-    text: withChildName(selected.text, childName),
+    advice: withChildName(selected.advice, childName),
+    why: withChildName(selected.why, childName),
     source: selected.source,
   };
 }
@@ -607,7 +609,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={650}>
           <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>{dailyParentingInsight.text}</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6, marginBottom: 10 }}>
+              {dailyParentingInsight.advice}
+            </p>
+            <div style={{ background: theme.colors.white, borderRadius: 12, padding: 12 }}>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.warmDark, fontWeight: 700, marginBottom: 4 }}>
+                💡 Por qué esto importa
+              </p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.55 }}>
+                {dailyParentingInsight.why}
+              </p>
+            </div>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>{dailyParentingInsight.source}</p>
           </div>
         </FadeIn>
