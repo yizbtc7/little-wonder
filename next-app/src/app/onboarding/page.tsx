@@ -4,17 +4,20 @@ import OnboardingForm from '@/components/OnboardingForm';
 
 export default async function Onboarding() {
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/');
-  }
+  if (!user) redirect('/');
 
-  const { data: profile } = await supabase.from('profiles').select('onboarded').eq('id', user.id).single();
+  const { data: child } = await supabase
+    .from('children')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle();
 
-  if (profile && profile.onboarded) {
-    redirect('/');
-  }
+  if (child) redirect('/');
 
-  return <OnboardingForm userId={user.id} />;
+  return <OnboardingForm userId={user.id} userEmail={user.email ?? ''} />;
 }

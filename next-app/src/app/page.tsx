@@ -5,17 +5,21 @@ import ObserveFlow from '@/components/ObserveFlow';
 
 export default async function Home() {
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return <SignIn />;
-  }
+  if (!user) return <SignIn />;
 
-  const { data: profile } = await supabase.from('profiles').select('onboarded').eq('id', user.id).single();
+  const { data: child } = await supabase
+    .from('children')
+    .select('id,name,birthdate')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-  if (!profile || !profile.onboarded) {
-    redirect('/onboarding');
-  }
+  if (!child) redirect('/onboarding');
 
-  return <ObserveFlow userId={user.id} />;
+  return <ObserveFlow userId={user.id} childId={child.id} childName={child.name} />;
 }
