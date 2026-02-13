@@ -9,6 +9,7 @@ import { dailyInsights } from '@/data/daily-insights';
 import { theme } from '@/styles/theme';
 
 type InsightPayload = {
+  title: string;
   revelation: string;
   brain_science_gem: string;
   activity: {
@@ -40,6 +41,7 @@ function getAgeMonths(birthdate: string): number {
 
 function parseInsightPayload(raw: string): InsightPayload {
   const fallback: InsightPayload = {
+    title: 'Una maravilla en desarrollo',
     revelation: raw,
     brain_science_gem: 'Cada repetición fortalece conexiones neuronales que sostienen el aprendizaje profundo.',
     activity: {
@@ -55,6 +57,7 @@ function parseInsightPayload(raw: string): InsightPayload {
   try {
     const parsed = JSON.parse(match[0]) as Partial<InsightPayload>;
     return {
+      title: parsed.title ?? fallback.title,
       revelation: parsed.revelation ?? fallback.revelation,
       brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
       activity: {
@@ -70,6 +73,7 @@ function parseInsightPayload(raw: string): InsightPayload {
 
 function payloadFromStageWonder(wonder: StageWonder, childName: string): InsightPayload {
   return {
+    title: wonder.title,
     revelation: wonder.body,
     brain_science_gem: `${childName} está en una ventana de alta plasticidad cerebral, así que este patrón repetido está consolidando redes clave para aprendizaje futuro.`,
     activity: {
@@ -240,6 +244,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [observation, setObservation] = useState('');
   const [rawInsightResponse, setRawInsightResponse] = useState('');
   const [currentInsight, setCurrentInsight] = useState<InsightPayload | null>(null);
+  const [insightObservation, setInsightObservation] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -265,16 +270,19 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       return;
     }
 
+    const submittedObservation = observation.trim();
+
     setIsLoading(true);
     setStatus('Generating wonder...');
     setRawInsightResponse('');
     setCurrentInsight(null);
+    setInsightObservation(submittedObservation);
 
     try {
       const response = await fetch('/api/insight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ observation: observation.trim() }),
+        body: JSON.stringify({ observation: submittedObservation }),
       });
 
       if (!response.ok) {
@@ -320,14 +328,48 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           ← Back to today
         </Button>
 
-        <FadeIn delay={0}>
+        {insightObservation ? (
+          <FadeIn delay={0}>
+            <section
+              style={{
+                background: theme.colors.grayBg,
+                borderRadius: theme.radius.card,
+                padding: 16,
+                marginBottom: 12,
+              }}
+            >
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginBottom: 6 }}>
+                ✏️ Tu observación:
+              </p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontStyle: 'italic', color: theme.colors.dark, lineHeight: 1.6 }}>
+                {insightObservation}
+              </p>
+            </section>
+          </FadeIn>
+        ) : null}
+
+        <FadeIn delay={120}>
+          <h2
+            style={{
+              fontFamily: theme.fonts.display,
+              fontSize: 22,
+              color: theme.colors.dark,
+              lineHeight: 1.25,
+              marginBottom: 14,
+            }}
+          >
+            {parsedInsight.title}
+          </h2>
+        </FadeIn>
+
+        <FadeIn delay={250}>
           <section style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 22, boxShadow: theme.shadows.elevated, borderLeft: `4px solid ${theme.colors.brand}`, marginBottom: 12 }}>
             <p style={{ color: theme.colors.brand, textTransform: 'uppercase', fontSize: 12, fontFamily: theme.fonts.body, fontWeight: 700, marginBottom: 8 }}>💡 Lo que está pasando</p>
             <article style={{ color: theme.colors.dark, lineHeight: 1.7, fontSize: 15, fontFamily: theme.fonts.body }}>{renderWithChildBold(parsedInsight.revelation, childName)}</article>
           </section>
         </FadeIn>
 
-        <FadeIn delay={300}>
+        <FadeIn delay={450}>
           <section style={{ background: theme.colors.brandLight, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
             <p style={{ color: theme.colors.brandDark, fontWeight: 700, marginBottom: 6, fontFamily: theme.fonts.body }}>🧠 Dato fascinante</p>
             <p style={{ color: theme.colors.dark, fontWeight: 500, lineHeight: 1.6, fontFamily: theme.fonts.body }}>{parsedInsight.brain_science_gem}</p>
@@ -414,6 +456,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             delay={300 + index * 90}
             onClick={() => {
               setCurrentInsight(payloadFromStageWonder(wonder, childName));
+              setInsightObservation(null);
               setShowInsightScreen(true);
             }}
           />

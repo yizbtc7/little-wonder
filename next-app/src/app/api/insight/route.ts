@@ -23,6 +23,7 @@ type ProfileRow = {
 };
 
 type InsightPayload = {
+  title: string;
   revelation: string;
   brain_science_gem: string;
   activity: {
@@ -67,6 +68,7 @@ function buildPromptContext(params: {
 function parseInsightPayload(raw: string): InsightPayload {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   const fallback: InsightPayload = {
+    title: 'Una revelación sobre su aprendizaje de hoy',
     revelation: raw,
     brain_science_gem: 'Cada repetición fortalece conexiones neuronales clave para el aprendizaje profundo.',
     activity: {
@@ -83,6 +85,7 @@ function parseInsightPayload(raw: string): InsightPayload {
   try {
     const parsed = JSON.parse(jsonMatch[0]) as Partial<InsightPayload>;
     return {
+      title: parsed.title ?? fallback.title,
       revelation: parsed.revelation ?? fallback.revelation,
       brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
       activity: {
@@ -185,6 +188,7 @@ export async function POST(request: Request) {
       '',
       'Devuelve SOLO JSON válido sin markdown ni texto adicional, con este esquema exacto:',
       '{',
+      '  "title": "frase corta y poderosa que resume la revelación",',
       '  "revelation": "texto de la revelación principal",',
       '  "brain_science_gem": "dato científico sorprendente",',
       '  "activity": {',
