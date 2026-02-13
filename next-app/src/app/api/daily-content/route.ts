@@ -65,6 +65,65 @@ function extractJson(raw: string): unknown {
   }
 }
 
+function buildFallbackDailyContent(childName: string) {
+  return {
+    section_title: `¿Qué está pasando en el cerebro de ${childName}?`,
+    cards: [
+      {
+        icon: '🧠',
+        title: 'Hipótesis en tiempo real',
+        domain: 'Cognitive/Language',
+        preview: `${childName} está conectando lenguaje con causa y efecto en cada repetición cotidiana.`,
+        full: {
+          whats_happening: `El cerebro de ${childName} está construyendo modelos mentales sobre cómo funciona el mundo. Cada repetición consolida memoria, predicción y toma de decisiones.`,
+          youll_see_it_when: [
+            'Repite una acción para ver si el resultado cambia',
+            'Observa tu reacción antes de intentar de nuevo',
+            'Conecta eventos con “antes” y “después”',
+            'Insiste en entender una secuencia concreta',
+          ],
+          fascinating_part: 'Estas micro-pruebas son cimientos tempranos del pensamiento científico.',
+          how_to_be_present: `Describe lo que ves y deja una pausa para que ${childName} continúe. Acompañar sin interrumpir profundiza su razonamiento.`,
+        },
+      },
+      {
+        icon: '🎭',
+        title: 'Símbolos que cobran vida',
+        domain: 'Imagination/Symbolic Thinking',
+        preview: `${childName} puede usar un objeto como si fuera otro: eso es abstracción en acción.`,
+        full: {
+          whats_happening: `Cuando ${childName} convierte objetos en personajes o herramientas imaginarias, integra memoria, lenguaje e imaginación en un solo circuito.`,
+          youll_see_it_when: [
+            'Usa objetos cotidianos con funciones imaginarias',
+            'Imita escenas del día en forma de juego',
+            'Sostiene una mini-historia por varios turnos',
+            'Asigna roles a personas u objetos',
+          ],
+          fascinating_part: 'El juego simbólico temprano se asocia con avances en lenguaje y autorregulación.',
+          how_to_be_present: `Primero sigue la narrativa de ${childName}. Luego amplía con una frase breve en lugar de redirigir todo el juego.`,
+        },
+      },
+      {
+        icon: '🤝',
+        title: 'Mapeo social emergente',
+        domain: 'Social-Emotional',
+        preview: `${childName} está aprendiendo que otras personas piensan y sienten distinto.`,
+        full: {
+          whats_happening: `El cerebro social de ${childName} está refinando cómo leer emociones y ajustar conducta según contexto y vínculo.`,
+          youll_see_it_when: [
+            'Observa tu rostro para calibrar situaciones nuevas',
+            'Nombra emociones básicas o las señala',
+            'Ajusta su conducta según quién esté presente',
+            'Busca reparar conexión después de frustrarse',
+          ],
+          fascinating_part: 'Comprender mentes distintas es una base central de empatía y cooperación.',
+          how_to_be_present: `Nombra emociones con lenguaje simple y sin juicio. Tu calma ayuda a ${childName} a organizar su mundo emocional interno.`,
+        },
+      },
+    ],
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
@@ -140,10 +199,7 @@ export async function POST(request: Request) {
       .map((block) => block.text)
       .join('\n');
 
-    const parsed = extractJson(fullText);
-    if (!parsed) {
-      return NextResponse.json({ error: 'No se pudo generar contenido diario válido.' }, { status: 500 });
-    }
+    const parsed = extractJson(fullText) ?? buildFallbackDailyContent(child.name);
 
     await db.from('daily_content').upsert(
       {
