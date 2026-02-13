@@ -22,6 +22,16 @@ type ProfileRow = {
   parent_name: string;
 };
 
+type InsightPayload = {
+  revelation: string;
+  brain_science_gem: string;
+  activity: {
+    main: string;
+    express: string;
+  };
+  observe_next: string;
+};
+
 let systemPromptCache: string | null = null;
 
 async function getSystemPrompt(): Promise<string> {
@@ -51,7 +61,39 @@ function buildPromptContext(params: {
     .replaceAll('{{child_age_months}}', `${childAgeMonths}`)
     .replaceAll('{{child_age_label}}', childAgeLabel)
     .replaceAll('{{recent_observations}}', recentObservations.join('\n- '))
-    .replaceAll('{{output_format}}', 'text');
+    .replaceAll('{{output_format}}', 'json');
+}
+
+function parseInsightPayload(raw: string): InsightPayload {
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  const fallback: InsightPayload = {
+    revelation: raw,
+    brain_science_gem: 'Cada repetición fortalece conexiones neuronales clave para el aprendizaje profundo.',
+    activity: {
+      main: 'Invita a tu hijo/a a repetir la misma exploración con un pequeño cambio de material y observa qué estrategia ajusta.',
+      express: 'Versión express: nombra en voz alta una sola cosa que está probando y espera su siguiente intento.',
+    },
+    observe_next: 'La próxima vez, observa la pausa justo antes de actuar: ahí suele aparecer su hipótesis.',
+  };
+
+  if (!jsonMatch) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as Partial<InsightPayload>;
+    return {
+      revelation: parsed.revelation ?? fallback.revelation,
+      brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
+      activity: {
+        main: parsed.activity?.main ?? fallback.activity.main,
+        express: parsed.activity?.express ?? fallback.activity.express,
+      },
+      observe_next: parsed.observe_next ?? fallback.observe_next,
+    };
+  } catch {
+    return fallback;
+  }
 }
 
 export async function POST(request: Request) {
@@ -141,8 +183,17 @@ export async function POST(request: Request) {
       `Observación de hoy sobre ${child.name}:`,
       observationText,
       '',
-      'Responde en español para el padre/madre, con tono cálido, práctico y sin lenguaje clínico.',
-      'Incluye celebración, explicación, actividad concreta, versión rápida y una pregunta para seguir observando.',
+      'Devuelve SOLO JSON válido sin markdown ni texto adicional, con este esquema exacto:',
+      '{',
+      '  "revelation": "texto de la revelación principal",',
+      '  "brain_science_gem": "dato científico sorprendente",',
+      '  "activity": {',
+      '    "main": "actividad principal",',
+      '    "express": "versión de 30 segundos"',
+      '  },',
+      '  "observe_next": "pregunta de observación para la próxima vez"',
+      '}',
+      'Usa el nombre del niño al menos 3 veces y mantén tono cálido y específico.',
     ].join('\n');
 
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
@@ -169,13 +220,16 @@ export async function POST(request: Request) {
             }
           }
 
+          const parsedPayload = parseInsightPayload(fullResponse);
+
           const { error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
-            content: fullResponse,
-            insight_text: fullResponse,
+            content: parsedPayload.revelation,
+            insight_text: parsedPayload.revelation,
             json_response: {
               source: 'anthropic_stream',
               model: 'claude-sonnet-4-5-20250929',
+              payload: parsedPayload,
             },
             schema_detected: null,
             domain: null,
