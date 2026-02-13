@@ -51,11 +51,10 @@ function parseInsightPayload(raw: string): InsightPayload {
     observe_next: 'La próxima vez, observa la pausa justo antes de actuar: ahí suele aparecer su hipótesis.',
   };
 
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) return fallback;
+  const source = raw.match(/\{[\s\S]*\}/)?.[0] ?? raw;
 
   try {
-    const parsed = JSON.parse(match[0]) as Partial<InsightPayload>;
+    const parsed = JSON.parse(source) as Partial<InsightPayload>;
     return {
       title: parsed.title ?? fallback.title,
       revelation: parsed.revelation ?? fallback.revelation,
@@ -67,7 +66,21 @@ function parseInsightPayload(raw: string): InsightPayload {
       observe_next: parsed.observe_next ?? fallback.observe_next,
     };
   } catch {
-    return fallback;
+    const extract = (field: string): string | null => {
+      const match = source.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*?)"(?=\\s*,\\s*"|\\s*})`));
+      return match?.[1]?.replaceAll('\\n', '\n') ?? null;
+    };
+
+    return {
+      title: extract('title') ?? fallback.title,
+      revelation: extract('revelation') ?? fallback.revelation,
+      brain_science_gem: extract('brain_science_gem') ?? fallback.brain_science_gem,
+      activity: {
+        main: extract('main') ?? fallback.activity.main,
+        express: extract('express') ?? fallback.activity.express,
+      },
+      observe_next: extract('observe_next') ?? fallback.observe_next,
+    };
   }
 }
 
