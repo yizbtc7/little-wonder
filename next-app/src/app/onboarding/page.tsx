@@ -1,21 +1,20 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import SignIn from '@/components/SignIn';
-import ObserveFlow from '@/components/ObserveFlow';
+import OnboardingForm from '@/components/OnboardingForm';
 
-export default async function Home() {
+export default async function Onboarding() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return <SignIn />;
+    redirect('/');
   }
 
   const { data: profile } = await supabase.from('profiles').select('onboarded').eq('id', user.id).single();
 
-  if (!profile || !profile.onboarded) {
-    redirect('/onboarding');
+  if (profile && profile.onboarded) {
+    redirect('/');
   }
 
-  return <ObserveFlow userId={user.id} />;
+  return <OnboardingForm userId={user.id} />;
 }
