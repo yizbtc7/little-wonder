@@ -206,14 +206,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         ) : null}
 
         <FadeUp delay={220}>
-          <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: theme.radius.lg, padding: 20, marginTop: 8, marginBottom: 14 }}>
-            <p style={{ margin: '0 0 8px', fontSize: 11, textTransform: 'uppercase', color: theme.colors.roseDark, fontWeight: 700 }}>🌻 Today&apos;s tip</p>
-            <p style={{ margin: '0 0 10px' }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
-            <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: theme.radius.sm, padding: 12, cursor: 'pointer' }}>
-              <p style={{ margin: 0, fontWeight: 700, color: theme.colors.roseDark }}>💡 Why this matters</p>
-              {tipExpanded ? <p style={{ margin: '8px 0 0', color: theme.colors.midText }}>{withChildName(DAILY_INSIGHT.why, childName)}</p> : null}
+          <div style={{ background: theme.colors.warmWhite, borderRadius: theme.radius.lg, padding: 16, marginTop: 8, marginBottom: 14, border: `1px solid ${theme.colors.divider}` }}>
+            <p style={{ margin: '0 0 6px', fontSize: 10, textTransform: 'uppercase', color: theme.colors.lightText, fontWeight: 700, letterSpacing: 0.4 }}>🌻 Today&apos;s tip</p>
+            <p style={{ margin: '0 0 8px', color: theme.colors.darkText, fontSize: 15, lineHeight: 1.5 }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
+            <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: theme.radius.sm, padding: 11, cursor: 'pointer', border: `1px solid ${theme.colors.divider}` }}>
+              <p style={{ margin: 0, fontWeight: 700, color: theme.colors.midText }}>💡 Why this matters</p>
+              {tipExpanded ? <p style={{ margin: '8px 0 0', color: theme.colors.midText, fontSize: 14, lineHeight: 1.55 }}>{withChildName(DAILY_INSIGHT.why, childName)}</p> : null}
             </div>
-            <a href={DAILY_INSIGHT.sourceUrl} target='_blank' rel='noreferrer' style={{ display: 'inline-block', marginTop: 8, color: theme.colors.lightText, fontSize: 12 }}>
+            <a href={DAILY_INSIGHT.sourceUrl} target='_blank' rel='noreferrer' style={{ display: 'inline-block', marginTop: 8, color: theme.colors.lightText, fontSize: 11 }}>
               {DAILY_INSIGHT.source}
             </a>
           </div>
