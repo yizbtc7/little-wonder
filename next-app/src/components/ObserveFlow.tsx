@@ -174,16 +174,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         ) : null}
 
         <FadeUp delay={220}>
-          <h2 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 24, color: theme.colors.charcoal }}>Inside {childName}'s brain</h2>
-          <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
-        </FadeUp>
-
-        {personalizedCards.map((card, index) => (
-          <WonderCard key={card.title} {...card} delay={300 + index * 100} body={card.preview} onClick={() => setShowWonder(index)} />
-        ))}
-
-        <FadeUp delay={760}>
-          <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: theme.radius.lg, padding: 20, marginTop: 8 }}>
+          <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: theme.radius.lg, padding: 20, marginTop: 8, marginBottom: 14 }}>
             <p style={{ margin: '0 0 8px', fontSize: 11, textTransform: 'uppercase', color: theme.colors.roseDark, fontWeight: 700 }}>🌻 Today&apos;s tip</p>
             <p style={{ margin: '0 0 10px' }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
             <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: theme.radius.sm, padding: 12, cursor: 'pointer' }}>
@@ -195,6 +186,15 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
             </a>
           </div>
         </FadeUp>
+
+        <FadeUp delay={320}>
+          <h2 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 24, color: theme.colors.charcoal }}>Inside {childName}'s brain</h2>
+          <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
+        </FadeUp>
+
+        {personalizedCards.map((card, index) => (
+          <WonderCard key={card.title} {...card} delay={400 + index * 100} body={card.preview} onClick={() => setShowWonder(index)} />
+        ))}
       </section>
 
       <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 390, background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
