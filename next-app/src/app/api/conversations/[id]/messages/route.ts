@@ -12,15 +12,21 @@ type CreateMessageBody = {
   wonder_id?: string | null;
 };
 
+type ConversationOwnerRow = {
+  id: string;
+  user_id: string;
+  child_id: string;
+};
+
 function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-async function verifyConversationOwner(conversationId: string, userId: string) {
+async function getOwnedConversation(conversationId: string, userId: string): Promise<ConversationOwnerRow | null> {
   const db = dbClient();
   const { data, error } = await db
     .from('conversations')
-    .select('id,user_id')
+    .select('id,user_id,child_id')
     .eq('id', conversationId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -29,7 +35,73 @@ async function verifyConversationOwner(conversationId: string, userId: string) {
     throw new Error(error.message);
   }
 
-  return Boolean(data);
+  return (data as ConversationOwnerRow | null) ?? null;
+}
+
+function extractWonderTitleFromAssistantContent(content: string): string | null {
+  try {
+    const parsed = JSON.parse(content) as { wonder?: { title?: string } | null };
+    const title = parsed?.wonder?.title?.trim();
+    return title && title.length > 0 ? title : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveWonderId(params: {
+  conversation: ConversationOwnerRow;
+  role: 'user' | 'assistant';
+  content: string;
+  requestedWonderId?: string | null;
+}): Promise<string | null> {
+  const { conversation, role, content, requestedWonderId } = params;
+  const db = dbClient();
+
+  if (role !== 'assistant') return null;
+
+  if (requestedWonderId) {
+    const { data } = await db
+      .from('wonders')
+      .select('id')
+      .eq('id', requestedWonderId)
+      .eq('child_id', conversation.child_id)
+      .maybeSingle();
+
+    return data?.id ?? null;
+  }
+
+  const wonderTitle = extractWonderTitleFromAssistantContent(content);
+  if (!wonderTitle) return null;
+
+  const { data } = await db
+    .from('wonders')
+    .select('id,title,created_at')
+    .eq('child_id', conversation.child_id)
+    .eq('title', wonderTitle)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data?.id ?? null;
+}
+
+async function refreshWonderCount(conversationId: string) {
+  const db = dbClient();
+  const { data } = await db
+    .from('chat_messages')
+    .select('wonder_id')
+    .eq('conversation_id', conversationId)
+    .not('wonder_id', 'is', null);
+
+  const wonderCount = new Set((data ?? []).map((row) => row.wonder_id).filter((id): id is string => Boolean(id))).size;
+
+  await db
+    .from('conversations')
+    .update({
+      wonder_count: wonderCount,
+      last_message_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId);
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -44,14 +116,14 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let ownsConversation = false;
+  let conversation: ConversationOwnerRow | null = null;
   try {
-    ownsConversation = await verifyConversationOwner(id, user.id);
+    conversation = await getOwnedConversation(id, user.id);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 
-  if (!ownsConversation) {
+  if (!conversation) {
     return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
   }
 
@@ -71,8 +143,8 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (wonderIds.length > 0) {
     const { data: wonders } = await db
-      .from('insights')
-      .select('id,title,revelation,brain_science_gem,activity_main,activity_express,observe_next,schema_detected,created_at')
+      .from('wonders')
+      .select('id,title,article,schemas_detected,created_at')
       .in('id', wonderIds);
 
     wondersById = (wonders ?? []).reduce<Record<string, unknown>>((acc, row) => {
@@ -101,14 +173,14 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let ownsConversation = false;
+  let conversation: ConversationOwnerRow | null = null;
   try {
-    ownsConversation = await verifyConversationOwner(id, user.id);
+    conversation = await getOwnedConversation(id, user.id);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 
-  if (!ownsConversation) {
+  if (!conversation) {
     return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
   }
 
@@ -124,6 +196,13 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'content is required' }, { status: 400 });
   }
 
+  const resolvedWonderId = await resolveWonderId({
+    conversation,
+    role,
+    content,
+    requestedWonderId: body.wonder_id,
+  });
+
   const db = dbClient();
   const { data, error } = await db
     .from('chat_messages')
@@ -131,7 +210,7 @@ export async function POST(request: Request, context: RouteContext) {
       conversation_id: id,
       role,
       content,
-      wonder_id: body.wonder_id ?? null,
+      wonder_id: resolvedWonderId,
       created_at: new Date().toISOString(),
     })
     .select('id,conversation_id,role,content,wonder_id,created_at')
@@ -158,17 +237,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
   }
 
-  if (body.wonder_id) {
-    const { data: conversationRow } = await db
-      .from('conversations')
-      .select('wonder_count')
-      .eq('id', id)
-      .maybeSingle();
-
-    updates.wonder_count = ((conversationRow?.wonder_count as number | null) ?? 0) + 1;
-  }
-
   await db.from('conversations').update(updates).eq('id', id);
+  await refreshWonderCount(id);
 
   return NextResponse.json({ message: data }, { status: 201 });
 }
