@@ -134,6 +134,23 @@ function apiUrl(path: string): string {
   return path;
 }
 
+function formatConversationDate(dateInput: string, locale: 'en' | 'es'): string {
+  const date = new Date(dateInput);
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((startOfToday.getTime() - startOfTarget.getTime()) / 86400000);
+
+  if (diffDays === 0) return locale === 'es' ? 'Hoy' : 'Today';
+  if (diffDays === 1) return locale === 'es' ? 'Ayer' : 'Yesterday';
+
+  return date.toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 function deserializeAssistantInsight(content: string): InsightPayload {
   try {
     const parsed = JSON.parse(content) as Partial<InsightPayload>;
@@ -245,6 +262,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
   const [exploreCards, setExploreCards] = useState<ExploreBrainCardRow[]>([]);
   const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
+  const [locale, setLocale] = useState<'en' | 'es'>('en');
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -257,6 +275,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     'Connecting to developmental science...',
     'Preparing your insight...',
   ];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = (localStorage.getItem('locale') || localStorage.getItem('language') || '').toLowerCase();
+    if (saved.startsWith('es')) {
+      setLocale('es');
+      return;
+    }
+    const navLang = window.navigator.language?.toLowerCase() ?? 'en';
+    setLocale(navLang.startsWith('es') ? 'es' : 'en');
+  }, []);
 
   useEffect(() => {
     if (!typing) {
@@ -740,7 +769,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                         <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>
-                          {new Date(conversation.last_message_at).toLocaleDateString()}
+                          {formatConversationDate(conversation.last_message_at, locale)}
                         </span>
                         {conversation.wonder_count > 0 ? (
                           <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: theme.colors.roseDark }}>✨ {conversation.wonder_count}</span>
