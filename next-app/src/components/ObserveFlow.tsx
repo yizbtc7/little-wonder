@@ -269,12 +269,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Discover what&apos;s happening at {childAgeLabel}</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
-            <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>Inside {childName}&apos;s brain</h2>
-            <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
-            {personalizedCards.map((card, idx) => (
-              <WonderCard key={card.title} icon={card.icon} title={card.title} domain={card.domain} body={card.preview} delay={idx * 100} onClick={() => setSelectedExploreCard(idx)} />
-            ))}
-            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8 }}>
+            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌻 Today&apos;s tip</p>
               <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
@@ -282,6 +277,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
                 {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(DAILY_INSIGHT.why, childName)}</p> : null}
               </div>
             </div>
+
+            <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>Inside {childName}&apos;s brain</h2>
+            <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
+            {personalizedCards.map((card, idx) => (
+              <WonderCard key={card.title} icon={card.icon} title={card.title} domain={card.domain} body={card.preview} delay={idx * 100} onClick={() => setSelectedExploreCard(idx)} />
+            ))}
           </div>
         </div>
       ) : null}
