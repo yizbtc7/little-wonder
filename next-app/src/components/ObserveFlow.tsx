@@ -164,7 +164,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         <FadeUp delay={700}>
           <section style={{ background: theme.colors.lavenderBg, borderRadius: theme.radius.lg, padding: '18px 20px', marginBottom: 14 }}>
             <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: theme.colors.lavender }}>🧠 The fascinating part</p>
-            <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 15, lineHeight: 1.6, fontWeight: 500, color: theme.colors.darkText }}>{card.full.fascinating_part}</p>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, fontWeight: 400, color: theme.colors.darkText }}>{card.full.fascinating_part}</p>
           </section>
         </FadeUp>
 
@@ -208,7 +208,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         <FadeUp delay={700}>
           <section style={{ background: theme.colors.lavenderBg, borderRadius: theme.radius.lg, padding: '18px 20px', marginBottom: 14 }}>
             <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: theme.colors.lavender }}>🧠 The fascinating part</p>
-            <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 15, lineHeight: 1.6, fontWeight: 500, color: theme.colors.darkText }}>{parsed.brain_science_gem}</p>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, fontWeight: 400, color: theme.colors.darkText }}>{parsed.brain_science_gem}</p>
           </section>
         </FadeUp>
 
@@ -229,7 +229,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         <FadeUp delay={1100}>
           <section style={{ background: theme.colors.sageBg, borderRadius: theme.radius.lg, padding: '18px 20px', marginBottom: 20 }}>
             <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: theme.colors.sage }}>👀 Watch for this next</p>
-            <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 16, lineHeight: 1.5, fontWeight: 600, color: theme.colors.darkText }}>{parsed.observe_next}</p>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, fontWeight: 400, color: theme.colors.darkText }}>{parsed.observe_next}</p>
           </section>
         </FadeUp>
       </main>
