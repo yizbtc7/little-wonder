@@ -23,6 +23,22 @@ type ChatMessage =
   | { role: 'user'; text: string }
   | { role: 'ai'; insight: InsightPayload };
 
+type ConversationSummary = {
+  id: string;
+  started_at: string;
+  last_message_at: string;
+  preview: string | null;
+  wonder_count: number;
+};
+
+type ApiChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  wonder_id: string | null;
+  created_at: string;
+};
+
 type Props = {
   parentName: string;
   childName: string;
@@ -63,6 +79,37 @@ function parseInsightPayload(raw: string): InsightPayload {
 
 function withChildName(text: string, childName: string): string {
   return replaceChildName(text, childName).replaceAll('Leo', childName);
+}
+
+function serializeAssistantInsight(insight: InsightPayload): string {
+  return JSON.stringify(insight);
+}
+
+function apiUrl(path: string): string {
+  if (typeof window !== 'undefined') {
+    return new URL(path, window.location.origin).toString();
+  }
+  return path;
+}
+
+function deserializeAssistantInsight(content: string): InsightPayload {
+  try {
+    const parsed = JSON.parse(content) as Partial<InsightPayload>;
+    if (!parsed || typeof parsed !== 'object') return parseInsightPayload(content);
+    return {
+      title: parsed.title ?? 'A wonder in motion',
+      revelation: parsed.revelation ?? '',
+      brain_science_gem: parsed.brain_science_gem ?? '',
+      activity: {
+        main: parsed.activity?.main ?? '',
+        express: parsed.activity?.express ?? '',
+      },
+      observe_next: parsed.observe_next ?? '',
+      schemas_detected: Array.isArray(parsed.schemas_detected) ? parsed.schemas_detected : [],
+    };
+  } catch {
+    return parseInsightPayload(content);
+  }
 }
 
 type Tab = 'chat' | 'explore' | 'profile';
@@ -150,6 +197,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -207,6 +257,63 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     [childName]
   );
 
+  const fetchConversations = async (): Promise<ConversationSummary[]> => {
+    try {
+      const response = await fetch(apiUrl('/api/conversations?limit=20'));
+      if (!response.ok) return [];
+      const payload = (await response.json()) as { conversations?: ConversationSummary[] };
+      const list = payload.conversations ?? [];
+      setConversations(list);
+      return list;
+    } catch {
+      return [];
+    }
+  };
+
+  const loadConversationMessages = async (id: string) => {
+    const response = await fetch(apiUrl(`/api/conversations/${id}/messages`));
+    if (!response.ok) return;
+    const payload = (await response.json()) as { messages?: ApiChatMessage[] };
+    const hydrated: ChatMessage[] = (payload.messages ?? []).map((message) =>
+      message.role === 'user'
+        ? { role: 'user', text: message.content }
+        : { role: 'ai', insight: deserializeAssistantInsight(message.content) }
+    );
+    setConversationId(id);
+    setMessages(hydrated);
+    setShowSidebar(false);
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'chat') return;
+    void (async () => {
+      const list = await fetchConversations();
+      if (list.length > 0) {
+        await loadConversationMessages(list[0].id);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const ensureConversation = async (previewText: string): Promise<string | null> => {
+    if (conversationId) return conversationId;
+
+    const response = await fetch(apiUrl('/api/conversations'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preview: previewText }),
+    });
+
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { conversation?: { id: string } };
+    const id = payload.conversation?.id ?? null;
+    if (id) {
+      setConversationId(id);
+      await fetchConversations();
+    }
+    return id;
+  };
+
   const sendMessage = async (directText?: string) => {
     const text = (directText ?? input).trim();
     if (!text) return;
@@ -214,6 +321,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setInput('');
     setTyping(true);
+
+    const convId = await ensureConversation(text);
+
+    if (convId) {
+      await fetch(apiUrl(`/api/conversations/${convId}/messages`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'user', content: text }),
+      });
+    }
 
     const response = await fetch('/api/insight', {
       method: 'POST',
@@ -239,6 +356,15 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     const parsed = parseInsightPayload(raw);
     setTyping(false);
     setMessages((prev) => [...prev, { role: 'ai', insight: parsed }]);
+
+    if (convId) {
+      await fetch(apiUrl(`/api/conversations/${convId}/messages`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'assistant', content: serializeAssistantInsight(parsed) }),
+      });
+      await fetchConversations();
+    }
 
     setTimeout(() => {
       if (chatScrollRef.current) {
@@ -481,16 +607,68 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   }
 
   return (
-    <main style={{ maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: theme.colors.cream, boxShadow: '0 0 60px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ position: 'relative', maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: theme.colors.cream, boxShadow: '0 0 60px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
       {activeTab === 'chat' ? (
         <>
+          {showSidebar ? (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 60, display: 'flex' }}>
+              <div onClick={() => setShowSidebar(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
+              <div style={{ position: 'relative', width: '82%', maxWidth: 320, background: theme.colors.cream, height: '100%', boxShadow: '4px 0 24px rgba(0,0,0,0.1)', padding: 16, overflowY: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal }}>Conversations</p>
+                  <button onClick={() => setShowSidebar(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18 }}>✕</button>
+                </div>
+                <button
+                  onClick={() => {
+                    setConversationId(null);
+                    setMessages([]);
+                    setShowSidebar(false);
+                  }}
+                  style={{ width: '100%', marginBottom: 12, border: 'none', borderRadius: 14, background: theme.colors.charcoal, color: '#fff', padding: '12px 14px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  ✏️ New conversation
+                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {conversations.map((conversation) => (
+                    <button
+                      key={conversation.id}
+                      onClick={() => void loadConversationMessages(conversation.id)}
+                      style={{ textAlign: 'left', borderRadius: 14, border: `1px solid ${conversation.id === conversationId ? theme.colors.blushMid : 'transparent'}`, background: conversation.id === conversationId ? theme.colors.blushLight : 'transparent', padding: '12px 14px', cursor: 'pointer' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>
+                          {new Date(conversation.last_message_at).toLocaleDateString()}
+                        </span>
+                        {conversation.wonder_count > 0 ? (
+                          <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: theme.colors.roseDark }}>✨ {conversation.wonder_count}</span>
+                        ) : null}
+                      </div>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText, lineHeight: 1.4 }}>{conversation.preview || 'New conversation'}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${theme.colors.divider}`, background: theme.colors.cream }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 12, background: theme.colors.blush, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✨</div>
-              <div>
+              <button onClick={() => setShowSidebar(true)} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: theme.colors.blushLight, cursor: 'pointer' }}>☰</button>
+              <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>Little Wonder</p>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{childName}&apos;s curiosity companion</p>
               </div>
+              {messages.length > 0 ? (
+                <button
+                  onClick={() => {
+                    setConversationId(null);
+                    setMessages([]);
+                  }}
+                  style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: theme.colors.blushLight, cursor: 'pointer' }}
+                >
+                  ✏️
+                </button>
+              ) : null}
             </div>
           </div>
 

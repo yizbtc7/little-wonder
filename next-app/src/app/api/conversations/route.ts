@@ -23,14 +23,28 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const childId = searchParams.get('child_id');
+  const childIdParam = searchParams.get('child_id');
   const limit = Math.min(Number(searchParams.get('limit') ?? '20'), 100);
 
+  const db = dbClient();
+
+  let childId = childIdParam;
   if (!childId) {
-    return NextResponse.json({ error: 'child_id is required' }, { status: 400 });
+    const { data: childRow } = await db
+      .from('children')
+      .select('id')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    childId = childRow?.id ?? null;
   }
 
-  const db = dbClient();
+  if (!childId) {
+    return NextResponse.json({ conversations: [] });
+  }
+
   const { data, error } = await db
     .from('conversations')
     .select('id,child_id,user_id,started_at,last_message_at,preview,wonder_count,language')
@@ -58,15 +72,29 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as CreateConversationBody;
 
-  if (!body.child_id) {
-    return NextResponse.json({ error: 'child_id is required' }, { status: 400 });
+  const db = dbClient();
+
+  let childId = body.child_id;
+  if (!childId) {
+    const { data: childRow } = await db
+      .from('children')
+      .select('id')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    childId = childRow?.id ?? undefined;
   }
 
-  const db = dbClient();
+  if (!childId) {
+    return NextResponse.json({ error: 'No child found for this user' }, { status: 400 });
+  }
+
   const { data, error } = await db
     .from('conversations')
     .insert({
-      child_id: body.child_id,
+      child_id: childId,
       user_id: user.id,
       preview: body.preview?.slice(0, 100) ?? null,
       language: body.language ?? 'en',
