@@ -57,7 +57,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ conversations: data ?? [] });
+  const conversations = data ?? [];
+  const conversationIds = conversations.map((c) => c.id);
+
+  if (conversationIds.length === 0) {
+    return NextResponse.json({ conversations: [] });
+  }
+
+  const { data: linkedMessages } = await db
+    .from('chat_messages')
+    .select('conversation_id,wonder_id')
+    .in('conversation_id', conversationIds)
+    .not('wonder_id', 'is', null);
+
+  const linkedCounts = (linkedMessages ?? []).reduce<Record<string, Set<string>>>((acc, row) => {
+    if (!row.wonder_id) return acc;
+    if (!acc[row.conversation_id]) acc[row.conversation_id] = new Set();
+    acc[row.conversation_id].add(row.wonder_id);
+    return acc;
+  }, {});
+
+  const hydrated = conversations.map((conversation) => ({
+    ...conversation,
+    wonder_count: linkedCounts[conversation.id]?.size ?? 0,
+  }));
+
+  return NextResponse.json({ conversations: hydrated });
 }
 
 export async function POST(request: Request) {
