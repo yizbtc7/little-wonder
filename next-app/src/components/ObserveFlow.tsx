@@ -68,7 +68,77 @@ function withChildName(text: string, childName: string): string {
 type Tab = 'chat' | 'explore' | 'profile';
 type ProfileTab = 'overview' | 'timeline' | 'settings';
 
-export default function ObserveFlow({ parentName, childName, childAgeLabel }: Props) {
+function getAgeMonths(birthdate: string): number {
+  if (!birthdate) return 22;
+  const now = new Date();
+  const b = new Date(birthdate);
+  return (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+}
+
+function getQuickPrompts(ageMonths: number, childName: string): string[] {
+  if (ageMonths <= 4) {
+    return [
+      `🌀 ${childName} keeps staring at the ceiling fan`,
+      `😊 ${childName} smiled when I talked`,
+      `🤏 ${childName} grabbed my finger tightly`,
+      `😢 ${childName} keeps crying and I can't tell why`,
+    ];
+  }
+
+  if (ageMonths <= 8) {
+    return [
+      `👶 ${childName} puts everything in their mouth`,
+      `🙈 ${childName} laughed so hard at peek-a-boo`,
+      `📱 ${childName} keeps reaching for my phone`,
+      `😭 ${childName} cried when grandma held them`,
+    ];
+  }
+
+  if (ageMonths <= 14) {
+    return [
+      `🍽️ ${childName} keeps dropping food from the high chair`,
+      `📦 ${childName} keeps putting things into boxes`,
+      `👋 ${childName} waved bye-bye today`,
+      `😣 ${childName} got frustrated trying to reach something`,
+    ];
+  }
+
+  if (ageMonths <= 24) {
+    return [
+      `🧱 ${childName} keeps stacking and knocking down blocks`,
+      `🗣️ ${childName} pointed at something and said a new word`,
+      `😤 ${childName} had a big tantrum at the store`,
+      `🎭 ${childName} was pretending to cook me dinner`,
+    ];
+  }
+
+  if (ageMonths <= 48) {
+    return [
+      `❓ ${childName} keeps asking "why?" nonstop`,
+      `✏️ ${childName} keeps drawing circles and lines`,
+      `🧸 ${childName} got really upset when another kid took a toy`,
+      `🧚 ${childName} told me about an imaginary friend`,
+    ];
+  }
+
+  if (ageMonths <= 84) {
+    return [
+      `📍 ${childName} is trying to read signs everywhere`,
+      `🧱 ${childName} built an elaborate Lego structure`,
+      `💔 ${childName} said "nobody wants to play with me"`,
+      `🔧 ${childName} keeps asking how things work`,
+    ];
+  }
+
+  return [
+    `📺 ${childName} only wants to watch YouTube lately`,
+    `📚 ${childName} is struggling with homework`,
+    `🎮 ${childName} is obsessed with one game`,
+    `🌌 ${childName} asked me a really deep question`,
+  ];
+}
+
+export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [profileTab, setProfileTab] = useState<ProfileTab>('overview');
 
@@ -85,12 +155,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createSupabaseBrowserClient();
 
-  const prompts = [
-    `🧱 ${childName} keeps stacking and knocking down blocks`,
-    `🗣️ ${childName} pointed at something and said a new word`,
-    `😤 ${childName} had a big tantrum at the store`,
-    `🎭 ${childName} was pretending to cook me dinner`,
-  ];
+  const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName), [childBirthdate, childName]);
 
   const loadingMessages = [
     `Analyzing what ${childName} is exploring...`,
@@ -438,7 +503,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
                 <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>Try one of these</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {prompts.map((prompt) => (
-                    <button key={prompt} onClick={() => sendMessage(prompt.slice(2).trim())} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '12px 16px', textAlign: 'left', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, cursor: 'pointer' }}>
+                    <button key={prompt} onClick={() => sendMessage(prompt.replace(/^\S+\s+/, ''))} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '12px 16px', textAlign: 'left', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, cursor: 'pointer' }}>
                       {prompt}
                     </button>
                   ))}
