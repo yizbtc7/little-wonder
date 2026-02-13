@@ -536,13 +536,26 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   return (
     <main style={{ minHeight: '100vh', background: theme.colors.cream, paddingBottom: 96 }}>
-      <header style={{ background: theme.colors.white, padding: '28px 24px 20px', borderBottom: `1px solid ${theme.colors.grayBg}` }}>
+      <header style={{ background: theme.colors.white, padding: '28px 24px 20px', borderBottom: `1px solid ${theme.colors.grayBg}`, position: 'relative', overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'absolute',
+            right: -40,
+            top: -35,
+            width: 140,
+            height: 140,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${theme.colors.brandLight} 0%, rgba(255,255,255,0) 70%)`,
+            pointerEvents: 'none',
+          }}
+        />
         <FadeIn delay={80}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray, marginBottom: 4 }}>Good morning, {parentName} 👋</p>
               <h1 style={{ color: theme.colors.dark, fontSize: 36, lineHeight: 1.15 }}>{childName}&apos;s World Today</h1>
               <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 4 }}>{childAgeLabel} · {stageContent.stage}</p>
+              <div className="wonder-chip">🧠✨ Curious mode</div>
             </div>
             <LogoutButton />
           </div>
@@ -563,8 +576,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               boxShadow: theme.shadows.subtle,
               border: `1px solid ${theme.colors.grayBg}`,
               cursor: 'pointer',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
+            <span className="sparkle s1">✨</span>
+            <span className="sparkle s2">💫</span>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brandDark, fontWeight: 700, marginBottom: 6 }}>
               ✨ Moment of wonder
             </p>
@@ -575,6 +592,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               Toca para descubrir la maravilla detrás de lo que acabas de ver.
             </p>
             <div
+              className="cta-pill"
               style={{
                 display: 'inline-block',
                 marginTop: 10,
@@ -711,6 +729,44 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           </div>
         ))}
       </nav>
+
+      <style jsx global>{`
+        @keyframes wonderBob {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes wonderPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(227,185,56,0.35); }
+          60% { box-shadow: 0 0 0 10px rgba(227,185,56,0); }
+        }
+        @keyframes sparkleDrift {
+          0%, 100% { transform: translateY(0px) scale(1); opacity: 0.55; }
+          50% { transform: translateY(-6px) scale(1.08); opacity: 1; }
+        }
+        .wonder-chip {
+          display: inline-block;
+          margin-top: 8px;
+          font-size: 12px;
+          font-family: ${theme.fonts.body};
+          color: ${theme.colors.brandDark};
+          background: ${theme.colors.brandLight};
+          border-radius: 999px;
+          padding: 4px 10px;
+          font-weight: 700;
+          animation: wonderBob 2.6s ease-in-out infinite;
+        }
+        .cta-pill {
+          animation: wonderPulse 2.8s ease-in-out infinite;
+        }
+        .sparkle {
+          position: absolute;
+          pointer-events: none;
+          font-size: 14px;
+          animation: sparkleDrift 2.4s ease-in-out infinite;
+        }
+        .sparkle.s1 { right: 14px; top: 12px; }
+        .sparkle.s2 { right: 40px; top: 26px; animation-delay: 0.6s; }
+      `}</style>
     </main>
   );
 }

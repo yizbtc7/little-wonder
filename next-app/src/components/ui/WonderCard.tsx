@@ -90,7 +90,21 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
             >
               {toPreview(body)}
             </p>
-            <span style={{ fontSize: 13, color: theme.colors.brand, fontFamily: theme.fonts.body, fontWeight: 500 }}>Tap to read more</span>
+            <span
+              style={{
+                fontSize: 13,
+                color: theme.colors.brand,
+                fontFamily: theme.fonts.body,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                transform: hovered ? 'translateX(2px)' : 'none',
+                transition: `transform ${theme.motion.fast} ${theme.motion.spring}`,
+              }}
+            >
+              Tap to read more <span style={{ display: 'inline-block' }}>→</span>
+            </span>
           </div>
         </div>
       </article>
