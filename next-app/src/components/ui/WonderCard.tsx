@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import FadeUp from '@/components/ui/FadeUp';
 import { theme } from '@/styles/theme';
-import FadeIn from '@/components/ui/FadeIn';
 
 type WonderCardProps = {
   icon: string;
@@ -14,100 +14,99 @@ type WonderCardProps = {
 };
 
 function toPreview(text: string): string {
-  return text.length > 180 ? `${text.slice(0, 180)}...` : text;
+  return text.length > 190 ? `${text.slice(0, 190)}...` : text;
 }
 
 export default function WonderCard({ icon, title, body, domain, delay = 0, onClick }: WonderCardProps) {
   const [hovered, setHovered] = useState(false);
-  const [pressed, setPressed] = useState(false);
 
   return (
-    <FadeIn delay={delay}>
+    <FadeUp delay={delay}>
       <article
         onClick={onClick}
         onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => {
-          setHovered(false);
-          setPressed(false);
-        }}
-        onMouseDown={() => setPressed(true)}
-        onMouseUp={() => setPressed(false)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          background: '#FFF9FD',
-          borderRadius: theme.radius.card,
-          padding: 22,
-          marginBottom: 16,
+          background: theme.colors.white,
+          borderRadius: theme.radius.lg,
+          padding: 0,
+          marginBottom: 14,
           cursor: onClick ? 'pointer' : 'default',
-          boxShadow: hovered ? theme.shadows.elevated : theme.shadows.subtle,
-          border: hovered ? `1px solid ${theme.colors.coral}` : `1px solid ${theme.colors.grayBg}`,
-          transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
-          transform: pressed ? 'scale(0.985)' : hovered ? 'translateY(-2px)' : 'none',
+          boxShadow: hovered ? '0 8px 30px rgba(0,0,0,0.08)' : '0 2px 12px rgba(0,0,0,0.04)',
+          transition: 'all 0.3s ease',
+          transform: hovered ? 'translateY(-2px)' : 'none',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+        <div style={{ padding: '20px 20px 16px', display: 'flex', gap: 14 }}>
           <div
             style={{
-              fontSize: 28,
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: theme.colors.brandLight,
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: theme.colors.blushLight,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              fontSize: 26,
               flexShrink: 0,
-              transform: hovered ? 'translateY(-1px) scale(1.06)' : 'none',
-              transition: `transform ${theme.motion.fast} ${theme.motion.spring}`,
             }}
           >
             {icon}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <h3 style={{ fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 600, color: theme.colors.dark, margin: 0 }}>{title}</h3>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: theme.colors.warmDark,
-                  background: theme.colors.warm,
-                  padding: '3px 10px',
-                  borderRadius: theme.radius.chip,
-                  fontFamily: theme.fonts.body,
-                  fontWeight: 500,
-                }}
-              >
-                {domain}
-              </span>
-            </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3
+              style={{
+                fontFamily: theme.fonts.serif,
+                fontSize: 17,
+                fontWeight: 600,
+                color: theme.colors.darkText,
+                margin: 0,
+                lineHeight: 1.3,
+              }}
+            >
+              {title}
+            </h3>
+
+            <span
+              style={{
+                display: 'inline-block',
+                marginTop: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: 0.3,
+                textTransform: 'uppercase',
+                color: theme.colors.roseDark,
+                background: theme.colors.blushLight,
+                borderRadius: 20,
+                padding: '3px 10px',
+                fontFamily: theme.fonts.sans,
+              }}
+            >
+              {domain}
+            </span>
+
             <p
               style={{
-                fontFamily: theme.fonts.body,
+                fontFamily: theme.fonts.sans,
                 fontSize: 14,
-                lineHeight: 1.6,
-                color: theme.colors.gray,
-                margin: '8px 0 0',
+                fontWeight: 400,
+                lineHeight: 1.55,
+                color: theme.colors.midText,
+                margin: '10px 0 0',
               }}
             >
               {toPreview(body)}
             </p>
-            <span
-              style={{
-                fontSize: 13,
-                color: theme.colors.brand,
-                fontFamily: theme.fonts.body,
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                transform: hovered ? 'translateX(2px)' : 'none',
-                transition: `transform ${theme.motion.fast} ${theme.motion.spring}`,
-              }}
-            >
-              Tap to read more <span style={{ display: 'inline-block' }}>→</span>
-            </span>
           </div>
         </div>
+
+        <div style={{ padding: '0 20px 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>Read more</span>
+          <span style={{ fontSize: 12, color: theme.colors.rose }}>→</span>
+        </div>
       </article>
-    </FadeIn>
+    </FadeUp>
   );
 }
