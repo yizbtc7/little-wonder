@@ -37,6 +37,125 @@ type DailyContentPayload = {
   cards: DailyContentCard[];
 };
 
+function getFallbackDailyContent(ageMonths: number, childName: string): DailyContentPayload {
+  if (ageMonths <= 8) {
+    return {
+      section_title: `¿Qué está pasando en el cerebro de ${childName}?`,
+      cards: [
+        {
+          icon: '👄',
+          title: 'El laboratorio de su boca',
+          domain: 'Sensory Processing',
+          preview: `${childName} está explorando textura, temperatura y forma con precisión sensorial extrema. No es manía: es investigación activa.`,
+          full: {
+            whats_happening: `A esta edad, ${childName} obtiene más información sensorial por la boca que por las manos. Cuando lleva objetos a la boca, su cerebro está comparando textura, borde, temperatura y resistencia para construir mapas sensoriales sólidos.`,
+            youll_see_it_when: [
+              'Muerde o chupa objetos nuevos durante varios segundos antes de soltarlos',
+              'Vuelve al mismo objeto para re-explorarlo',
+              'Cambia rápido entre objetos para comparar sensaciones',
+              'Se calma al repetir exploración oral conocida',
+            ],
+            fascinating_part: `Este tipo de exploración temprana mejora discriminación sensorial, una base clave para autorregulación y aprendizaje posterior.`,
+            how_to_be_present: `Tu rol no es frenar cada intento, sino acompañar con seguridad y palabras simples. Nombra lo que ves y deja que ${childName} cierre el ciclo de exploración.`,
+          },
+        },
+        {
+          icon: '🔄',
+          title: 'Cuando algo desaparece',
+          domain: 'Cognitive Development',
+          preview: `${childName} está empezando a sostener imágenes mentales de cosas que no ve. Ese cambio transforma su manera de jugar y recordar.`,
+          full: {
+            whats_happening: `En este momento, el cerebro de ${childName} está construyendo permanencia de objeto. Eso significa que puede mantener viva una representación mental aunque el objeto ya no esté frente a sus ojos.`,
+            youll_see_it_when: [
+              'Busca un juguete escondido debajo de una tela',
+              'Se inclina para mirar dónde cayó algo',
+              'Se emociona en juegos de esconder/aparecer',
+              'Recuerda dónde vio algo hace unos segundos',
+            ],
+            fascinating_part: `Esta habilidad es una base profunda para memoria de trabajo y planificación futura.`,
+            how_to_be_present: `Haz pausas y espera su búsqueda antes de ayudar. Acompaña narrando en voz calma: “desapareció… lo estás buscando… ahí está.”`,
+          },
+        },
+        {
+          icon: '😊',
+          title: 'Tu cara como brújula',
+          domain: 'Social-Emotional',
+          preview: `${childName} mira tu expresión para decidir si algo es seguro o inquietante. Tu regulación se vuelve su mapa emocional.`,
+          full: {
+            whats_happening: `${childName} está afinando social referencing: usar tu rostro y tono como señal para interpretar novedad. No es dependencia: es una estrategia cerebral inteligente para navegar incertidumbre.`,
+            youll_see_it_when: [
+              'Mira tu cara antes de tocar algo nuevo',
+              'Se frena si percibe tensión en tu voz',
+              'Se anima cuando te ve calmado/a',
+              'Busca contacto visual tras un ruido inesperado',
+            ],
+            fascinating_part: `En segundos, tu expresión puede modular su respuesta de estrés o curiosidad.`,
+            how_to_be_present: `Antes de hablar, regula tu propio tono y rostro. Una señal calmada y clara ayuda a que ${childName} explore con seguridad.`,
+          },
+        },
+      ],
+    };
+  }
+
+  return {
+    section_title: `¿Qué está pasando en el cerebro de ${childName}?`,
+    cards: [
+      {
+        icon: '🧠',
+        title: 'La explosión del porqué',
+        domain: 'Cognitive/Language',
+        preview: `${childName} está construyendo modelos causales del mundo en tiempo real. Cada pregunta o repetición es una hipótesis.`,
+        full: {
+          whats_happening: `El cerebro de ${childName} está enlazando lenguaje con causalidad. Cuando repite una acción o insiste en una pregunta, está probando reglas sobre cómo funciona el mundo.`,
+          youll_see_it_when: [
+            'Repite la misma acción con pequeñas variaciones',
+            'Pide explicación de algo varias veces',
+            'Conecta eventos con “antes” y “después”',
+            'Compara lo que ocurre cuando cambia una variable',
+          ],
+          fascinating_part: `Estas micro-pruebas son cimientos de razonamiento científico y narrativo.`,
+          how_to_be_present: `No necesitas responder todo perfecto. Acompaña con observación clara y una pregunta abierta corta para sostener su pensamiento.`,
+        },
+      },
+      {
+        icon: '🎭',
+        title: 'Imaginación con reglas propias',
+        domain: 'Imagination/Symbolic Thinking',
+        preview: `${childName} ya puede sostener dos realidades: lo que algo es y lo que representa. Eso es pensamiento simbólico en acción.`,
+        full: {
+          whats_happening: `Cuando ${childName} convierte un objeto común en “otra cosa”, su cerebro está integrando memoria, lenguaje e imaginación. Esto amplía flexibilidad cognitiva y capacidad de planificación.`,
+          youll_see_it_when: [
+            'Usa objetos cotidianos como si fueran otros',
+            'Asigna roles en mini-historias',
+            'Imita escenas que vio durante el día',
+            'Mantiene una narrativa breve durante el juego',
+          ],
+          fascinating_part: `El juego simbólico temprano predice avances posteriores en lenguaje y autorregulación.`,
+          how_to_be_present: `Sigue su narrativa antes de proponer la tuya. Validar su idea primero fortalece confianza y profundidad del juego.`,
+        },
+      },
+      {
+        icon: '🤝',
+        title: 'El mapa social se expande',
+        domain: 'Social-Emotional',
+        preview: `${childName} empieza a notar que otras personas sienten y piensan diferente. Ese descubrimiento transforma sus vínculos.`,
+        full: {
+          whats_happening: `${childName} está desarrollando teoría de mente de forma temprana: reconocer que otra persona puede querer o sentir algo distinto. Es un salto social enorme para esta etapa.`,
+          youll_see_it_when: [
+            'Observa reacciones de otros antes de actuar',
+            'Intenta “consolar” de forma simple',
+            'Ajusta conducta según quién está presente',
+            'Nombra emociones básicas en sí mismo/a o en otros',
+          ],
+          fascinating_part: `Comprender mentes distintas es una base central de empatía y cooperación futura.`,
+          how_to_be_present: `Modela lenguaje emocional simple y concreto. Nombrar lo que sienten sin juicio ayuda a organizar su mundo social interno.`,
+        },
+      },
+    ],
+  };
+}
+
+
 type ObserveFlowProps = {
   parentName: string;
   childName: string;
@@ -212,6 +331,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   );
   const parsedInsight = useMemo(() => currentInsight ?? parseInsightPayload(rawInsightResponse), [currentInsight, rawInsightResponse]);
   const dailyParentingInsight = useMemo(() => getDailyParentingInsight(ageMonths, childName), [ageMonths, childName]);
+  const effectiveDailyContent = useMemo(
+    () => dailyContent ?? getFallbackDailyContent(ageMonths, childName),
+    [dailyContent, ageMonths, childName]
+  );
 
   useEffect(() => {
     if (dailyContent) return;
@@ -450,7 +573,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <h2 style={{ fontSize: 30, color: theme.colors.dark }}>
-                {dailyContent?.section_title ?? `¿Qué está pasando en el cerebro de ${childName}?`}
+                {effectiveDailyContent.section_title}
               </h2>
               <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>Contenido educativo diario basado en su etapa actual</p>
             </div>
@@ -458,7 +581,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           </div>
         </FadeIn>
 
-        {isLoadingDailyContent ? (
+        {isLoadingDailyContent && !dailyContent ? (
           <FadeIn delay={300}>
             <div style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
               <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray }}>Preparando contenido de hoy…</p>
@@ -466,7 +589,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           </FadeIn>
         ) : null}
 
-        {(dailyContent?.cards ?? []).map((card, index) => (
+        {effectiveDailyContent.cards.map((card, index) => (
           <WonderCard
             key={`${card.title}-${index}`}
             icon={card.icon}
