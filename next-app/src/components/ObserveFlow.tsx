@@ -125,14 +125,38 @@ function parseInsightPayload(raw: string): InsightPayload {
     .replace(/```$/i, '')
     .trim();
 
-  const parsed =
+  let parsed =
     parseCandidate(cleaned) ??
     parseCandidate(cleaned.replaceAll('\\"', '"').replaceAll('\\n', '\n').replaceAll('\\t', '\t'));
 
+  if (!parsed && cleaned.startsWith('"') && cleaned.endsWith('"')) {
+    const unquoted = cleaned.slice(1, -1).replaceAll('\\"', '"').replaceAll('\\n', '\n');
+    parsed = parseCandidate(unquoted);
+  }
+
   if (!parsed) return fallback;
 
+  if (!parsed.wonder && typeof parsed.reply === 'string' && parsed.reply.includes('"wonder"')) {
+    const nested = parseCandidate(parsed.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
+    if (nested) {
+      parsed = { ...parsed, ...nested };
+    }
+  }
+
+  if (!parsed.wonder && parsed.title && (parsed as { article?: WonderPayload['article']; schemas_detected?: string[] }).article) {
+    const legacy = parsed as { title?: string; article?: WonderPayload['article']; schemas_detected?: string[] };
+    parsed.wonder = {
+      title: legacy.title ?? 'New Wonder',
+      article: legacy.article!,
+      schemas_detected: legacy.schemas_detected ?? [],
+    };
+  }
+
+  const replyText = (parsed.reply ?? fallback.reply ?? '').toString();
+  const conciseReply = replyText.length > 700 ? `${replyText.slice(0, 680).trim()}…` : replyText;
+
   return {
-    reply: parsed.reply ?? fallback.reply,
+    reply: conciseReply,
     wonder: parsed.wonder ?? null,
     title: parsed.title ?? fallback.title,
     revelation: parsed.revelation ?? fallback.revelation,
