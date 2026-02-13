@@ -17,8 +17,25 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Little Wonder',
+  title: 'Little Wonder — Curiosity Companion',
   description: 'See the extraordinary things your child is already doing.',
+  openGraph: {
+    title: 'Little Wonder',
+    description: 'See the extraordinary things your child is already doing.',
+    url: 'https://littlewonder.ai',
+    images: ['https://littlewonder.ai/og-image.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png' }],
+  },
 };
 
 export default function RootLayout({
