@@ -8,16 +8,15 @@ export default function SignInButton() {
   const supabase = createSupabaseBrowserClient();
   const [error, setError] = useState('');
 
-  const envAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const appUrl = envAppUrl && envAppUrl.length > 0 ? envAppUrl : window.location.origin;
-
   const handleGoogleSignIn = async () => {
     setError('');
+
+    const origin = window.location.origin;
 
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${appUrl}/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
       },
     });
 
