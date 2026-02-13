@@ -33,10 +33,10 @@ export const theme = {
     coralLight: '#FDF5F1',
   },
   fonts: {
-    serif: "'Playfair Display', 'Georgia', serif",
-    sans: "'Nunito', 'DM Sans', -apple-system, sans-serif",
-    display: "'Playfair Display', 'Georgia', serif",
-    body: "'Nunito', 'DM Sans', -apple-system, sans-serif",
+    serif: "'Playfair Display', Georgia, serif",
+    sans: "'Nunito', sans-serif",
+    display: "'Playfair Display', Georgia, serif",
+    body: "'Nunito', sans-serif",
   },
   radius: {
     sm: 12,

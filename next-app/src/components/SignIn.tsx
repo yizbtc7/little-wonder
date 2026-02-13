@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
+import { theme } from '@/styles/theme';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://little-wonder-tdf2.vercel.app';
 
@@ -36,7 +37,7 @@ export default function SignIn() {
   };
 
   return (
-    <main style={{ padding: 24, maxWidth: 520, margin: '0 auto', fontFamily: 'sans-serif' }}>
+    <main style={{ padding: 24, maxWidth: 520, margin: '0 auto', fontFamily: theme.fonts.sans }}>
       <h1>Little Wonder</h1>
       <p>Sign in to continue.</p>
 

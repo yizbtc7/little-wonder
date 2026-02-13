@@ -18,7 +18,7 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-body), 'DM Sans', -apple-system, sans-serif;
+  font-family: var(--font-body), 'Nunito', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -27,8 +27,8 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display), 'DM Serif Display', Georgia, serif;
-  font-weight: 400;
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-weight: 600;
 }
 
 a {
