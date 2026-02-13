@@ -572,41 +572,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         ) : null}
 
         <FadeIn delay={220}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div>
-              <h2 style={{ fontSize: 30, color: theme.colors.dark }}>
-                {effectiveDailyContent.section_title}
-              </h2>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>Contenido educativo diario basado en su etapa actual</p>
-            </div>
-            <span style={{ fontSize: 12, color: theme.colors.brand, background: theme.colors.brandLight, padding: '4px 12px', borderRadius: theme.radius.chip, fontFamily: theme.fonts.body, fontWeight: 600 }}>{stageContent.stage}</span>
-          </div>
-        </FadeIn>
-
-        {isLoadingDailyContent && !dailyContent ? (
-          <FadeIn delay={300}>
-            <div style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray }}>Preparando contenido de hoy…</p>
-            </div>
-          </FadeIn>
-        ) : null}
-
-        {effectiveDailyContent.cards.map((card, index) => (
-          <WonderCard
-            key={`${card.title}-${index}`}
-            icon={card.icon}
-            title={card.title}
-            body={card.preview}
-            domain={card.domain}
-            delay={300 + index * 90}
-            onClick={() => {
-              setSelectedDailyCard(card);
-              setShowDailyCardScreen(true);
-            }}
-          />
-        ))}
-
-        <FadeIn delay={650}>
           <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6, marginBottom: 10 }}>
@@ -623,6 +588,41 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>{dailyParentingInsight.source}</p>
           </div>
         </FadeIn>
+
+        <FadeIn delay={300}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div>
+              <h2 style={{ fontSize: 30, color: theme.colors.dark }}>
+                {effectiveDailyContent.section_title}
+              </h2>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>Contenido educativo diario basado en su etapa actual</p>
+            </div>
+            <span style={{ fontSize: 12, color: theme.colors.brand, background: theme.colors.brandLight, padding: '4px 12px', borderRadius: theme.radius.chip, fontFamily: theme.fonts.body, fontWeight: 600 }}>{stageContent.stage}</span>
+          </div>
+        </FadeIn>
+
+        {isLoadingDailyContent && !dailyContent ? (
+          <FadeIn delay={360}>
+            <div style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray }}>Preparando contenido de hoy…</p>
+            </div>
+          </FadeIn>
+        ) : null}
+
+        {effectiveDailyContent.cards.map((card, index) => (
+          <WonderCard
+            key={`${card.title}-${index}`}
+            icon={card.icon}
+            title={card.title}
+            body={card.preview}
+            domain={card.domain}
+            delay={420 + index * 90}
+            onClick={() => {
+              setSelectedDailyCard(card);
+              setShowDailyCardScreen(true);
+            }}
+          />
+        ))}
 
         <FadeIn delay={720}>
           <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 10 }}>Things to notice today</p>
