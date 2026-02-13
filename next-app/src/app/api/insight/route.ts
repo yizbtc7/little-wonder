@@ -110,6 +110,8 @@ export async function POST(request: Request) {
         user_id: user.id,
         child_id: child.id,
         text: observationText,
+        observation_text: observationText,
+        created_by: user.id,
       })
       .select('id')
       .single<{ id: string }>();
@@ -166,6 +168,10 @@ export async function POST(request: Request) {
           const { error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
             content: fullResponse,
+            insight_text: fullResponse,
+            json_response: {
+              source: 'claude_stream',
+            },
             schema_detected: null,
             domain: null,
           });
