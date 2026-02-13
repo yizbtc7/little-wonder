@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import LogoutButton from '@/components/LogoutButton';
 import Button from '@/components/ui/Button';
 import FadeIn from '@/components/ui/FadeIn';
@@ -19,18 +19,30 @@ type InsightPayload = {
   observe_next: string;
 };
 
+type DailyContentCard = {
+  icon: string;
+  title: string;
+  domain: string;
+  preview: string;
+  full: {
+    whats_happening: string;
+    youll_see_it_when: string[];
+    fascinating_part: string;
+    how_to_be_present: string;
+  };
+};
+
+type DailyContentPayload = {
+  section_title: string;
+  cards: DailyContentCard[];
+};
+
 type ObserveFlowProps = {
   parentName: string;
   childName: string;
   childAgeLabel: string;
   childBirthdate: string;
-};
-
-type StageWonder = {
-  icon: string;
-  title: string;
-  body: string;
-  domain: string;
+  initialDailyContent: unknown;
 };
 
 function getAgeMonths(birthdate: string): number {
@@ -66,34 +78,38 @@ function parseInsightPayload(raw: string): InsightPayload {
       observe_next: parsed.observe_next ?? fallback.observe_next,
     };
   } catch {
-    const extract = (field: string): string | null => {
-      const match = source.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*?)"(?=\\s*,\\s*"|\\s*})`));
-      return match?.[1]?.replaceAll('\\n', '\n') ?? null;
-    };
-
-    return {
-      title: extract('title') ?? fallback.title,
-      revelation: extract('revelation') ?? fallback.revelation,
-      brain_science_gem: extract('brain_science_gem') ?? fallback.brain_science_gem,
-      activity: {
-        main: extract('main') ?? fallback.activity.main,
-        express: extract('express') ?? fallback.activity.express,
-      },
-      observe_next: extract('observe_next') ?? fallback.observe_next,
-    };
+    return fallback;
   }
 }
 
-function payloadFromStageWonder(wonder: StageWonder, childName: string): InsightPayload {
+function parseDailyContentPayload(raw: unknown, childName: string): DailyContentPayload | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const content = raw as Partial<DailyContentPayload>;
+  if (!Array.isArray(content.cards)) {
+    return null;
+  }
+
+  const cards = content.cards
+    .filter((card): card is DailyContentCard => {
+      if (!card || typeof card !== 'object') return false;
+      const c = card as Partial<DailyContentCard>;
+      return typeof c.title === 'string' && typeof c.icon === 'string' && typeof c.preview === 'string' && typeof c.domain === 'string' && !!c.full;
+    })
+    .slice(0, 3);
+
+  if (cards.length === 0) {
+    return null;
+  }
+
   return {
-    title: wonder.title,
-    revelation: wonder.body,
-    brain_science_gem: `${childName} está en una ventana de alta plasticidad cerebral, así que este patrón repetido está consolidando redes clave para aprendizaje futuro.`,
-    activity: {
-      main: `Prueba extender "${wonder.title}" con objetos de casa en 2-3 variaciones, dejando que ${childName} lidere y tú solo narres lo que observas.`,
-      express: `Versión express: observa 30 segundos, nombra una sola cosa que ${childName} está probando y espera su siguiente intento.`,
-    },
-    observe_next: `La próxima vez, fíjate en la pausa de ${childName} justo antes de actuar: esa micro-pausa suele mostrar su hipótesis en tiempo real.`,
+    section_title:
+      typeof content.section_title === 'string' && content.section_title.length > 0
+        ? content.section_title
+        : `¿Qué está pasando en el cerebro de ${childName}?`,
+    cards,
   };
 }
 
@@ -143,121 +159,45 @@ function getStageContent(ageMonths: number, childName: string) {
   if (ageMonths <= 4) {
     return {
       stage: 'Early Explorer',
-      tip: `At this age, ${name} is absorbing everything through sensation. Narrate what you're doing throughout the day. Your voice is ${name}'s favorite sound, and this builds language long before first words.`,
       observePrompts: [`What catches ${name}'s attention most?`, `How does ${name} react to different sounds?`, `What makes ${name} most calm or alert?`],
-      dailyWonders: [
-        {
-          icon: '👀',
-          title: 'Tracking Mastery',
-          body: `Right now, ${name}'s brain is building visual pathways at an extraordinary rate. When ${name} follows your face or a toy, that's active brain-building that later supports reading, sports, and social skills.`,
-          domain: 'Visual Development',
-        },
-        {
-          icon: '✋',
-          title: 'The Grasp Reflex',
-          body: `When ${name} grips your finger, it's one of the oldest reflexes in development. Over the coming weeks, this automatic grip transforms into intentional reaching — one of the most important cognitive leaps of the first year.`,
-          domain: 'Motor Development',
-        },
-        {
-          icon: '🗣️',
-          title: 'Serve & Return',
-          body: `Every time you respond to ${name}'s coos and cries, you're building what scientists call serve-and-return interactions. These back-and-forth exchanges literally construct brain architecture.`,
-          domain: 'Communication',
-        },
-      ],
     };
   }
 
   if (ageMonths <= 8) {
     return {
       stage: 'Sensory Scientist',
-      tip: `This is a golden age of cause-and-effect learning. ${name} is fascinated by “what happens when I do this?” Safe things to bang, shake, drop, and squeeze are perfect right now.`,
       observePrompts: [`What does ${name} keep reaching for?`, `What makes ${name} laugh right now?`, `How is ${name} moving differently this week?`],
-      dailyWonders: [
-        {
-          icon: '👄',
-          title: 'The Mouth Laboratory',
-          body: `When ${name} puts everything in their mouth, they're running a sensory lab. The mouth gives more precise info about texture, temperature, and shape than hands can offer right now.`,
-          domain: 'Sensory Exploration',
-        },
-        {
-          icon: '🔄',
-          title: 'Object Permanence Emerging',
-          body: `${name} is starting to understand that things exist even when hidden. Looking for dropped toys means ${name} can hold a mental picture of something they can't see.`,
-          domain: 'Cognitive Development',
-        },
-        {
-          icon: '😊',
-          title: 'Social Referencing',
-          body: `Watch how ${name} checks your face when something new happens. ${name} uses your emotional response as a guide for how to feel about the world.`,
-          domain: 'Social-Emotional',
-        },
-      ],
     };
   }
 
   if (ageMonths <= 14) {
     return {
       stage: 'Little Physicist',
-      tip: `${name} may have a schema — a pattern of play they repeat obsessively (trajectory, enclosure, rotation). These patterns are deep learning, not random behavior.`,
       observePrompts: [`What does ${name} do over and over again?`, `What new thing did ${name} figure out recently?`, `What frustrates ${name} right now?`],
-      dailyWonders: [
-        {
-          icon: '⬇️',
-          title: 'The Drop Experiment',
-          body: `If ${name} keeps dropping things, you're living with a tiny physicist. Each drop is a real experiment: Does it fall the same way? Same sound? Will someone react?`,
-          domain: 'Scientific Thinking',
-        },
-        {
-          icon: '📦',
-          title: 'Container Play',
-          body: `Putting things in and taking them out trains spatial relationships, volume, categories, and the concept of inside/outside. This is pre-math, pre-engineering thinking.`,
-          domain: 'Spatial Reasoning',
-        },
-        {
-          icon: '🚶',
-          title: 'Movement & Independence',
-          body: `Independent movement transforms cognition. ${name} can choose what to explore, approach what's interesting, and retreat from what isn't. That's agency.`,
-          domain: 'Motor & Cognitive',
-        },
-      ],
     };
   }
 
   return {
     stage: 'World Builder',
-    tip: `Follow ${name}'s lead in play. Instead of redirecting, narrate what you see: “You're stacking the blue blocks high.” That deepens engagement and confidence.`,
     observePrompts: [`What is ${name} pretending or imagining lately?`, `What new words or phrases has ${name} picked up?`, `What does ${name} choose during free time?`],
-    dailyWonders: [
-      {
-        icon: '💬',
-        title: 'The Language Explosion',
-        body: `${name} is in the fastest language acquisition phase of life. Even before many words, ${name} understands far more than can be expressed.`,
-        domain: 'Language Development',
-      },
-      {
-        icon: '🎭',
-        title: 'Pretend Play Emerges',
-        body: `When ${name} pretends a banana is a phone, that's complex cognition: holding two realities at once (what it is vs what it represents).`,
-        domain: 'Cognitive & Imagination',
-      },
-      {
-        icon: '🤝',
-        title: 'Social Understanding',
-        body: `${name} is developing theory of mind — understanding others have different thoughts and feelings. That's sophisticated social cognition.`,
-        domain: 'Social-Emotional',
-      },
-    ],
   };
 }
 
-export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate }: ObserveFlowProps) {
+export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, initialDailyContent }: ObserveFlowProps) {
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [showInsightScreen, setShowInsightScreen] = useState(false);
+  const [showDailyCardScreen, setShowDailyCardScreen] = useState(false);
   const [observation, setObservation] = useState('');
   const [rawInsightResponse, setRawInsightResponse] = useState('');
   const [currentInsight, setCurrentInsight] = useState<InsightPayload | null>(null);
   const [insightObservation, setInsightObservation] = useState<string | null>(null);
+  const [selectedDailyCard, setSelectedDailyCard] = useState<DailyContentCard | null>(null);
+  const initialParsedDailyContent = useMemo(
+    () => parseDailyContentPayload(initialDailyContent, childName),
+    [initialDailyContent, childName]
+  );
+  const [dailyContent, setDailyContent] = useState<DailyContentPayload | null>(initialParsedDailyContent);
+  const [isLoadingDailyContent, setIsLoadingDailyContent] = useState(!initialParsedDailyContent);
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -266,16 +206,43 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const stageContent = useMemo(
     () => ({
       ...baseStageContent,
-      dailyWonders: rotateByDay(baseStageContent.dailyWonders),
       observePrompts: rotateByDay(baseStageContent.observePrompts),
     }),
     [baseStageContent]
   );
   const parsedInsight = useMemo(() => currentInsight ?? parseInsightPayload(rawInsightResponse), [currentInsight, rawInsightResponse]);
-  const dailyParentingInsight = useMemo(
-    () => getDailyParentingInsight(ageMonths, childName),
-    [ageMonths, childName]
-  );
+  const dailyParentingInsight = useMemo(() => getDailyParentingInsight(ageMonths, childName), [ageMonths, childName]);
+
+  useEffect(() => {
+    if (dailyContent) return;
+
+    const fetchDailyContent = async () => {
+      setIsLoadingDailyContent(true);
+      try {
+        const response = await fetch('/api/daily-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          setIsLoadingDailyContent(false);
+          return;
+        }
+
+        const payload = (await response.json()) as { content?: unknown };
+        const parsed = parseDailyContentPayload(payload.content ?? null, childName);
+        if (parsed) {
+          setDailyContent(parsed);
+        }
+      } catch {
+        // ignore and use fallback UI
+      } finally {
+        setIsLoadingDailyContent(false);
+      }
+    };
+
+    void fetchDailyContent();
+  }, [dailyContent, childName]);
 
   const generateInsight = async () => {
     if (!observation.trim()) {
@@ -334,6 +301,57 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     }
   };
 
+  if (showDailyCardScreen && selectedDailyCard) {
+    return (
+      <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: '24px 20px' }}>
+        <Button variant="ghost" onClick={() => setShowDailyCardScreen(false)} style={{ marginBottom: 10 }}>
+          ← Back to today
+        </Button>
+
+        <FadeIn delay={0}>
+          <h2 style={{ fontFamily: theme.fonts.display, fontSize: 22, color: theme.colors.dark, lineHeight: 1.25, marginBottom: 8 }}>
+            {selectedDailyCard.icon} {selectedDailyCard.title}
+          </h2>
+          <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brand, marginBottom: 12, fontWeight: 700 }}>
+            {selectedDailyCard.domain}
+          </p>
+        </FadeIn>
+
+        <FadeIn delay={120}>
+          <section style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 22, boxShadow: theme.shadows.elevated, borderLeft: `4px solid ${theme.colors.brand}`, marginBottom: 12 }}>
+            <p style={{ color: theme.colors.brand, textTransform: 'uppercase', fontSize: 12, fontFamily: theme.fonts.body, fontWeight: 700, marginBottom: 8 }}>💡 What&apos;s happening</p>
+            <article style={{ color: theme.colors.dark, lineHeight: 1.7, fontSize: 15, fontFamily: theme.fonts.body }}>{renderWithChildBold(selectedDailyCard.full.whats_happening, childName)}</article>
+          </section>
+        </FadeIn>
+
+        <FadeIn delay={260}>
+          <section style={{ background: theme.colors.brandLight, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
+            <p style={{ color: theme.colors.brandDark, fontWeight: 700, marginBottom: 6, fontFamily: theme.fonts.body }}>👀 You&apos;ll see it when...</p>
+            <ul style={{ color: theme.colors.dark, lineHeight: 1.6, fontFamily: theme.fonts.body, paddingLeft: 18, margin: 0 }}>
+              {selectedDailyCard.full.youll_see_it_when.map((item) => (
+                <li key={item} style={{ marginBottom: 6 }}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        </FadeIn>
+
+        <FadeIn delay={400}>
+          <section style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
+            <p style={{ color: theme.colors.warmDark, fontWeight: 700, marginBottom: 8, fontFamily: theme.fonts.body }}>🧠 The fascinating part</p>
+            <p style={{ color: theme.colors.dark, lineHeight: 1.6, fontFamily: theme.fonts.body }}>{selectedDailyCard.full.fascinating_part}</p>
+          </section>
+        </FadeIn>
+
+        <FadeIn delay={540}>
+          <section style={{ background: theme.colors.sageLight, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle }}>
+            <p style={{ color: theme.colors.sage, fontWeight: 700, marginBottom: 6, fontFamily: theme.fonts.body }}>🌱 How to be present</p>
+            <p style={{ color: theme.colors.dark, fontWeight: 500, fontSize: 16, lineHeight: 1.55, fontFamily: theme.fonts.body }}>{selectedDailyCard.full.how_to_be_present}</p>
+          </section>
+        </FadeIn>
+      </main>
+    );
+  }
+
   if (showInsightScreen) {
     return (
       <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: '24px 20px' }}>
@@ -343,36 +361,15 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
         {insightObservation ? (
           <FadeIn delay={0}>
-            <section
-              style={{
-                background: theme.colors.grayBg,
-                borderRadius: theme.radius.card,
-                padding: 16,
-                marginBottom: 12,
-              }}
-            >
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginBottom: 6 }}>
-                ✏️ Tu observación:
-              </p>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontStyle: 'italic', color: theme.colors.dark, lineHeight: 1.6 }}>
-                {insightObservation}
-              </p>
+            <section style={{ background: theme.colors.grayBg, borderRadius: theme.radius.card, padding: 16, marginBottom: 12 }}>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginBottom: 6 }}>✏️ Tu observación:</p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontStyle: 'italic', color: theme.colors.dark, lineHeight: 1.6 }}>{insightObservation}</p>
             </section>
           </FadeIn>
         ) : null}
 
         <FadeIn delay={120}>
-          <h2
-            style={{
-              fontFamily: theme.fonts.display,
-              fontSize: 22,
-              color: theme.colors.dark,
-              lineHeight: 1.25,
-              marginBottom: 14,
-            }}
-          >
-            {parsedInsight.title}
-          </h2>
+          <h2 style={{ fontFamily: theme.fonts.display, fontSize: 22, color: theme.colors.dark, lineHeight: 1.25, marginBottom: 14 }}>{parsedInsight.title}</h2>
         </FadeIn>
 
         <FadeIn delay={250}>
@@ -452,25 +449,34 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={220}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
-              <h2 style={{ fontSize: 34, color: theme.colors.dark }}>Today&apos;s Wonders</h2>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>What {childName}&apos;s brain is up to right now</p>
+              <h2 style={{ fontSize: 30, color: theme.colors.dark }}>
+                {dailyContent?.section_title ?? `¿Qué está pasando en el cerebro de ${childName}?`}
+              </h2>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>Contenido educativo diario basado en su etapa actual</p>
             </div>
             <span style={{ fontSize: 12, color: theme.colors.brand, background: theme.colors.brandLight, padding: '4px 12px', borderRadius: theme.radius.chip, fontFamily: theme.fonts.body, fontWeight: 600 }}>{stageContent.stage}</span>
           </div>
         </FadeIn>
 
-        {stageContent.dailyWonders.map((wonder, index) => (
+        {isLoadingDailyContent ? (
+          <FadeIn delay={300}>
+            <div style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray }}>Preparando contenido de hoy…</p>
+            </div>
+          </FadeIn>
+        ) : null}
+
+        {(dailyContent?.cards ?? []).map((card, index) => (
           <WonderCard
-            key={`${wonder.title}-${index}`}
-            icon={wonder.icon}
-            title={wonder.title}
-            body={wonder.body}
-            domain={wonder.domain}
+            key={`${card.title}-${index}`}
+            icon={card.icon}
+            title={card.title}
+            body={card.preview}
+            domain={card.domain}
             delay={300 + index * 90}
             onClick={() => {
-              setCurrentInsight(payloadFromStageWonder(wonder, childName));
-              setInsightObservation(null);
-              setShowInsightScreen(true);
+              setSelectedDailyCard(card);
+              setShowDailyCardScreen(true);
             }}
           />
         ))}
@@ -478,12 +484,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={650}>
           <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>
-              {dailyParentingInsight.text}
-            </p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>
-              {dailyParentingInsight.source}
-            </p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>{dailyParentingInsight.text}</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>{dailyParentingInsight.source}</p>
           </div>
         </FadeIn>
 
