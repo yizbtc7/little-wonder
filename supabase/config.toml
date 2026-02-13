@@ -3,7 +3,7 @@ project_id = "iwutiqervpapcjqfmshd"
 [auth]
 enabled = true
 site_url = "https://next-app-sooty-phi.vercel.app"
-additional_redirect_urls = ["https://next-app-sooty-phi.vercel.app/auth/callback"]
+additional_redirect_urls = ["https://next-app-sooty-phi.vercel.app/auth/callback", "http://localhost:3000/auth/callback", "http://127.0.0.1:3000/auth/callback"]
 
 [auth.mfa]
 max_enrolled_factors = 10
