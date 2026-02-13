@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://little-wonder-tdf2.vercel.app';
+
 export default function SignIn() {
   const supabase = createSupabaseBrowserClient();
   const [email, setEmail] = useState('');
@@ -14,7 +16,7 @@ export default function SignIn() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${APP_URL}/auth/callback`,
       },
     });
     if (error) setStatus(error.message);
@@ -28,7 +30,6 @@ export default function SignIn() {
       return;
     }
 
-    // Fallback: create account if it does not exist.
     const signup = await supabase.auth.signUp({ email, password });
     if (signup.error) setStatus(signup.error.message);
     else setStatus('Check your email (if confirmation is enabled) or try sign in again.');
