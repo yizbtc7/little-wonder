@@ -152,15 +152,15 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         <div style={{ position: 'absolute', right: 20, top: 64 }}><LogoutButton /></div>
       </header>
 
-      <section style={{ padding: '20px 20px 0' }}>
+      <section style={{ padding: '26px 22px 0' }}>
         <ScaleIn delay={120}>
           <div
             onClick={() => setIsComposerOpen(true)}
             style={{
               background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`,
               borderRadius: theme.radius.lg,
-              padding: 18,
-              marginBottom: 22,
+              padding: 22,
+              marginBottom: 28,
               border: `1.5px solid ${theme.colors.rose}`,
               cursor: 'pointer',
               boxShadow: '0 8px 24px rgba(196,117,106,0.12)',
@@ -186,7 +186,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
             <p style={{ margin: '6px 0 0', color: theme.colors.midText, fontSize: 14, lineHeight: 1.45 }}>
               This is where the magic happens — log one moment and unlock the science behind it ✨
             </p>
-            <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, background: theme.colors.charcoal, color: '#fff', borderRadius: 999, padding: '10px 16px', fontSize: 13, fontWeight: 700 }}>
+            <div style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8, background: theme.colors.charcoal, color: '#fff', borderRadius: 999, padding: '10px 16px', fontSize: 13, fontWeight: 700 }}>
               Start now <span>→</span>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         ) : null}
 
         <FadeUp delay={220}>
-          <div style={{ background: theme.colors.warmWhite, borderRadius: theme.radius.lg, padding: 16, marginTop: 8, marginBottom: 14, border: `1px solid ${theme.colors.divider}` }}>
+          <div style={{ background: theme.colors.warmWhite, borderRadius: theme.radius.lg, padding: 20, marginTop: 10, marginBottom: 22, border: `1px solid ${theme.colors.divider}` }}>
             <p style={{ margin: '0 0 6px', fontSize: 10, textTransform: 'uppercase', color: theme.colors.lightText, fontWeight: 700, letterSpacing: 0.4 }}>🌻 Today&apos;s tip</p>
             <p style={{ margin: '0 0 8px', color: theme.colors.darkText, fontSize: 15, lineHeight: 1.5 }}>{withChildName(DAILY_INSIGHT.tip, childName)}</p>
             <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: theme.radius.sm, padding: 11, cursor: 'pointer', border: `1px solid ${theme.colors.divider}` }}>
@@ -221,7 +221,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
 
         <FadeUp delay={320}>
           <h2 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 24, color: theme.colors.charcoal }}>What might be happening in {childName}&apos;s brain</h2>
-          <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>Science-backed possibilities based on this stage</p>
+          <p style={{ margin: '6px 0 16px', fontSize: 12, color: theme.colors.lightText }}>Science-backed possibilities based on this stage</p>
         </FadeUp>
 
         {personalizedCards.map((card, index) => (

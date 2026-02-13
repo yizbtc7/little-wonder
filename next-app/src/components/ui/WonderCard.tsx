@@ -35,8 +35,8 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
         style={{
           background: '#FFF9FD',
           borderRadius: theme.radius.card,
-          padding: 20,
-          marginBottom: 12,
+          padding: 22,
+          marginBottom: 16,
           cursor: onClick ? 'pointer' : 'default',
           boxShadow: hovered ? theme.shadows.elevated : theme.shadows.subtle,
           border: hovered ? `1px solid ${theme.colors.coral}` : `1px solid ${theme.colors.grayBg}`,
