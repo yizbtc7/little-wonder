@@ -189,7 +189,7 @@ function deserializeAssistantInsight(content: string): InsightPayload {
   }
 }
 
-type Tab = 'chat' | 'explore' | 'profile';
+type Tab = 'chat' | 'explore' | 'activities' | 'profile';
 type ProfileTab = 'overview' | 'timeline' | 'settings';
 
 function getAgeMonths(birthdate: string): number {
@@ -293,6 +293,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     'Connecting to developmental science...',
     'Preparing your insight...',
   ];
+
+  const dailyQuotes = [
+    'What you notice today becomes who they are tomorrow.',
+    "You don't need to teach them to be curious. You just need to not accidentally stop it.",
+    'The moments that drive you crazy are often the ones that matter most.',
+    'Behind every \"annoying\" behavior is a brilliant experiment.',
+    'Your attention is the most powerful developmental tool ever invented.',
+  ];
+
+  const quoteOfTheDay = dailyQuotes[Math.floor(Date.now() / 86400000) % 5];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -836,6 +846,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </button>
                   ))}
                 </div>
+                <p style={{ margin: '26px auto 0', maxWidth: 300, fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 16, color: theme.colors.lightText, textAlign: 'center', lineHeight: 1.55 }}>
+                  {quoteOfTheDay}
+                </p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -965,6 +978,39 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </div>
       ) : null}
 
+      {activeTab === 'activities' ? (
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
+          <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Activities</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Simple ways to support {childName}&apos;s growth today</p>
+          </div>
+          <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              {
+                icon: '🧱',
+                title: 'Stack & crash lab',
+                body: `Build a short tower with ${childName}, then change one block and test what happens.`,
+              },
+              {
+                icon: '🗣️',
+                title: 'Point, name, pause',
+                body: `When ${childName} points, name the object and pause 3 seconds for a response.`,
+              },
+              {
+                icon: '🎭',
+                title: 'Pretend kitchen story',
+                body: `Follow ${childName}'s pretend play script and add one simple back-and-forth turn.`,
+              },
+            ].map((activity) => (
+              <div key={activity.title} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '14px 16px' }}>
+                <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal }}>{activity.icon} {activity.title}</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.55, color: theme.colors.midText }}>{activity.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {activeTab === 'profile' ? (
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {profileTab === 'settings' ? (
@@ -1072,6 +1118,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         {[
           { id: 'chat' as Tab, icon: '💬', label: 'Chat' },
           { id: 'explore' as Tab, icon: '🔭', label: 'Explore' },
+          { id: 'activities' as Tab, icon: '🎯', label: 'Activities' },
           { id: 'profile' as Tab, icon: '🧒', label: childName },
         ].map((tab) => (
           <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ textAlign: 'center', cursor: 'pointer', opacity: activeTab === tab.id ? 1 : 0.35 }}>
