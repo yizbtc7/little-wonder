@@ -76,6 +76,19 @@ type ExploreDailyTipRow = {
   source?: string;
 };
 
+type ProfileWonderTimelineEntry = {
+  id: string;
+  created_at: string;
+  title: string;
+  observation: string;
+  schemas: string[];
+};
+
+type ProfileSchemaStat = {
+  name: string;
+  count: number;
+};
+
 type Props = {
   parentName: string;
   childName: string;
@@ -280,6 +293,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
   const [exploreCards, setExploreCards] = useState<ExploreBrainCardRow[]>([]);
   const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
+  const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
+  const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<'en' | 'es'>('en');
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -328,20 +343,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     return () => clearInterval(interval);
   }, [typing, loadingMessages.length]);
 
-  const timeline = [
-    {
-      date: 'Today',
-      title: `${childName} just invented the scientific method`,
-      obs: `${childName} explored blocks by weight and size, then adjusted strategy after each collapse.`,
-      schemas: ['Connecting', 'Positioning'],
-    },
-    {
-      date: 'Yesterday',
-      title: 'The physics of bath time',
-      obs: `${childName} kept pouring water between cups and watching flow changes.`,
-      schemas: ['Trajectory', 'Transporting'],
-    },
-  ];
 
   const personalizedCards = useMemo(() => {
     const sourceCards =
@@ -421,6 +422,24 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         };
         setExploreCards(payload.brain_cards ?? []);
         setExploreDailyTip(payload.daily_tip ?? null);
+      } catch {
+        // ignore fetch errors in non-browser test environments
+      }
+    })();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'profile') return;
+    void (async () => {
+      try {
+        const response = await fetch(apiUrl('/api/profile/wonders'));
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          timeline?: ProfileWonderTimelineEntry[];
+          schema_stats?: ProfileSchemaStat[];
+        };
+        setProfileTimeline(payload.timeline ?? []);
+        setProfileSchemaStats(payload.schema_stats ?? []);
       } catch {
         // ignore fetch errors in non-browser test environments
       }
@@ -1046,9 +1065,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
                   {[
-                    { n: timeline.length, l: 'Moments' },
-                    { n: 4, l: 'Schemas' },
-                    { n: 87, l: 'Days' },
+                    { n: profileTimeline.length, l: 'Wonders' },
+                    { n: profileSchemaStats.length, l: 'Schemas' },
+                    { n: new Set(profileTimeline.map((entry) => new Date(entry.created_at).toDateString())).size, l: 'Days' },
                   ].map((s) => (
                     <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.5)', borderRadius: 18, padding: 12, textAlign: 'center' }}>
                       <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
@@ -1069,17 +1088,19 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <>
                     <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Schemas detected</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-                      {[
-                        { name: 'Trajectory', count: 5, bg: theme.colors.lavenderBg },
-                        { name: 'Connecting', count: 3, bg: theme.colors.sageBg },
-                        { name: 'Positioning', count: 2, bg: theme.colors.blush },
-                        { name: 'Transporting', count: 2, bg: '#E8F0E4' },
-                      ].map((schema) => (
-                        <div key={schema.name} style={{ background: schema.bg, borderRadius: 18, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{schema.name}</span>
-                          <span style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 10, padding: '2px 7px', fontSize: 11, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
-                        </div>
-                      ))}
+                      {profileSchemaStats.length === 0 ? (
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>No schema data yet.</p>
+                      ) : (
+                        profileSchemaStats.map((schema, idx) => {
+                          const bg = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#E8F0E4'][idx % 4];
+                          return (
+                            <div key={schema.name} style={{ background: bg, borderRadius: 18, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{schema.name}</span>
+                              <span style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 10, padding: '2px 7px', fontSize: 11, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                     <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Interests</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1092,20 +1113,28 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                 {profileTab === 'timeline' ? (
                   <>
-                    {timeline.map((entry, i) => (
-                      <div key={`${entry.date}-${entry.title}`}>
-                        {(i === 0 || timeline[i - 1].date !== entry.date) ? <p style={{ margin: '16px 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>{entry.date}</p> : null}
-                        <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                          <h4 style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>{entry.title}</h4>
-                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.obs}</p>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {entry.schemas.map((schema) => (
-                              <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{schema}</span>
-                            ))}
+                    {profileTimeline.length === 0 ? (
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>No wonders yet. Capture a chat observation to generate your first wonder.</p>
+                    ) : (
+                      profileTimeline.map((entry, i) => {
+                        const dayLabel = formatConversationDate(entry.created_at, locale);
+                        const prevDayLabel = i > 0 ? formatConversationDate(profileTimeline[i - 1].created_at, locale) : null;
+                        return (
+                          <div key={entry.id}>
+                            {i === 0 || prevDayLabel !== dayLabel ? <p style={{ margin: '16px 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>{dayLabel}</p> : null}
+                            <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                              <h4 style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>{entry.title}</h4>
+                              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.observation}</p>
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                {entry.schemas.map((schema) => (
+                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{schema}</span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })
+                    )}
                   </>
                 ) : null}
               </div>
