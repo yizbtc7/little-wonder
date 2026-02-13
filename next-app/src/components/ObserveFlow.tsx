@@ -9,6 +9,7 @@ import WonderCard from '@/components/ui/WonderCard';
 import { DAILY_INSIGHT } from '@/data/daily-insights';
 import { STAGE_CONTENT } from '@/data/stage-content';
 import { theme } from '@/styles/theme';
+import { replaceChildName, replaceChildNameList } from '@/utils/personalize';
 
 type InsightPayload = {
   title: string;
@@ -51,7 +52,7 @@ function parseInsightPayload(raw: string): InsightPayload {
 }
 
 function withChildName(text: string, childName: string) {
-  return text.replaceAll('{{child_name}}', childName).replaceAll('Leo', childName);
+  return replaceChildName(text, childName).replaceAll('Leo', childName);
 }
 
 export default function ObserveFlow({ parentName, childName, childAgeLabel }: Props) {
@@ -65,6 +66,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   const [status, setStatus] = useState('');
 
   const parsed = useMemo(() => parseInsightPayload(rawInsight), [rawInsight]);
+  const personalizedCards = useMemo(
+    () =>
+      STAGE_CONTENT.cards.map((card) => ({
+        ...card,
+        title: withChildName(card.title, childName),
+        preview: withChildName(card.preview, childName),
+        full: {
+          whats_happening: withChildName(card.full.whats_happening, childName),
+          youll_see_it_when: replaceChildNameList(card.full.youll_see_it_when, childName),
+          fascinating_part: withChildName(card.full.fascinating_part, childName),
+          how_to_be_present: withChildName(card.full.how_to_be_present, childName),
+        },
+      })),
+    [childName]
+  );
 
   const generateInsight = async () => {
     if (!observation.trim()) return;
@@ -96,17 +112,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   };
 
   if (showWonder !== null) {
-    const card = STAGE_CONTENT.cards[showWonder];
+    const card = personalizedCards[showWonder];
     return (
       <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: '24px 20px' }}>
         <SoftButton variant='ghost' onClick={() => setShowWonder(null)} style={{ paddingLeft: 0 }}>← Back</SoftButton>
         <FadeUp delay={100}>
           <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 28, color: theme.colors.charcoal, margin: '6px 0 12px' }}>{card.title}</h2>
         </FadeUp>
-        <FadeUp delay={200}><section style={{ background: '#fff', borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>🔍 What's happening</b><p>{withChildName(card.full.whats_happening, childName)}</p></section></FadeUp>
-        <FadeUp delay={280}><section style={{ background: '#fff', borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>✨ You'll see it when...</b><ul>{card.full.youll_see_it_when.map((i) => <li key={i}>{withChildName(i, childName)}</li>)}</ul></section></FadeUp>
-        <FadeUp delay={360}><section style={{ background: theme.colors.lavenderBg, borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>🧠 The fascinating part</b><p>{withChildName(card.full.fascinating_part, childName)}</p></section></FadeUp>
-        <FadeUp delay={440}><section style={{ background: theme.colors.sageBg, borderRadius: theme.radius.lg, padding: 18 }}><b>🤲 How to be present</b><p>{withChildName(card.full.how_to_be_present, childName)}</p></section></FadeUp>
+        <FadeUp delay={200}><section style={{ background: '#fff', borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>🔍 What's happening</b><p>{card.full.whats_happening}</p></section></FadeUp>
+        <FadeUp delay={280}><section style={{ background: '#fff', borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>✨ You'll see it when...</b><ul>{card.full.youll_see_it_when.map((i) => <li key={i}>{i}</li>)}</ul></section></FadeUp>
+        <FadeUp delay={360}><section style={{ background: theme.colors.lavenderBg, borderRadius: theme.radius.lg, padding: 18, marginBottom: 12 }}><b>🧠 The fascinating part</b><p>{card.full.fascinating_part}</p></section></FadeUp>
+        <FadeUp delay={440}><section style={{ background: theme.colors.sageBg, borderRadius: theme.radius.lg, padding: 18 }}><b>🤲 How to be present</b><p>{card.full.how_to_be_present}</p></section></FadeUp>
       </main>
     );
   }
@@ -162,7 +178,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
           <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
         </FadeUp>
 
-        {STAGE_CONTENT.cards.map((card, index) => (
+        {personalizedCards.map((card, index) => (
           <WonderCard key={card.title} {...card} delay={300 + index * 100} body={card.preview} onClick={() => setShowWonder(index)} />
         ))}
 
