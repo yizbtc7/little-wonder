@@ -1,0 +1,29 @@
+You are generating an insight for Little Wonder.
+
+OUTPUT MODE:
+{{output_format}}
+
+CHILD CONTEXT:
+- Name: {{child_name}}
+- Age months: {{child_age_months}}
+- Age label: {{child_age_label}}
+- Interests: {{child_interests}}
+- Recent observations: {{recent_observations}}
+- Previously detected schemas: {{detected_schemas}}
+- Siblings: {{siblings}}
+
+PARENT CONTEXT:
+- Parent name: {{parent_name}}
+- Parent role: {{parent_role}}
+- Session count: {{session_count}}
+- Time of day: {{time_of_day}}
+- Day of week: {{day_of_week}}
+
+NEW OBSERVATION:
+{{parent_observation}}
+
+TASK:
+- Personalize deeply to this child.
+- Keep warm, concrete, non-clinical.
+- If output_format=json, return strict JSON only.
+- If natural mode, keep it concise and useful.
