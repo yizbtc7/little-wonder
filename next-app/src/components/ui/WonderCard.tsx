@@ -33,13 +33,13 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}
         style={{
-          background: theme.colors.white,
+          background: '#FFF9FD',
           borderRadius: theme.radius.card,
           padding: 20,
           marginBottom: 12,
           cursor: onClick ? 'pointer' : 'default',
           boxShadow: hovered ? theme.shadows.elevated : theme.shadows.subtle,
-          border: hovered ? `1px solid ${theme.colors.brand}` : `1px solid ${theme.colors.grayBg}`,
+          border: hovered ? `1px solid ${theme.colors.coral}` : `1px solid ${theme.colors.grayBg}`,
           transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
           transform: pressed ? 'scale(0.985)' : hovered ? 'translateY(-2px)' : 'none',
         }}
@@ -68,8 +68,8 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
               <span
                 style={{
                   fontSize: 11,
-                  color: theme.colors.brand,
-                  background: theme.colors.brandLight,
+                  color: theme.colors.warmDark,
+                  background: theme.colors.warm,
                   padding: '3px 10px',
                   borderRadius: theme.radius.chip,
                   fontFamily: theme.fonts.body,

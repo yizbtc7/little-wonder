@@ -569,7 +569,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             style={{
               width: '100%',
               textAlign: 'left',
-              background: theme.colors.white,
+              background: '#FFF9FD',
               borderRadius: 20,
               padding: '18px 18px',
               marginBottom: 16,
@@ -637,7 +637,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         ) : null}
 
         <FadeIn delay={220}>
-          <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
+          <div style={{ background: theme.colors.warm, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 16, border: `1px solid ${theme.colors.grayBg}` }}>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6, marginBottom: 10 }}>
               {dailyParentingInsight.advice}
