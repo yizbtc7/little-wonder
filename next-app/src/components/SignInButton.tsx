@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
+import Button from '@/components/ui/Button';
 
 export default function SignInButton() {
   const supabase = createSupabaseBrowserClient();
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
 
   const envAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
   const appUrl = envAppUrl && envAppUrl.length > 0 ? envAppUrl : window.location.origin;
@@ -27,10 +28,10 @@ export default function SignInButton() {
 
   return (
     <div>
-      <button onClick={handleGoogleSignIn} style={{ padding: '10px 14px' }}>
-        Sign in with Google
-      </button>
-      {error ? <p style={{ color: 'crimson', marginTop: 12 }}>{error}</p> : null}
+      <Button onClick={handleGoogleSignIn} size="lg" style={{ width: '100%', maxWidth: 320 }}>
+        Continue with Google
+      </Button>
+      {error ? <p style={{ color: '#E8725A', marginTop: 12 }}>{error}</p> : null}
     </div>
   );
 }
