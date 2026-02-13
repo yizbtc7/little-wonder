@@ -4,6 +4,7 @@ export type DailyInsight = {
   ageRangeMin: number;
   ageRangeMax: number;
   source: string;
+  sourceUrl: string;
 };
 
 export const dailyInsights: DailyInsight[] = [
@@ -14,6 +15,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 Harvard Center on the Developing Child",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "En el cambio de pañal, narra acciones simples: ‘abro’, ‘limpio’, ‘cierro’.",
@@ -21,6 +23,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 Investigación temprana en adquisición de lenguaje",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Mueve un objeto lentamente frente a {{child_name}} durante 30-60 segundos y haz pausas.",
@@ -28,6 +31,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 Neurodesarrollo visual en primera infancia",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Antes de intervenir cuando llora, observa unos segundos para identificar qué necesita realmente.",
@@ -35,6 +39,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 RIE + ciencia de co-regulación",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Haz una mini-rutina de sueño siempre igual: contacto, frase corta, voz suave.",
@@ -42,6 +47,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 Desarrollo temprano del sistema de regulación",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Ofrece una textura nueva segura y deja que {{child_name}} la explore sin apurar.",
@@ -49,6 +55,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 0,
     ageRangeMax: 4,
     source: "📚 Integración sensorial en lactantes",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
 
   // 5-8m
@@ -58,6 +65,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Estudios de esquemas de juego temprano",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Juega a esconder un objeto parcialmente y espera antes de ayudar.",
@@ -65,6 +73,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Cognición infantil temprana",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Ofrece dos objetos seguros y deja que {{child_name}} elija con cuál empezar.",
@@ -72,6 +81,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Self-Determination Theory aplicada a infancia",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Durante comida o juego, nombra la acción exacta que ves: ‘aprietas’, ‘golpeas’, ‘sacudes’.",
@@ -79,6 +89,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Lenguaje situado en experiencias sensorimotoras",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Cuando aparezca algo nuevo, ofrece una expresión calmada y clara antes de hablar mucho.",
@@ -86,6 +97,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Social Referencing en primera infancia",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Haz turnos de sonido breves: tú dices una sílaba, esperas, y respondes su vocalización.",
@@ -93,6 +105,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 5,
     ageRangeMax: 8,
     source: "📚 Serve & Return",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/serve-and-return/',
   },
 
   // 9-14m
@@ -102,6 +115,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Desarrollo espacial y matemático temprano",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Si {{child_name}} repite una acción muchas veces, deja que complete su ciclo antes de cambiar actividad.",
@@ -109,6 +123,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Aprendizaje por repetición y consolidación",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Cuando {{child_name}} señale algo, primero sigue su foco y nombra lo que mira.",
@@ -116,6 +131,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Joint Attention research",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Usa mini-secuencias en juego: ‘empezamos’, ‘paramos’, ‘guardamos’.",
@@ -123,6 +139,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Dra. Adele Diamond — función ejecutiva",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Cuando esté intentando algo difícil, espera unos segundos antes de ayudar.",
@@ -130,6 +147,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Motivación y competencia en desarrollo temprano",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Convierte el ‘tirar cosas’ en comparación: dos materiales, dos sonidos, misma acción.",
@@ -137,6 +155,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 9,
     ageRangeMax: 14,
     source: "📚 Razonamiento causal temprano",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
 
   // 15-24m
@@ -146,6 +165,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 Harvard Center on the Developing Child",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Al leer, deja que {{child_name}} decida cuándo pasar página, aunque cambie el orden.",
@@ -153,6 +173,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 Dra. Adele Diamond + lectura compartida",
+    sourceUrl: 'https://www.zerotothree.org/resource/reading-with-your-baby/',
   },
   {
     advice: "En juego simbólico, sigue su idea por 2-3 turnos antes de proponer cambios.",
@@ -160,6 +181,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 Juego simbólico y desarrollo cognitivo",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "En frustración, nombra emoción + límite en una frase corta y ofrece dos opciones.",
@@ -167,6 +189,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 Co-regulación y alfabetización emocional temprana",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Practica 45 segundos de observación silenciosa antes de intervenir en su juego.",
@@ -174,6 +197,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 RIE Observation",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Dale una tarea real breve (guardar un bloque, llevar una servilleta).",
@@ -181,6 +205,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 15,
     ageRangeMax: 24,
     source: "📚 Self-Determination Theory",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
 
   // 25-36m
@@ -190,6 +215,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Aprendizaje por indagación en primera infancia",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "En conflicto pequeño, guía 3 pasos: problema, opción, prueba.",
@@ -197,6 +223,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Función ejecutiva — investigación en preescolar temprano",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Si cambia reglas en el juego, pídele que te explique su nueva regla.",
@@ -204,6 +231,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Vygotsky y juego con reglas",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Convierte una rutina diaria en secuencia de 3 pasos y pídele anticipar el siguiente.",
@@ -211,6 +239,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Planificación temprana y memoria de trabajo",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Ofrece materiales abiertos (cajas, telas, cucharas) y menos instrucciones.",
@@ -218,6 +247,7 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Open-ended play research",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
   {
     advice: "Sustituye ‘¡bravo!’ por feedback de proceso: ‘probaste tres formas hasta lograrlo’.",
@@ -225,5 +255,6 @@ export const dailyInsights: DailyInsight[] = [
     ageRangeMin: 25,
     ageRangeMax: 36,
     source: "📚 Motivación y process praise",
+    sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
   },
 ];

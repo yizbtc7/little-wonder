@@ -261,6 +261,7 @@ function getDailyParentingInsight(childAgeMonths: number, childName: string) {
       advice: `Hoy sigue la iniciativa de ${childName} durante 10 minutos y nombra lo que observas.`,
       why: `Cuando ${childName} siente que su iniciativa cuenta, su cerebro sostiene mejor la atención y el vínculo. Esa combinación acelera aprendizaje y confianza al mismo tiempo.`,
       source: '📚 Harvard Center on the Developing Child',
+      sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/serve-and-return/',
     };
   }
 
@@ -271,6 +272,7 @@ function getDailyParentingInsight(childAgeMonths: number, childName: string) {
     advice: withChildName(selected.advice, childName),
     why: withChildName(selected.why, childName),
     source: selected.source,
+    sourceUrl: selected.sourceUrl,
   };
 }
 
@@ -617,7 +619,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 {dailyParentingInsight.why}
               </p>
             </div>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>{dailyParentingInsight.source}</p>
+            <a
+              href={dailyParentingInsight.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-block', fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8, textDecoration: 'underline' }}
+            >
+              {dailyParentingInsight.source}
+            </a>
           </div>
         </FadeIn>
 
