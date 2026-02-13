@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { theme } from '@/styles/theme';
 import FadeIn from '@/components/ui/FadeIn';
 
@@ -17,19 +18,30 @@ function toPreview(text: string): string {
 }
 
 export default function WonderCard({ icon, title, body, domain, delay = 0, onClick }: WonderCardProps) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+
   return (
     <FadeIn delay={delay}>
       <article
         onClick={onClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => {
+          setHovered(false);
+          setPressed(false);
+        }}
+        onMouseDown={() => setPressed(true)}
+        onMouseUp={() => setPressed(false)}
         style={{
           background: theme.colors.white,
           borderRadius: theme.radius.card,
           padding: 20,
           marginBottom: 12,
           cursor: onClick ? 'pointer' : 'default',
-          boxShadow: theme.shadows.subtle,
-          border: `1px solid #F0F0F0`,
-          transition: 'all 0.2s ease',
+          boxShadow: hovered ? theme.shadows.elevated : theme.shadows.subtle,
+          border: hovered ? `1px solid ${theme.colors.brandLight}` : `1px solid #F0F0F0`,
+          transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
+          transform: pressed ? 'scale(0.985)' : hovered ? 'translateY(-2px)' : 'none',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
@@ -44,6 +56,8 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              transform: hovered ? 'translateY(-1px) scale(1.06)' : 'none',
+              transition: `transform ${theme.motion.fast} ${theme.motion.spring}`,
             }}
           >
             {icon}

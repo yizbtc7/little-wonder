@@ -600,7 +600,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <Button variant="ghost" onClick={() => setIsComposerOpen(false)}>Cancel</Button>
                 <Button onClick={generateInsight} disabled={isLoading || !observation.trim()}>See the wonder ✨</Button>
               </div>
-              {status ? <p style={{ marginTop: 8, color: theme.colors.gray, fontSize: 14 }}>{status}</p> : null}
+              {status ? (
+                <p
+                  style={{
+                    marginTop: 8,
+                    color: status.includes('Done') ? theme.colors.brand : theme.colors.gray,
+                    fontSize: 14,
+                    fontWeight: status.includes('Done') ? 700 : 500,
+                    transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
+                  }}
+                >
+                  {status.includes('Done') ? '✨ ' : ''}
+                  {status}
+                </p>
+              ) : null}
             </div>
           </FadeIn>
         ) : null}

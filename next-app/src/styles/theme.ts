@@ -27,7 +27,13 @@ export const theme = {
     chip: 24,
   },
   shadows: {
-    subtle: '0 1px 4px rgba(0,0,0,0.06)',
-    elevated: '0 4px 16px rgba(0,0,0,0.08)',
+    subtle: '0 2px 10px rgba(45,45,58,0.08)',
+    elevated: '0 10px 28px rgba(45,45,58,0.14)',
+    glow: '0 10px 30px rgba(107,92,231,0.25)',
+  },
+  motion: {
+    fast: '160ms',
+    normal: '260ms',
+    spring: 'cubic-bezier(0.22, 1, 0.36, 1)',
   },
 } as const;

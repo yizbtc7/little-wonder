@@ -20,8 +20,9 @@ export default function FadeIn({ children, delay = 0, style }: FadeInProps) {
     <div
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'opacity 0.5s ease, transform 0.5s ease',
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(14px) scale(0.985)',
+        transition: 'opacity 520ms cubic-bezier(0.22, 1, 0.36, 1), transform 520ms cubic-bezier(0.22, 1, 0.36, 1)',
+        willChange: 'opacity, transform',
         ...style,
       }}
     >

@@ -26,6 +26,7 @@ export default function Button({
   style,
 }: ButtonProps) {
   const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   const baseStyle: CSSProperties = {
     border: 'none',
@@ -33,7 +34,7 @@ export default function Button({
     fontFamily: theme.fonts.body,
     fontWeight: 600,
     cursor: disabled ? 'default' : 'pointer',
-    transition: 'all 0.2s ease',
+    transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
     opacity: disabled ? 0.55 : 1,
     display: 'inline-flex',
     alignItems: 'center',
@@ -47,8 +48,8 @@ export default function Button({
       color: theme.colors.white,
       padding: size === 'lg' ? '18px 32px' : '14px 24px',
       fontSize: size === 'lg' ? 18 : 16,
-      transform: hovered ? 'translateY(-1px)' : 'none',
-      boxShadow: hovered ? `0 6px 20px ${theme.colors.brand}40` : `0 2px 8px ${theme.colors.brand}30`,
+      transform: pressed ? 'translateY(0) scale(0.98)' : hovered ? 'translateY(-1px) scale(1.01)' : 'none',
+      boxShadow: hovered ? theme.shadows.glow : `0 2px 8px ${theme.colors.brand}30`,
     },
     secondary: {
       background: theme.colors.white,
@@ -71,7 +72,12 @@ export default function Button({
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setPressed(false);
+      }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
       style={{ ...baseStyle, ...variantStyle[variant], ...style }}
     >
       {children}
