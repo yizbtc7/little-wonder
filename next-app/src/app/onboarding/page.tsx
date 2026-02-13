@@ -1,23 +1,22 @@
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import OnboardingForm from '@/components/OnboardingForm';
+import { getAuthenticatedUser, getFirstChildProfile, getParentProfile } from '@/lib/userContext';
 
-export default async function Onboarding() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default async function OnboardingPage() {
+  const { supabase, user } = await getAuthenticatedUser();
 
-  if (!user) redirect('/');
+  if (!user) {
+    redirect('/');
+  }
 
-  const { data: child } = await supabase
-    .from('children')
-    .select('id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle();
+  const [profile, child] = await Promise.all([
+    getParentProfile(supabase, user.id),
+    getFirstChildProfile(supabase, user.id),
+  ]);
 
-  if (child) redirect('/');
+  if (profile && child) {
+    redirect('/home');
+  }
 
   return <OnboardingForm userId={user.id} userEmail={user.email ?? ''} />;
 }

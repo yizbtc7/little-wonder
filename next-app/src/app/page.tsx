@@ -1,15 +1,21 @@
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import SignInButton from '@/components/SignInButton';
+import { getAuthenticatedUser, getFirstChildProfile, getParentProfile } from '@/lib/userContext';
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getAuthenticatedUser();
 
   if (user) {
-    redirect('/dashboard');
+    const [profile, child] = await Promise.all([
+      getParentProfile(supabase, user.id),
+      getFirstChildProfile(supabase, user.id),
+    ]);
+
+    if (!profile || !child) {
+      redirect('/onboarding');
+    }
+
+    redirect('/home');
   }
 
   return (
