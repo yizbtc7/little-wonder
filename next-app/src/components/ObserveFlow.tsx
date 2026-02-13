@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import FadeUp from '@/components/ui/FadeUp';
 import SoftButton from '@/components/ui/SoftButton';
 import WonderCard from '@/components/ui/WonderCard';
@@ -75,6 +75,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [typingMessageIndex, setTypingMessageIndex] = useState(0);
   const [tipExpanded, setTipExpanded] = useState(false);
   const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
@@ -90,6 +91,25 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
     `😤 ${childName} had a big tantrum at the store`,
     `🎭 ${childName} was pretending to cook me dinner`,
   ];
+
+  const loadingMessages = [
+    `Analyzing what ${childName} is exploring...`,
+    'Connecting to developmental science...',
+    'Preparing your insight...',
+  ];
+
+  useEffect(() => {
+    if (!typing) {
+      setTypingMessageIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTypingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [typing, loadingMessages.length]);
 
   const timeline = [
     {
@@ -433,31 +453,62 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
                     </div>
                   ) : (
                     <div key={idx} style={{ maxWidth: '92%' }}>
-                      <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: theme.colors.charcoal }}>{msg.insight.title}</h3>
+                      <FadeUp delay={80}>
+                        <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: theme.colors.charcoal }}>{msg.insight.title}</h3>
+                      </FadeUp>
 
-                      <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, borderLeft: `4px solid ${theme.colors.lavender}`, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                        <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>💡 What&apos;s really happening</p>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.65, color: theme.colors.darkText }}>{msg.insight.revelation}</p>
-                      </div>
+                      <FadeUp delay={180}>
+                        <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, borderLeft: `4px solid ${theme.colors.lavender}`, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>💡 What&apos;s really happening</p>
+                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.65, color: theme.colors.darkText }}>{msg.insight.revelation}</p>
+                        </div>
+                      </FadeUp>
 
-                      <button onClick={() => setExpandedSection(expandedSection === 'brain' ? null : 'brain')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.lavenderBg, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
-                        <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🧠 The fascinating part</p>
-                        {expandedSection === 'brain' ? <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.brain_science_gem}</p> : null}
-                      </button>
+                      <FadeUp delay={280}>
+                        <button onClick={() => setExpandedSection(expandedSection === 'brain' ? null : 'brain')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.lavenderBg, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
+                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🧠 The fascinating part</p>
+                          {expandedSection === 'brain' ? <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.brain_science_gem}</p> : null}
+                        </button>
+                      </FadeUp>
 
-                      <button onClick={() => setExpandedSection(expandedSection === 'activity' ? null : 'activity')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.blush, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
-                        <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌱 Try this</p>
-                        {expandedSection === 'activity' ? <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.activity.main}</p> : null}
-                      </button>
+                      <FadeUp delay={380}>
+                        <button onClick={() => setExpandedSection(expandedSection === 'activity' ? null : 'activity')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.blush, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
+                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌱 Try this</p>
+                          {expandedSection === 'activity' ? <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.activity.main}</p> : null}
+                        </button>
+                      </FadeUp>
 
-                      <div style={{ background: theme.colors.sageBg, borderRadius: 18, padding: '14px 16px' }}>
-                        <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.sage }}>👀 Watch for this next</p>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.5, color: theme.colors.darkText }}>{msg.insight.observe_next}</p>
-                      </div>
+                      <FadeUp delay={480}>
+                        <div style={{ background: theme.colors.sageBg, borderRadius: 18, padding: '14px 16px' }}>
+                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.sage }}>👀 Watch for this next</p>
+                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.5, color: theme.colors.darkText }}>{msg.insight.observe_next}</p>
+                        </div>
+                      </FadeUp>
                     </div>
                   )
                 )}
-                {typing ? <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>Thinking…</p> : null}
+                {typing ? (
+                  <div style={{ padding: '12px 0' }}>
+                    <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                      {[0, 1, 2].map((dot) => (
+                        <div
+                          key={dot}
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 4,
+                            background: theme.colors.blushMid,
+                            animation: `typingPulse 1.2s ease-in-out ${dot * 0.2}s infinite`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, fontStyle: 'italic', color: theme.colors.midText, transition: 'opacity 0.3s ease' }}>
+                      {loadingMessages[typingMessageIndex]}
+                    </p>
+                    <style>{`@keyframes typingPulse { 0%, 100% { opacity: 0.3; transform: scale(0.8);} 50% { opacity: 1; transform: scale(1);} }`}</style>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

@@ -15,11 +15,13 @@ type ChildRow = {
   user_id: string;
   name: string;
   birthdate: string;
+  interests?: string[] | null;
 };
 
 type ProfileRow = {
   user_id: string;
   parent_name: string;
+  parent_role?: string | null;
 };
 
 type InsightPayload = {
@@ -31,6 +33,7 @@ type InsightPayload = {
     express: string;
   };
   observe_next: string;
+  schemas_detected: string[];
 };
 
 let systemPromptCache: string | null = null;
@@ -40,28 +43,55 @@ async function getSystemPrompt(): Promise<string> {
     return systemPromptCache;
   }
 
-  const promptPath = path.join(process.cwd(), 'docs', 'prompts', 'system_prompt_master.md');
-  const fileContent = await readFile(promptPath, 'utf8');
-  systemPromptCache = fileContent;
-  return fileContent;
+  const v4Path = path.join(process.cwd(), 'docs', 'prompts', 'little_wonder_system_prompt_v4.md');
+  const fallbackPath = path.join(process.cwd(), 'docs', 'prompts', 'system_prompt_master.md');
+
+  try {
+    const fileContent = await readFile(v4Path, 'utf8');
+    systemPromptCache = fileContent;
+    return fileContent;
+  } catch {
+    const fileContent = await readFile(fallbackPath, 'utf8');
+    systemPromptCache = fileContent;
+    return fileContent;
+  }
 }
 
 function buildPromptContext(params: {
   promptTemplate: string;
   parentName: string;
+  parentRole: string;
   childName: string;
   childAgeMonths: number;
   childAgeLabel: string;
+  childInterests: string[];
   recentObservations: string[];
+  detectedSchemas: string[];
+  sessionCount: number;
 }): string {
-  const { promptTemplate, parentName, childName, childAgeMonths, childAgeLabel, recentObservations } = params;
+  const {
+    promptTemplate,
+    parentName,
+    parentRole,
+    childName,
+    childAgeMonths,
+    childAgeLabel,
+    childInterests,
+    recentObservations,
+    detectedSchemas,
+    sessionCount,
+  } = params;
 
   return promptTemplate
     .replaceAll('{{parent_name}}', parentName)
+    .replaceAll('{{parent_role}}', parentRole)
     .replaceAll('{{child_name}}', childName)
     .replaceAll('{{child_age_months}}', `${childAgeMonths}`)
     .replaceAll('{{child_age_label}}', childAgeLabel)
+    .replaceAll('{{child_interests}}', childInterests.join(', '))
     .replaceAll('{{recent_observations}}', recentObservations.join('\n- '))
+    .replaceAll('{{detected_schemas}}', detectedSchemas.join(', '))
+    .replaceAll('{{session_count}}', `${sessionCount}`)
     .replaceAll('{{output_format}}', 'json');
 }
 
@@ -76,6 +106,7 @@ function parseInsightPayload(raw: string): InsightPayload {
       express: 'Quick version: name one thing they are testing and pause for the next attempt.',
     },
     observe_next: 'Next time, watch the pause right before action — that often reveals the hypothesis.',
+    schemas_detected: [],
   };
 
   const source = jsonMatch?.[0] ?? raw;
@@ -91,6 +122,9 @@ function parseInsightPayload(raw: string): InsightPayload {
         express: parsed.activity?.express ?? fallback.activity.express,
       },
       observe_next: parsed.observe_next ?? fallback.observe_next,
+      schemas_detected: Array.isArray(parsed.schemas_detected)
+        ? parsed.schemas_detected.filter((value): value is string => typeof value === 'string')
+        : fallback.schemas_detected,
     };
   } catch {
     const extract = (field: string): string | null => {
@@ -107,6 +141,7 @@ function parseInsightPayload(raw: string): InsightPayload {
         express: extract('express') ?? fallback.activity.express,
       },
       observe_next: extract('observe_next') ?? fallback.observe_next,
+      schemas_detected: fallback.schemas_detected,
     };
   }
 }
@@ -140,10 +175,10 @@ export async function POST(request: Request) {
     );
 
     const [{ data: profile }, { data: child }] = await Promise.all([
-      db.from('profiles').select('user_id,parent_name').eq('user_id', user.id).maybeSingle<ProfileRow>(),
+      db.from('profiles').select('user_id,parent_name,parent_role').eq('user_id', user.id).maybeSingle<ProfileRow>(),
       db
         .from('children')
-        .select('id,user_id,name,birthdate')
+        .select('id,user_id,name,birthdate,interests')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true })
         .limit(1)
@@ -165,6 +200,23 @@ export async function POST(request: Request) {
     const recentObservations = (recentObservationRows ?? [])
       .map((row) => row.text)
       .filter((value): value is string => typeof value === 'string' && value.length > 0);
+
+    const { data: recentInsightRows } = await db
+      .from('insights')
+      .select('schema_detected,json_response')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const detectedSchemas = (recentInsightRows ?? [])
+      .flatMap((row) => {
+        const fromSchemaDetected = typeof row.schema_detected === 'string' ? [row.schema_detected] : [];
+        const fromJson = Array.isArray((row.json_response as { payload?: { schemas_detected?: string[] } } | null)?.payload?.schemas_detected)
+          ? (row.json_response as { payload?: { schemas_detected?: string[] } }).payload?.schemas_detected ?? []
+          : [];
+        return [...fromSchemaDetected, ...fromJson];
+      })
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .slice(0, 10);
 
     const { data: observationRow, error: observationError } = await db
       .from('observations')
@@ -188,10 +240,14 @@ export async function POST(request: Request) {
     const systemPrompt = buildPromptContext({
       promptTemplate,
       parentName: profile.parent_name,
+      parentRole: profile.parent_role ?? 'caregiver',
       childName: child.name,
       childAgeMonths,
       childAgeLabel,
+      childInterests: Array.isArray(child.interests) ? child.interests : [],
       recentObservations,
+      detectedSchemas,
+      sessionCount: recentObservations.length + 1,
     });
 
     const userPrompt = [
@@ -207,8 +263,10 @@ export async function POST(request: Request) {
       '    "main": "main activity",',
       '    "express": "30-second version"',
       '  },',
-      '  "observe_next": "what to watch next time"',
+      '  "observe_next": "what to watch next time",',
+      '  "schemas_detected": ["schema1", "schema2"]',
       '}',
+      'Return raw JSON only. No markdown, no fences, no commentary.',
       'Use the child\'s name at least 3 times and keep a warm, specific tone.',
     ].join('\n');
 
