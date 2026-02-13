@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function GET(request: Request) {
-  const reqUrl = new URL(request.url);
-  const code = reqUrl.searchParams.get('code');
-  const redirectTo = reqUrl.origin;
-
-  if (!code) return NextResponse.redirect(`${redirectTo}/`);
-
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
   const supabase = await createSupabaseServerClient();
-  await supabase.auth.exchangeCodeForSession(code);
 
-  return NextResponse.redirect(`${redirectTo}/`);
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code);
+  }
+
+  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
 }
