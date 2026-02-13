@@ -29,7 +29,7 @@ async function getSystemPrompt(): Promise<string> {
     return systemPromptCache;
   }
 
-  const promptPath = path.join(process.cwd(), '..', 'docs', 'prompts', 'system_prompt_master.md');
+  const promptPath = path.join(process.cwd(), 'docs', 'prompts', 'system_prompt_master.md');
   const fileContent = await readFile(promptPath, 'utf8');
   systemPromptCache = fileContent;
   return fileContent;
