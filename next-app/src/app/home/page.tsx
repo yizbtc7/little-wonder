@@ -9,6 +9,7 @@ type InsightCard = {
   created_at: string;
   schema_detected: string | null;
   domain: string | null;
+  json_response: Record<string, unknown> | null;
 };
 
 export default async function HomePage() {
@@ -29,7 +30,7 @@ export default async function HomePage() {
 
   const { data: insightRows } = await supabase
     .from('insights')
-    .select('id,content,created_at,schema_detected,domain,observation:observations!inner(child_id,user_id)')
+    .select('id,content,created_at,schema_detected,domain,json_response,observation:observations!inner(child_id,user_id)')
     .eq('observation.child_id', child.id)
     .eq('observation.user_id', user.id)
     .order('created_at', { ascending: false })
@@ -41,6 +42,7 @@ export default async function HomePage() {
     created_at: row.created_at as string,
     schema_detected: (row.schema_detected as string | null) ?? null,
     domain: (row.domain as string | null) ?? null,
+    json_response: (row.json_response as Record<string, unknown> | null) ?? null,
   }));
 
   const ageInMonths = getAgeInMonths(child.birthdate);

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { theme } from '@/styles/theme';
 import FadeIn from '@/components/ui/FadeIn';
 
@@ -10,23 +9,26 @@ type WonderCardProps = {
   body: string;
   domain: string;
   delay?: number;
+  onClick?: () => void;
 };
 
-export default function WonderCard({ icon, title, body, domain, delay = 0 }: WonderCardProps) {
-  const [expanded, setExpanded] = useState(false);
+function toPreview(text: string): string {
+  return text.length > 180 ? `${text.slice(0, 180)}...` : text;
+}
 
+export default function WonderCard({ icon, title, body, domain, delay = 0, onClick }: WonderCardProps) {
   return (
     <FadeIn delay={delay}>
       <article
-        onClick={() => setExpanded((value) => !value)}
+        onClick={onClick}
         style={{
           background: theme.colors.white,
           borderRadius: theme.radius.card,
           padding: 20,
           marginBottom: 12,
-          cursor: 'pointer',
+          cursor: onClick ? 'pointer' : 'default',
           boxShadow: theme.shadows.subtle,
-          border: `1px solid ${expanded ? theme.colors.brandLight : '#F0F0F0'}`,
+          border: `1px solid #F0F0F0`,
           transition: 'all 0.2s ease',
         }}
       >
@@ -70,18 +72,11 @@ export default function WonderCard({ icon, title, body, domain, delay = 0 }: Won
                 lineHeight: 1.6,
                 color: theme.colors.gray,
                 margin: '8px 0 0',
-                maxHeight: expanded ? 320 : 44,
-                overflow: 'hidden',
-                transition: 'max-height 0.3s ease',
               }}
             >
-              {body}
+              {toPreview(body)}
             </p>
-            {!expanded ? (
-              <span style={{ fontSize: 13, color: theme.colors.brand, fontFamily: theme.fonts.body, fontWeight: 500 }}>
-                Tap to read more
-              </span>
-            ) : null}
+            <span style={{ fontSize: 13, color: theme.colors.brand, fontFamily: theme.fonts.body, fontWeight: 500 }}>Tap to read more</span>
           </div>
         </div>
       </article>

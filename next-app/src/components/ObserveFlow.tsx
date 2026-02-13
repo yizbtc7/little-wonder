@@ -13,6 +13,7 @@ type InsightCard = {
   created_at: string;
   schema_detected: string | null;
   domain: string | null;
+  json_response: Record<string, unknown> | null;
 };
 
 type InsightPayload = {
@@ -117,19 +118,29 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [showInsightScreen, setShowInsightScreen] = useState(false);
   const [observation, setObservation] = useState('');
   const [rawInsightResponse, setRawInsightResponse] = useState('');
+  const [currentInsight, setCurrentInsight] = useState<InsightPayload | null>(null);
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const ageMonths = getAgeMonths(childBirthdate);
   const stageContent = useMemo(() => getStageContent(ageMonths, childName), [ageMonths, childName]);
-  const parsedInsight = useMemo(() => parseInsightPayload(rawInsightResponse), [rawInsightResponse]);
+  const parsedInsight = useMemo(() => currentInsight ?? parseInsightPayload(rawInsightResponse), [currentInsight, rawInsightResponse]);
 
-  const historicalWonders = insights.map((item) => ({
-    icon: '✨',
-    title: item.domain ?? 'Moment of Wonder',
-    body: item.content,
-    domain: item.schema_detected ?? stageContent.stage,
-  }));
+  const historicalWonders = insights.map((item) => {
+    const payload =
+      item.json_response && typeof item.json_response === 'object' && 'payload' in item.json_response
+        ? (item.json_response.payload as InsightPayload)
+        : parseInsightPayload(item.content);
+
+    return {
+      id: item.id,
+      icon: '✨',
+      title: item.domain ?? 'Moment of Wonder',
+      body: payload.revelation,
+      domain: item.schema_detected ?? stageContent.stage,
+      payload,
+    };
+  });
 
   const generateInsight = async () => {
     if (!observation.trim()) {
@@ -140,6 +151,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setIsLoading(true);
     setStatus('Generating wonder...');
     setRawInsightResponse('');
+    setCurrentInsight(null);
 
     try {
       const response = await fetch('/api/insight', {
@@ -173,6 +185,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setRawInsightResponse(accumulated);
       }
 
+      setCurrentInsight(parseInsightPayload(accumulated));
       setStatus('Done ✨');
       setObservation('');
       setIsComposerOpen(false);
@@ -357,7 +370,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
         {historicalWonders.length === 0
           ? stageContent.dailyWonders.map((wonder, index) => <WonderCard key={`${wonder.title}-${index}`} {...wonder} delay={300 + index * 90} />)
-          : historicalWonders.map((wonder, index) => <WonderCard key={`${wonder.title}-${index}`} {...wonder} delay={300 + index * 80} />)}
+          : historicalWonders.map((wonder, index) => (
+              <WonderCard
+                key={wonder.id}
+                icon={wonder.icon}
+                title={wonder.title}
+                body={wonder.body}
+                domain={wonder.domain}
+                delay={300 + index * 80}
+                onClick={() => {
+                  setCurrentInsight(wonder.payload);
+                  setShowInsightScreen(true);
+                }}
+              />
+            ))}
 
         <FadeIn delay={650}>
           <div
