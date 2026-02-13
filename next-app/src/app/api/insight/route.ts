@@ -24,7 +24,20 @@ type ProfileRow = {
   parent_role?: string | null;
 };
 
+type WonderPayload = {
+  title: string;
+  article: {
+    lead: string;
+    pull_quote: string;
+    signs: string[];
+    how_to_be_present: string;
+  };
+  schemas_detected: string[];
+};
+
 type InsightPayload = {
+  reply: string;
+  wonder: WonderPayload | null;
   title: string;
   revelation: string;
   brain_science_gem: string;
@@ -97,7 +110,11 @@ function buildPromptContext(params: {
 
 function parseInsightPayload(raw: string): InsightPayload {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  const source = jsonMatch?.[0] ?? raw;
+
   const fallback: InsightPayload = {
+    reply: raw,
+    wonder: null,
     title: 'A revelation from today\'s learning',
     revelation: raw,
     brain_science_gem: 'Each repetition strengthens neural pathways for deeper learning.',
@@ -109,11 +126,25 @@ function parseInsightPayload(raw: string): InsightPayload {
     schemas_detected: [],
   };
 
-  const source = jsonMatch?.[0] ?? raw;
-
   try {
     const parsed = JSON.parse(source) as Partial<InsightPayload>;
+
+    const wonder = parsed.wonder
+      ? {
+          title: parsed.wonder.title ?? '',
+          article: {
+            lead: parsed.wonder.article?.lead ?? '',
+            pull_quote: parsed.wonder.article?.pull_quote ?? '',
+            signs: Array.isArray(parsed.wonder.article?.signs) ? parsed.wonder.article?.signs ?? [] : [],
+            how_to_be_present: parsed.wonder.article?.how_to_be_present ?? '',
+          },
+          schemas_detected: Array.isArray(parsed.wonder.schemas_detected) ? parsed.wonder.schemas_detected : [],
+        }
+      : null;
+
     return {
+      reply: parsed.reply ?? fallback.reply,
+      wonder,
       title: parsed.title ?? fallback.title,
       revelation: parsed.revelation ?? fallback.revelation,
       brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
@@ -127,22 +158,7 @@ function parseInsightPayload(raw: string): InsightPayload {
         : fallback.schemas_detected,
     };
   } catch {
-    const extract = (field: string): string | null => {
-      const match = source.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*?)"(?=\\s*,\\s*"|\\s*})`));
-      return match?.[1]?.replaceAll('\\n', '\n') ?? null;
-    };
-
-    return {
-      title: extract('title') ?? fallback.title,
-      revelation: extract('revelation') ?? fallback.revelation,
-      brain_science_gem: extract('brain_science_gem') ?? fallback.brain_science_gem,
-      activity: {
-        main: extract('main') ?? fallback.activity.main,
-        express: extract('express') ?? fallback.activity.express,
-      },
-      observe_next: extract('observe_next') ?? fallback.observe_next,
-      schemas_detected: fallback.schemas_detected,
-    };
+    return fallback;
   }
 }
 
@@ -256,16 +272,19 @@ export async function POST(request: Request) {
       '',
       'Return ONLY valid JSON with no markdown or extra text using this exact schema:',
       '{',
-      '  "title": "short powerful line that summarizes the revelation",',
-      '  "revelation": "main revelation text",',
-      '  "brain_science_gem": "surprising science insight",',
-      '  "activity": {',
-      '    "main": "main activity",',
-      '    "express": "30-second version"',
-      '  },',
-      '  "observe_next": "what to watch next time",',
-      '  "schemas_detected": ["schema1", "schema2"]',
+      '  "reply": "conversational chat response",',
+      '  "wonder": null OR {',
+      '    "title": "5-8 word revelation",',
+      '    "article": {',
+      '      "lead": "editorial lead paragraph(s)",',
+      '      "pull_quote": "one striking scientific fact",',
+      '      "signs": ["sign 1", "sign 2", "sign 3"],',
+      '      "how_to_be_present": "warm practical closing"',
+      '    },',
+      '    "schemas_detected": ["Trajectory", "Connecting"]',
+      '  }',
       '}',
+      'When observation is specific, include a wonder object. For follow-up/general questions, use wonder=null.',
       'Return raw JSON only. No markdown, no fences, no commentary.',
       'Use the child\'s name at least 3 times and keep a warm, specific tone.',
     ].join('\n');
@@ -296,10 +315,12 @@ export async function POST(request: Request) {
 
           const parsedPayload = parseInsightPayload(fullResponse);
 
+          const insightText = parsedPayload.reply || parsedPayload.revelation;
+
           const { error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
-            content: parsedPayload.revelation,
-            insight_text: parsedPayload.revelation,
+            content: insightText,
+            insight_text: insightText,
             json_response: {
               source: 'anthropic_stream',
               model: 'claude-sonnet-4-5-20250929',
@@ -312,6 +333,22 @@ export async function POST(request: Request) {
           if (insightError) {
             controller.error(new Error(`Error saving insight: ${insightError.message}`));
             return;
+          }
+
+          if (parsedPayload.wonder) {
+            const { error: wonderError } = await db.from('wonders').insert({
+              child_id: child.id,
+              observation_text: observationText,
+              title: parsedPayload.wonder.title,
+              article: parsedPayload.wonder.article,
+              schemas_detected: parsedPayload.wonder.schemas_detected ?? [],
+              language: 'en',
+            });
+
+            if (wonderError) {
+              controller.error(new Error(`Error saving wonder: ${wonderError.message}`));
+              return;
+            }
           }
 
           controller.close();

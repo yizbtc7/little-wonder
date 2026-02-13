@@ -10,12 +10,25 @@ import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 
-type InsightPayload = {
+type WonderPayload = {
   title: string;
-  revelation: string;
-  brain_science_gem: string;
-  activity: { main: string; express: string };
-  observe_next: string;
+  article: {
+    lead: string;
+    pull_quote: string;
+    signs: string[];
+    how_to_be_present: string;
+  };
+  schemas_detected?: string[];
+};
+
+type InsightPayload = {
+  reply?: string;
+  wonder?: WonderPayload | null;
+  title?: string;
+  revelation?: string;
+  brain_science_gem?: string;
+  activity?: { main: string; express: string };
+  observe_next?: string;
   schemas_detected?: string[];
 };
 
@@ -49,6 +62,8 @@ type Props = {
 
 function parseInsightPayload(raw: string): InsightPayload {
   const fallback: InsightPayload = {
+    reply: raw,
+    wonder: null,
     title: 'A wonder in motion',
     revelation: raw,
     brain_science_gem: 'Small repeated moments build big neural architecture.',
@@ -61,13 +76,16 @@ function parseInsightPayload(raw: string): InsightPayload {
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) return fallback;
     const p = JSON.parse(match[0]) as Partial<InsightPayload>;
+
     return {
+      reply: p.reply ?? fallback.reply,
+      wonder: p.wonder ?? null,
       title: p.title ?? fallback.title,
       revelation: p.revelation ?? fallback.revelation,
       brain_science_gem: p.brain_science_gem ?? fallback.brain_science_gem,
       activity: {
-        main: p.activity?.main ?? fallback.activity.main,
-        express: p.activity?.express ?? fallback.activity.express,
+        main: p.activity?.main ?? fallback.activity?.main ?? '',
+        express: p.activity?.express ?? fallback.activity?.express ?? '',
       },
       observe_next: p.observe_next ?? fallback.observe_next,
       schemas_detected: p.schemas_detected ?? [],
@@ -200,6 +218,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [showSidebar, setShowSidebar] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -610,6 +629,34 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     <main style={{ position: 'relative', maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: theme.colors.cream, boxShadow: '0 0 60px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
       {activeTab === 'chat' ? (
         <>
+          {openWonder ? (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: theme.colors.cream, overflowY: 'auto' }}>
+              <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 40px' }}>
+                <button onClick={() => setOpenWonder(null)} style={{ border: 'none', borderRadius: 50, background: 'rgba(255,255,255,0.6)', padding: '8px 16px', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, marginBottom: 24 }}>← Back to chat</button>
+                <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.5 }}>✨ Wonder</p>
+                <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openWonder.title}</h1>
+              </div>
+              <div style={{ padding: '0 24px 40px' }}>
+                <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
+                <div style={{ margin: '0 0 24px', padding: '22px 0', borderTop: `2px solid ${theme.colors.rose}55`, borderBottom: `2px solid ${theme.colors.rose}55` }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontStyle: 'italic', textAlign: 'center', fontSize: 19, color: theme.colors.charcoal }}>{openWonder.article.pull_quote}</p>
+                </div>
+                <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, textTransform: 'uppercase', letterSpacing: 0.8 }}>✨ You&apos;ll recognize it when…</p>
+                <div style={{ marginBottom: 24 }}>
+                  {openWonder.article.signs.map((sign, index) => (
+                    <div key={index} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: theme.colors.blush, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.roseDark }}>{index + 1}</div>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{sign}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 24, padding: '24px 22px' }}>
+                  <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.sage, textTransform: 'uppercase', letterSpacing: 0.8 }}>🤲 How to be present</p>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{openWonder.article.how_to_be_present}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {showSidebar ? (
             <div style={{ position: 'absolute', inset: 0, zIndex: 60, display: 'flex' }}>
               <div onClick={() => setShowSidebar(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
@@ -696,37 +743,49 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </div>
                   ) : (
                     <div key={idx} style={{ maxWidth: '92%' }}>
-                      <FadeUp delay={80}>
-                        <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: theme.colors.charcoal }}>{msg.insight.title}</h3>
-                      </FadeUp>
+                      {msg.insight.reply ? (
+                        <>
+                          <FadeUp delay={120}>
+                            <div style={{ background: '#fff', borderRadius: '20px 20px 20px 4px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 10 }}>
+                              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.7, color: theme.colors.darkText }}>{msg.insight.reply}</p>
+                            </div>
+                          </FadeUp>
+                          {msg.insight.wonder ? (
+                            <FadeUp delay={240}>
+                              <button
+                                onClick={() => setOpenWonder(msg.insight.wonder ?? null)}
+                                style={{ width: '100%', textAlign: 'left', border: `1.5px solid ${theme.colors.blushMid}`, borderRadius: 20, background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, padding: '18px 20px', cursor: 'pointer' }}
+                              >
+                                <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.5 }}>✨ New Wonder</p>
+                                <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: theme.colors.charcoal }}>{msg.insight.wonder.title}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                    {(msg.insight.wonder.schemas_detected ?? []).map((schema) => (
+                                      <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>
+                                        {schema}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>Read →</span>
+                                </div>
+                              </button>
+                            </FadeUp>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>
+                          <FadeUp delay={80}>
+                            <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: theme.colors.charcoal }}>{msg.insight.title}</h3>
+                          </FadeUp>
 
-                      <FadeUp delay={180}>
-                        <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, borderLeft: `4px solid ${theme.colors.lavender}`, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>💡 What&apos;s really happening</p>
-                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.65, color: theme.colors.darkText }}>{msg.insight.revelation}</p>
-                        </div>
-                      </FadeUp>
-
-                      <FadeUp delay={280}>
-                        <button onClick={() => setExpandedSection(expandedSection === 'brain' ? null : 'brain')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.lavenderBg, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
-                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🧠 The fascinating part</p>
-                          {expandedSection === 'brain' ? <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.brain_science_gem}</p> : null}
-                        </button>
-                      </FadeUp>
-
-                      <FadeUp delay={380}>
-                        <button onClick={() => setExpandedSection(expandedSection === 'activity' ? null : 'activity')} style={{ width: '100%', border: 'none', borderRadius: 18, background: theme.colors.blush, padding: '14px 16px', textAlign: 'left', marginBottom: 10 }}>
-                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌱 Try this</p>
-                          {expandedSection === 'activity' ? <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.darkText }}>{msg.insight.activity.main}</p> : null}
-                        </button>
-                      </FadeUp>
-
-                      <FadeUp delay={480}>
-                        <div style={{ background: theme.colors.sageBg, borderRadius: 18, padding: '14px 16px' }}>
-                          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.sage }}>👀 Watch for this next</p>
-                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.5, color: theme.colors.darkText }}>{msg.insight.observe_next}</p>
-                        </div>
-                      </FadeUp>
+                          <FadeUp delay={180}>
+                            <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, borderLeft: `4px solid ${theme.colors.lavender}`, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>💡 What&apos;s really happening</p>
+                              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.65, color: theme.colors.darkText }}>{msg.insight.revelation}</p>
+                            </div>
+                          </FadeUp>
+                        </>
+                      )}
                     </div>
                   )
                 )}
