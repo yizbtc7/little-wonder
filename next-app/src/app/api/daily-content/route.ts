@@ -67,7 +67,7 @@ function extractJson(raw: string): unknown {
 
 function buildFallbackDailyContent(childName: string) {
   return {
-    section_title: `¿Qué está pasando en el cerebro de ${childName}?`,
+    section_title: `What's happening inside ${childName}'s brain?`,
     cards: [
       {
         icon: '🧠',
@@ -75,15 +75,15 @@ function buildFallbackDailyContent(childName: string) {
         domain: 'Cognitive/Language',
         preview: `${childName} está conectando lenguaje con causa y efecto en cada repetición cotidiana.`,
         full: {
-          whats_happening: `El cerebro de ${childName} está construyendo modelos mentales sobre cómo funciona el mundo. Cada repetición consolida memoria, predicción y toma de decisiones.`,
+          whats_happening: `${childName}'s brain is building mental models for how the world works. Repetition here strengthens memory, prediction, and decision pathways.`,
           youll_see_it_when: [
-            'Repite una acción para ver si el resultado cambia',
-            'Observa tu reacción antes de intentar de nuevo',
-            'Conecta eventos con “antes” y “después”',
-            'Insiste en entender una secuencia concreta',
+            'Repeats one action to test if the result changes',
+            'Checks your reaction before trying again',
+            'Connects events as before and after',
+            'Insists on understanding one sequence clearly',
           ],
-          fascinating_part: 'Estas micro-pruebas son cimientos tempranos del pensamiento científico.',
-          how_to_be_present: `Describe lo que ves y deja una pausa para que ${childName} continúe. Acompañar sin interrumpir profundiza su razonamiento.`,
+          fascinating_part: 'These micro-tests are early foundations of scientific thinking.',
+          how_to_be_present: `Describe what you see and leave a short pause so ${childName} can continue. Presence without interruption deepens reasoning.`,
         },
       },
       {
@@ -95,12 +95,12 @@ function buildFallbackDailyContent(childName: string) {
           whats_happening: `Cuando ${childName} convierte objetos en personajes o herramientas imaginarias, integra memoria, lenguaje e imaginación en un solo circuito.`,
           youll_see_it_when: [
             'Usa objetos cotidianos con funciones imaginarias',
-            'Imita escenas del día en forma de juego',
+            'Imitates scenes from the day during play',
             'Sostiene una mini-historia por varios turnos',
             'Asigna roles a personas u objetos',
           ],
           fascinating_part: 'El juego simbólico temprano se asocia con avances en lenguaje y autorregulación.',
-          how_to_be_present: `Primero sigue la narrativa de ${childName}. Luego amplía con una frase breve en lugar de redirigir todo el juego.`,
+          how_to_be_present: `First follow ${childName}'s narrative. Then expand with one short line instead of redirecting the whole play flow.`,
         },
       },
       {
@@ -109,15 +109,15 @@ function buildFallbackDailyContent(childName: string) {
         domain: 'Social-Emotional',
         preview: `${childName} está aprendiendo que otras personas piensan y sienten distinto.`,
         full: {
-          whats_happening: `El cerebro social de ${childName} está refinando cómo leer emociones y ajustar conducta según contexto y vínculo.`,
+          whats_happening: `${childName}'s social brain is refining how to read emotions and adapt behavior by context and relationship.`,
           youll_see_it_when: [
-            'Observa tu rostro para calibrar situaciones nuevas',
-            'Nombra emociones básicas o las señala',
-            'Ajusta su conducta según quién esté presente',
-            'Busca reparar conexión después de frustrarse',
+            'Checks your face to calibrate new situations',
+            'Names or points to basic emotions',
+            'Adjusts behavior based on who is present',
+            'Attempts repair after frustration',
           ],
-          fascinating_part: 'Comprender mentes distintas es una base central de empatía y cooperación.',
-          how_to_be_present: `Nombra emociones con lenguaje simple y sin juicio. Tu calma ayuda a ${childName} a organizar su mundo emocional interno.`,
+          fascinating_part: 'Understanding different minds is a core foundation of empathy and cooperation.',
+          how_to_be_present: `Name emotions with simple, non-judgmental language. Your calm helps ${childName} organize their inner emotional world.`,
         },
       },
     ],
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
   try {
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicApiKey) {
-      return NextResponse.json({ error: 'ANTHROPIC_API_KEY no configurada.' }, { status: 500 });
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not configured.' }, { status: 500 });
     }
 
     const supabaseAuth = await createSupabaseServerClient();
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
       .maybeSingle<ChildRow>();
 
     if (!child) {
-      return NextResponse.json({ error: 'Debes completar onboarding primero.' }, { status: 400 });
+      return NextResponse.json({ error: 'You need to complete onboarding first.' }, { status: 400 });
     }
 
     const { today, daySeed } = getBogotaDateParts();

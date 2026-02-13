@@ -68,14 +68,14 @@ function buildPromptContext(params: {
 function parseInsightPayload(raw: string): InsightPayload {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   const fallback: InsightPayload = {
-    title: 'Una revelación sobre su aprendizaje de hoy',
+    title: 'A revelation from today\'s learning',
     revelation: raw,
-    brain_science_gem: 'Cada repetición fortalece conexiones neuronales clave para el aprendizaje profundo.',
+    brain_science_gem: 'Each repetition strengthens neural pathways for deeper learning.',
     activity: {
-      main: 'Invita a tu hijo/a a repetir la misma exploración con un pequeño cambio de material y observa qué estrategia ajusta.',
-      express: 'Versión express: nombra en voz alta una sola cosa que está probando y espera su siguiente intento.',
+      main: 'Invite your child to repeat the same exploration with one small material change and observe what strategy shifts first.',
+      express: 'Quick version: name one thing they are testing and pause for the next attempt.',
     },
-    observe_next: 'La próxima vez, observa la pausa justo antes de actuar: ahí suele aparecer su hipótesis.',
+    observe_next: 'Next time, watch the pause right before action — that often reveals the hypothesis.',
   };
 
   const source = jsonMatch?.[0] ?? raw;
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
   try {
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicApiKey) {
-      return NextResponse.json({ error: 'ANTHROPIC_API_KEY no configurada.' }, { status: 500 });
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not configured.' }, { status: 500 });
     }
 
     const supabaseAuth = await createSupabaseServerClient();
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     const observationText = body.observation?.trim();
 
     if (!observationText) {
-      return NextResponse.json({ error: 'Observación vacía.' }, { status: 400 });
+      return NextResponse.json({ error: 'Observation is empty.' }, { status: 400 });
     }
 
     const db = createClient(
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     ]);
 
     if (!profile || !child) {
-      return NextResponse.json({ error: 'Debes completar onboarding primero.' }, { status: 400 });
+      return NextResponse.json({ error: 'You need to complete onboarding first.' }, { status: 400 });
     }
 
     const { data: recentObservationRows } = await db
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       .single<{ id: string }>();
 
     if (observationError || !observationRow) {
-      return NextResponse.json({ error: `Error guardando observación: ${observationError?.message}` }, { status: 500 });
+      return NextResponse.json({ error: `Error saving observation: ${observationError?.message}` }, { status: 500 });
     }
 
     const childAgeMonths = getAgeInMonths(child.birthdate);
@@ -195,21 +195,21 @@ export async function POST(request: Request) {
     });
 
     const userPrompt = [
-      `Observación de hoy sobre ${child.name}:`,
+      `Today\'s observation about ${child.name}:`,
       observationText,
       '',
-      'Devuelve SOLO JSON válido sin markdown ni texto adicional, con este esquema exacto:',
+      'Return ONLY valid JSON with no markdown or extra text using this exact schema:',
       '{',
-      '  "title": "frase corta y poderosa que resume la revelación",',
-      '  "revelation": "texto de la revelación principal",',
-      '  "brain_science_gem": "dato científico sorprendente",',
+      '  "title": "short powerful line that summarizes the revelation",',
+      '  "revelation": "main revelation text",',
+      '  "brain_science_gem": "surprising science insight",',
       '  "activity": {',
-      '    "main": "actividad principal",',
-      '    "express": "versión de 30 segundos"',
+      '    "main": "main activity",',
+      '    "express": "30-second version"',
       '  },',
-      '  "observe_next": "pregunta de observación para la próxima vez"',
+      '  "observe_next": "what to watch next time"',
       '}',
-      'Usa el nombre del niño al menos 3 veces y mantén tono cálido y específico.',
+      'Use the child\'s name at least 3 times and keep a warm, specific tone.',
     ].join('\n');
 
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
@@ -252,7 +252,7 @@ export async function POST(request: Request) {
           });
 
           if (insightError) {
-            controller.error(new Error(`Error guardando insight: ${insightError.message}`));
+            controller.error(new Error(`Error saving insight: ${insightError.message}`));
             return;
           }
 
