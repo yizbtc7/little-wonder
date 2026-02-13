@@ -551,10 +551,42 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={150}>
           <button
             onClick={() => setIsComposerOpen(true)}
-            style={{ width: '100%', textAlign: 'left', background: theme.colors.white, borderRadius: theme.radius.card, padding: '16px 18px', marginBottom: 14, boxShadow: theme.shadows.subtle, border: `1.5px dashed ${theme.colors.grayBg}`, cursor: 'pointer' }}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              background: `linear-gradient(135deg, ${theme.colors.brandLight} 0%, ${theme.colors.white} 100%)`,
+              borderRadius: theme.radius.card,
+              padding: '18px 18px',
+              marginBottom: 14,
+              boxShadow: theme.shadows.elevated,
+              border: `2px solid ${theme.colors.brand}`,
+              cursor: 'pointer',
+            }}
           >
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.dark, fontWeight: 600 }}>What&apos;s {childName} up to?</p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 2 }}>Log a moment of wonder</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brandDark, fontWeight: 700, marginBottom: 4 }}>
+              ✨ NUEVO MOMENTO
+            </p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 18, color: theme.colors.dark, fontWeight: 800 }}>
+              What&apos;s {childName} up to?
+            </p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.gray, marginTop: 4 }}>
+              Toca para descubrir la maravilla detrás de lo que acabas de ver.
+            </p>
+            <div
+              style={{
+                display: 'inline-block',
+                marginTop: 10,
+                background: theme.colors.brand,
+                color: theme.colors.white,
+                borderRadius: 999,
+                padding: '8px 14px',
+                fontFamily: theme.fonts.body,
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              Registrar momento
+            </div>
           </button>
         </FadeIn>
 
