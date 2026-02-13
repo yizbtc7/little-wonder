@@ -154,9 +154,41 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
 
       <section style={{ padding: '20px 20px 0' }}>
         <ScaleIn delay={120}>
-          <div onClick={() => setIsComposerOpen(true)} style={{ background: '#fff', borderRadius: theme.radius.lg, padding: 16, marginBottom: 20, border: `1.5px dashed ${theme.colors.blushMid}`, cursor: 'pointer' }}>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontWeight: 700 }}>What did you see in {childName}?</p>
-            <p style={{ margin: '2px 0 0', color: theme.colors.lightText, fontSize: 12 }}>Describe a moment — we&apos;ll show you the science ✨</p>
+          <div
+            onClick={() => setIsComposerOpen(true)}
+            style={{
+              background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`,
+              borderRadius: theme.radius.lg,
+              padding: 18,
+              marginBottom: 22,
+              border: `1.5px solid ${theme.colors.rose}`,
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(196,117,106,0.12)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                right: -28,
+                top: -28,
+                width: 90,
+                height: 90,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.35)',
+                pointerEvents: 'none',
+              }}
+            />
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontWeight: 800, fontSize: 21, color: theme.colors.charcoal }}>
+              What did you see in {childName}?
+            </p>
+            <p style={{ margin: '6px 0 0', color: theme.colors.midText, fontSize: 14, lineHeight: 1.45 }}>
+              This is where the magic happens — log one moment and unlock the science behind it ✨
+            </p>
+            <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, background: theme.colors.charcoal, color: '#fff', borderRadius: 999, padding: '10px 16px', fontSize: 13, fontWeight: 700 }}>
+              Start now <span>→</span>
+            </div>
           </div>
         </ScaleIn>
 
