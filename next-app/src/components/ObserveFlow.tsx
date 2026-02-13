@@ -7,15 +7,6 @@ import FadeIn from '@/components/ui/FadeIn';
 import WonderCard from '@/components/ui/WonderCard';
 import { theme } from '@/styles/theme';
 
-type InsightCard = {
-  id: string;
-  content: string;
-  created_at: string;
-  schema_detected: string | null;
-  domain: string | null;
-  json_response: Record<string, unknown> | null;
-};
-
 type InsightPayload = {
   revelation: string;
   brain_science_gem: string;
@@ -31,7 +22,13 @@ type ObserveFlowProps = {
   childName: string;
   childAgeLabel: string;
   childBirthdate: string;
-  insights: InsightCard[];
+};
+
+type StageWonder = {
+  icon: string;
+  title: string;
+  body: string;
+  domain: string;
 };
 
 function getAgeMonths(birthdate: string): number {
@@ -70,6 +67,18 @@ function parseInsightPayload(raw: string): InsightPayload {
   }
 }
 
+function payloadFromStageWonder(wonder: StageWonder, childName: string): InsightPayload {
+  return {
+    revelation: wonder.body,
+    brain_science_gem: `${childName} está en una ventana de alta plasticidad cerebral, así que este patrón repetido está consolidando redes clave para aprendizaje futuro.`,
+    activity: {
+      main: `Prueba extender "${wonder.title}" con objetos de casa en 2-3 variaciones, dejando que ${childName} lidere y tú solo narres lo que observas.`,
+      express: `Versión express: observa 30 segundos, nombra una sola cosa que ${childName} está probando y espera su siguiente intento.`,
+    },
+    observe_next: `La próxima vez, fíjate en la pausa de ${childName} justo antes de actuar: esa micro-pausa suele mostrar su hipótesis en tiempo real.`,
+  };
+}
+
 function renderWithChildBold(text: string, childName: string) {
   const safe = childName.trim();
   if (!safe) return text;
@@ -79,41 +88,127 @@ function renderWithChildBold(text: string, childName: string) {
   );
 }
 
+function rotateByDay<T>(items: T[]): T[] {
+  if (items.length <= 1) return items;
+  const dayIndex = new Date().getDate() % items.length;
+  return [...items.slice(dayIndex), ...items.slice(0, dayIndex)];
+}
+
 function getStageContent(ageMonths: number, childName: string) {
+  const name = childName || 'your baby';
+
+  if (ageMonths <= 4) {
+    return {
+      stage: 'Early Explorer',
+      tip: `At this age, ${name} is absorbing everything through sensation. Narrate what you're doing throughout the day. Your voice is ${name}'s favorite sound, and this builds language long before first words.`,
+      observePrompts: [`What catches ${name}'s attention most?`, `How does ${name} react to different sounds?`, `What makes ${name} most calm or alert?`],
+      dailyWonders: [
+        {
+          icon: '👀',
+          title: 'Tracking Mastery',
+          body: `Right now, ${name}'s brain is building visual pathways at an extraordinary rate. When ${name} follows your face or a toy, that's active brain-building that later supports reading, sports, and social skills.`,
+          domain: 'Visual Development',
+        },
+        {
+          icon: '✋',
+          title: 'The Grasp Reflex',
+          body: `When ${name} grips your finger, it's one of the oldest reflexes in development. Over the coming weeks, this automatic grip transforms into intentional reaching — one of the most important cognitive leaps of the first year.`,
+          domain: 'Motor Development',
+        },
+        {
+          icon: '🗣️',
+          title: 'Serve & Return',
+          body: `Every time you respond to ${name}'s coos and cries, you're building what scientists call serve-and-return interactions. These back-and-forth exchanges literally construct brain architecture.`,
+          domain: 'Communication',
+        },
+      ],
+    };
+  }
+
+  if (ageMonths <= 8) {
+    return {
+      stage: 'Sensory Scientist',
+      tip: `This is a golden age of cause-and-effect learning. ${name} is fascinated by “what happens when I do this?” Safe things to bang, shake, drop, and squeeze are perfect right now.`,
+      observePrompts: [`What does ${name} keep reaching for?`, `What makes ${name} laugh right now?`, `How is ${name} moving differently this week?`],
+      dailyWonders: [
+        {
+          icon: '👄',
+          title: 'The Mouth Laboratory',
+          body: `When ${name} puts everything in their mouth, they're running a sensory lab. The mouth gives more precise info about texture, temperature, and shape than hands can offer right now.`,
+          domain: 'Sensory Exploration',
+        },
+        {
+          icon: '🔄',
+          title: 'Object Permanence Emerging',
+          body: `${name} is starting to understand that things exist even when hidden. Looking for dropped toys means ${name} can hold a mental picture of something they can't see.`,
+          domain: 'Cognitive Development',
+        },
+        {
+          icon: '😊',
+          title: 'Social Referencing',
+          body: `Watch how ${name} checks your face when something new happens. ${name} uses your emotional response as a guide for how to feel about the world.`,
+          domain: 'Social-Emotional',
+        },
+      ],
+    };
+  }
+
   if (ageMonths <= 14) {
     return {
       stage: 'Little Physicist',
-      tip: `${childName} may have a repeated play schema. Look for dropping, filling, rotating, or lining up patterns.`,
-      observePrompts: [
-        `What does ${childName} do over and over again?`,
-        `What new thing did ${childName} figure out this week?`,
-        `What frustrates ${childName} right now?`,
-      ],
+      tip: `${name} may have a schema — a pattern of play they repeat obsessively (trajectory, enclosure, rotation). These patterns are deep learning, not random behavior.`,
+      observePrompts: [`What does ${name} do over and over again?`, `What new thing did ${name} figure out recently?`, `What frustrates ${name} right now?`],
       dailyWonders: [
-        { icon: '⬇️', title: 'The Drop Experiment', body: `${childName} tests gravity, sound, and social response with each drop.`, domain: 'Scientific Thinking' },
-        { icon: '📦', title: 'Container Play', body: `Putting in and taking out objects trains spatial reasoning and early math.`, domain: 'Spatial Reasoning' },
-        { icon: '🚶', title: 'Movement & Independence', body: `Mobility gives ${childName} agency and drives self-directed learning.`, domain: 'Motor & Cognitive' },
+        {
+          icon: '⬇️',
+          title: 'The Drop Experiment',
+          body: `If ${name} keeps dropping things, you're living with a tiny physicist. Each drop is a real experiment: Does it fall the same way? Same sound? Will someone react?`,
+          domain: 'Scientific Thinking',
+        },
+        {
+          icon: '📦',
+          title: 'Container Play',
+          body: `Putting things in and taking them out trains spatial relationships, volume, categories, and the concept of inside/outside. This is pre-math, pre-engineering thinking.`,
+          domain: 'Spatial Reasoning',
+        },
+        {
+          icon: '🚶',
+          title: 'Movement & Independence',
+          body: `Independent movement transforms cognition. ${name} can choose what to explore, approach what's interesting, and retreat from what isn't. That's agency.`,
+          domain: 'Motor & Cognitive',
+        },
       ],
     };
   }
 
   return {
     stage: 'World Builder',
-    tip: `Follow ${childName}’s lead and narrate what you see. That grows language and confidence at once.`,
-    observePrompts: [
-      `What is ${childName} pretending lately?`,
-      `What phrase did ${childName} repeat today?`,
-      `What does ${childName} choose during free play?`,
-    ],
+    tip: `Follow ${name}'s lead in play. Instead of redirecting, narrate what you see: “You're stacking the blue blocks high.” That deepens engagement and confidence.`,
+    observePrompts: [`What is ${name} pretending or imagining lately?`, `What new words or phrases has ${name} picked up?`, `What does ${name} choose during free time?`],
     dailyWonders: [
-      { icon: '💬', title: 'Language in Action', body: `${childName} is absorbing language rapidly from everyday moments.`, domain: 'Language' },
-      { icon: '🎭', title: 'Pretend Thinking', body: `Symbolic play is abstract thinking in action.`, domain: 'Cognitive' },
-      { icon: '🤝', title: 'Social Mapping', body: `${childName} is learning others have different feelings and perspectives.`, domain: 'Social-Emotional' },
+      {
+        icon: '💬',
+        title: 'The Language Explosion',
+        body: `${name} is in the fastest language acquisition phase of life. Even before many words, ${name} understands far more than can be expressed.`,
+        domain: 'Language Development',
+      },
+      {
+        icon: '🎭',
+        title: 'Pretend Play Emerges',
+        body: `When ${name} pretends a banana is a phone, that's complex cognition: holding two realities at once (what it is vs what it represents).`,
+        domain: 'Cognitive & Imagination',
+      },
+      {
+        icon: '🤝',
+        title: 'Social Understanding',
+        body: `${name} is developing theory of mind — understanding others have different thoughts and feelings. That's sophisticated social cognition.`,
+        domain: 'Social-Emotional',
+      },
     ],
   };
 }
 
-export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, insights }: ObserveFlowProps) {
+export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate }: ObserveFlowProps) {
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [showInsightScreen, setShowInsightScreen] = useState(false);
   const [observation, setObservation] = useState('');
@@ -123,24 +218,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [isLoading, setIsLoading] = useState(false);
 
   const ageMonths = getAgeMonths(childBirthdate);
-  const stageContent = useMemo(() => getStageContent(ageMonths, childName), [ageMonths, childName]);
+  const baseStageContent = useMemo(() => getStageContent(ageMonths, childName), [ageMonths, childName]);
+  const stageContent = useMemo(
+    () => ({
+      ...baseStageContent,
+      dailyWonders: rotateByDay(baseStageContent.dailyWonders),
+      observePrompts: rotateByDay(baseStageContent.observePrompts),
+    }),
+    [baseStageContent]
+  );
   const parsedInsight = useMemo(() => currentInsight ?? parseInsightPayload(rawInsightResponse), [currentInsight, rawInsightResponse]);
-
-  const historicalWonders = insights.map((item) => {
-    const payload =
-      item.json_response && typeof item.json_response === 'object' && 'payload' in item.json_response
-        ? (item.json_response.payload as InsightPayload)
-        : parseInsightPayload(item.content);
-
-    return {
-      id: item.id,
-      icon: '✨',
-      title: item.domain ?? 'Moment of Wonder',
-      body: payload.revelation,
-      domain: item.schema_detected ?? stageContent.stage,
-      payload,
-    };
-  });
 
   const generateInsight = async () => {
     if (!observation.trim()) {
@@ -204,50 +291,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </Button>
 
         <FadeIn delay={0}>
-          <section
-            style={{
-              background: theme.colors.white,
-              borderRadius: theme.radius.card,
-              padding: 22,
-              boxShadow: theme.shadows.elevated,
-              borderLeft: `4px solid ${theme.colors.brand}`,
-              marginBottom: 12,
-            }}
-          >
-            <p style={{ color: theme.colors.brand, textTransform: 'uppercase', fontSize: 12, fontFamily: theme.fonts.body, fontWeight: 700, marginBottom: 8 }}>
-              💡 Lo que está pasando
-            </p>
-            <article style={{ color: theme.colors.dark, lineHeight: 1.7, fontSize: 15, fontFamily: theme.fonts.body }}>
-              {renderWithChildBold(parsedInsight.revelation, childName)}
-            </article>
+          <section style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 22, boxShadow: theme.shadows.elevated, borderLeft: `4px solid ${theme.colors.brand}`, marginBottom: 12 }}>
+            <p style={{ color: theme.colors.brand, textTransform: 'uppercase', fontSize: 12, fontFamily: theme.fonts.body, fontWeight: 700, marginBottom: 8 }}>💡 Lo que está pasando</p>
+            <article style={{ color: theme.colors.dark, lineHeight: 1.7, fontSize: 15, fontFamily: theme.fonts.body }}>{renderWithChildBold(parsedInsight.revelation, childName)}</article>
           </section>
         </FadeIn>
 
         <FadeIn delay={300}>
-          <section
-            style={{
-              background: theme.colors.brandLight,
-              borderRadius: theme.radius.card,
-              padding: 18,
-              boxShadow: theme.shadows.subtle,
-              marginBottom: 12,
-            }}
-          >
+          <section style={{ background: theme.colors.brandLight, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
             <p style={{ color: theme.colors.brandDark, fontWeight: 700, marginBottom: 6, fontFamily: theme.fonts.body }}>🧠 Dato fascinante</p>
             <p style={{ color: theme.colors.dark, fontWeight: 500, lineHeight: 1.6, fontFamily: theme.fonts.body }}>{parsedInsight.brain_science_gem}</p>
           </section>
         </FadeIn>
 
         <FadeIn delay={600}>
-          <section
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`,
-              borderRadius: theme.radius.card,
-              padding: 20,
-              boxShadow: theme.shadows.subtle,
-              marginBottom: 12,
-            }}
-          >
+          <section style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, boxShadow: theme.shadows.subtle, marginBottom: 12 }}>
             <p style={{ color: theme.colors.warmDark, fontWeight: 700, marginBottom: 8, fontFamily: theme.fonts.body }}>🌱 Prueba esto</p>
             <p style={{ color: theme.colors.dark, lineHeight: 1.6, fontFamily: theme.fonts.body, marginBottom: 10 }}>{parsedInsight.activity.main}</p>
             <div style={{ background: theme.colors.white, borderRadius: 12, padding: 12 }}>
@@ -258,14 +316,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </FadeIn>
 
         <FadeIn delay={900}>
-          <section
-            style={{
-              background: theme.colors.sageLight,
-              borderRadius: theme.radius.card,
-              padding: 18,
-              boxShadow: theme.shadows.subtle,
-            }}
-          >
+          <section style={{ background: theme.colors.sageLight, borderRadius: theme.radius.card, padding: 18, boxShadow: theme.shadows.subtle }}>
             <p style={{ color: theme.colors.sage, fontWeight: 700, marginBottom: 6, fontFamily: theme.fonts.body }}>👀 Para la próxima vez</p>
             <p style={{ color: theme.colors.dark, fontWeight: 700, fontSize: 17, lineHeight: 1.5, fontFamily: theme.fonts.body }}>{parsedInsight.observe_next}</p>
           </section>
@@ -276,23 +327,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   return (
     <main style={{ minHeight: '100vh', background: theme.colors.cream, paddingBottom: 96 }}>
-      <header
-        style={{
-          background: `linear-gradient(135deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 100%)`,
-          padding: '32px 24px 28px',
-          borderRadius: '0 0 28px 28px',
-        }}
-      >
+      <header style={{ background: `linear-gradient(135deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 100%)`, padding: '32px 24px 28px', borderRadius: '0 0 28px 28px' }}>
         <FadeIn delay={80}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>
-                Good morning, {parentName} 👋
-              </p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>Good morning, {parentName} 👋</p>
               <h1 style={{ color: theme.colors.white, fontSize: 42, lineHeight: 1.1 }}>{childName}&apos;s World Today</h1>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>
-                {childAgeLabel} · {stageContent.stage}
-              </p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>{childAgeLabel} · {stageContent.stage}</p>
             </div>
             <LogoutButton />
           </div>
@@ -303,51 +344,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={150}>
           <button
             onClick={() => setIsComposerOpen(true)}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              background: theme.colors.white,
-              borderRadius: theme.radius.card,
-              padding: '16px 18px',
-              marginBottom: 14,
-              boxShadow: theme.shadows.subtle,
-              border: `1.5px dashed ${theme.colors.grayBg}`,
-              cursor: 'pointer',
-            }}
+            style={{ width: '100%', textAlign: 'left', background: theme.colors.white, borderRadius: theme.radius.card, padding: '16px 18px', marginBottom: 14, boxShadow: theme.shadows.subtle, border: `1.5px dashed ${theme.colors.grayBg}`, cursor: 'pointer' }}
           >
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.dark, fontWeight: 600 }}>
-              What&apos;s {childName} up to?
-            </p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.dark, fontWeight: 600 }}>What&apos;s {childName} up to?</p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 2 }}>Log a moment of wonder</p>
           </button>
         </FadeIn>
 
         {isComposerOpen ? (
           <FadeIn>
-            <div
-              style={{
-                background: theme.colors.white,
-                borderRadius: theme.radius.card,
-                padding: 20,
-                marginBottom: 16,
-                boxShadow: theme.shadows.elevated,
-                border: `1.5px solid ${theme.colors.brandLight}`,
-              }}
-            >
-              <textarea
-                autoFocus
-                value={observation}
-                onChange={(event) => setObservation(event.target.value)}
-                placeholder={stageContent.observePrompts[0]}
-                style={{ width: '100%', height: 90, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.body, fontSize: 16, color: theme.colors.dark }}
-              />
+            <div style={{ background: theme.colors.white, borderRadius: theme.radius.card, padding: 20, marginBottom: 16, boxShadow: theme.shadows.elevated, border: `1.5px solid ${theme.colors.brandLight}` }}>
+              <textarea autoFocus value={observation} onChange={(event) => setObservation(event.target.value)} placeholder={stageContent.observePrompts[0]} style={{ width: '100%', height: 90, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.body, fontSize: 16, color: theme.colors.dark }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                <Button variant="ghost" onClick={() => setIsComposerOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={generateInsight} disabled={isLoading || !observation.trim()}>
-                  See the wonder ✨
-                </Button>
+                <Button variant="ghost" onClick={() => setIsComposerOpen(false)}>Cancel</Button>
+                <Button onClick={generateInsight} disabled={isLoading || !observation.trim()}>See the wonder ✨</Button>
               </div>
               {status ? <p style={{ marginTop: 8, color: theme.colors.gray, fontSize: 14 }}>{status}</p> : null}
             </div>
@@ -358,54 +368,36 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <h2 style={{ fontSize: 34, color: theme.colors.dark }}>Today&apos;s Wonders</h2>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>
-                What {childName}&apos;s brain is up to right now
-              </p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight }}>What {childName}&apos;s brain is up to right now</p>
             </div>
-            <span style={{ fontSize: 12, color: theme.colors.brand, background: theme.colors.brandLight, padding: '4px 12px', borderRadius: theme.radius.chip, fontFamily: theme.fonts.body, fontWeight: 600 }}>
-              {stageContent.stage}
-            </span>
+            <span style={{ fontSize: 12, color: theme.colors.brand, background: theme.colors.brandLight, padding: '4px 12px', borderRadius: theme.radius.chip, fontFamily: theme.fonts.body, fontWeight: 600 }}>{stageContent.stage}</span>
           </div>
         </FadeIn>
 
-        {historicalWonders.length === 0
-          ? stageContent.dailyWonders.map((wonder, index) => <WonderCard key={`${wonder.title}-${index}`} {...wonder} delay={300 + index * 90} />)
-          : historicalWonders.map((wonder, index) => (
-              <WonderCard
-                key={wonder.id}
-                icon={wonder.icon}
-                title={wonder.title}
-                body={wonder.body}
-                domain={wonder.domain}
-                delay={300 + index * 80}
-                onClick={() => {
-                  setCurrentInsight(wonder.payload);
-                  setShowInsightScreen(true);
-                }}
-              />
-            ))}
+        {stageContent.dailyWonders.map((wonder, index) => (
+          <WonderCard
+            key={`${wonder.title}-${index}`}
+            icon={wonder.icon}
+            title={wonder.title}
+            body={wonder.body}
+            domain={wonder.domain}
+            delay={300 + index * 90}
+            onClick={() => {
+              setCurrentInsight(payloadFromStageWonder(wonder, childName));
+              setShowInsightScreen(true);
+            }}
+          />
+        ))}
 
         <FadeIn delay={650}>
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`,
-              borderRadius: theme.radius.card,
-              padding: 20,
-              marginTop: 8,
-              marginBottom: 14,
-            }}
-          >
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>
-              TODAY'S PARENTING INSIGHT
-            </p>
+          <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>{stageContent.tip}</p>
           </div>
         </FadeIn>
 
         <FadeIn delay={720}>
-          <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 10 }}>
-            Things to notice today
-          </p>
+          <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 10 }}>Things to notice today</p>
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8 }}>
             {stageContent.observePrompts.map((prompt) => (
               <button
@@ -414,16 +406,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   setIsComposerOpen(true);
                   setObservation('');
                 }}
-                style={{
-                  background: theme.colors.white,
-                  borderRadius: 14,
-                  padding: '14px 16px',
-                  minWidth: 220,
-                  boxShadow: theme.shadows.subtle,
-                  border: `1px solid ${theme.colors.grayBg}`,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
+                style={{ background: theme.colors.white, borderRadius: 14, padding: '14px 16px', minWidth: 220, boxShadow: theme.shadows.subtle, border: `1px solid ${theme.colors.grayBg}`, cursor: 'pointer', textAlign: 'left' }}
               >
                 <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.4 }}>{prompt}</p>
                 <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brand, marginTop: 6, fontWeight: 600 }}>Tap to observe →</p>
@@ -433,21 +416,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </FadeIn>
       </section>
 
-      <nav
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: 390,
-          background: theme.colors.white,
-          borderTop: `1px solid ${theme.colors.grayBg}`,
-          display: 'flex',
-          justifyContent: 'space-around',
-          padding: '10px 0 24px',
-        }}
-      >
+      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 390, background: theme.colors.white, borderTop: `1px solid ${theme.colors.grayBg}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 24px' }}>
         {[
           { icon: '🏠', label: 'Today', active: true },
           { icon: '📋', label: 'Timeline', active: false },
@@ -456,9 +425,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         ].map((tab) => (
           <div key={tab.label} style={{ textAlign: 'center', opacity: tab.active ? 1 : 0.45 }}>
             <span style={{ fontSize: 20, display: 'block' }}>{tab.icon}</span>
-            <span style={{ fontFamily: theme.fonts.body, fontSize: 10, color: tab.active ? theme.colors.brand : theme.colors.gray, fontWeight: tab.active ? 700 : 500 }}>
-              {tab.label}
-            </span>
+            <span style={{ fontFamily: theme.fonts.body, fontSize: 10, color: tab.active ? theme.colors.brand : theme.colors.gray, fontWeight: tab.active ? 700 : 500 }}>{tab.label}</span>
           </div>
         ))}
       </nav>
