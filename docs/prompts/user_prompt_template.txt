@@ -1,29 +1,10 @@
-You are generating an insight for Little Wonder.
+Recent observations:
+{recent_observations}
 
-OUTPUT MODE:
-{{output_format}}
+Previously detected schemas:
+{detected_schemas}
 
-CHILD CONTEXT:
-- Name: {{child_name}}
-- Age months: {{child_age_months}}
-- Age label: {{child_age_label}}
-- Interests: {{child_interests}}
-- Recent observations: {{recent_observations}}
-- Previously detected schemas: {{detected_schemas}}
-- Siblings: {{siblings}}
+New observation:
+{new_observation}
 
-PARENT CONTEXT:
-- Parent name: {{parent_name}}
-- Parent role: {{parent_role}}
-- Session count: {{session_count}}
-- Time of day: {{time_of_day}}
-- Day of week: {{day_of_week}}
-
-NEW OBSERVATION:
-{{parent_observation}}
-
-TASK:
-- Personalize deeply to this child.
-- Keep warm, concrete, non-clinical.
-- If output_format=json, return strict JSON only.
-- If natural mode, keep it concise and useful.
+Based on the above, generate an insight and list any new or continuing schemas in JSON format.
