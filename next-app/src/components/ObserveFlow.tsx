@@ -142,8 +142,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
     [childName]
   );
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (directText?: string) => {
+    const text = (directText ?? input).trim();
     if (!text) return;
 
     setMessages((prev) => [...prev, { role: 'user', text }]);
@@ -438,7 +438,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
                 <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>Try one of these</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {prompts.map((prompt) => (
-                    <button key={prompt} onClick={() => { setInput(prompt.slice(2).trim()); textAreaRef.current?.focus(); }} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '12px 16px', textAlign: 'left', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, cursor: 'pointer' }}>
+                    <button key={prompt} onClick={() => sendMessage(prompt.slice(2).trim())} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '12px 16px', textAlign: 'left', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, cursor: 'pointer' }}>
                       {prompt}
                     </button>
                   ))}
