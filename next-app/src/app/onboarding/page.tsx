@@ -18,5 +18,5 @@ export default async function OnboardingPage() {
     redirect('/home');
   }
 
-  return <OnboardingForm userId={user.id} userEmail={user.email ?? ''} />;
+  return <OnboardingForm userId={user.id} />;
 }

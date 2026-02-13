@@ -51,6 +51,7 @@ export default async function HomePage() {
       parentName={profile.parent_name}
       childName={child.name}
       childAgeLabel={ageLabel}
+      childBirthdate={child.birthdate}
       insights={insights}
     />
   );
