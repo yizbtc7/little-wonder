@@ -109,27 +109,41 @@ function parseInsightPayload(raw: string): InsightPayload {
     schemas_detected: [],
   };
 
-  try {
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) return fallback;
-    const p = JSON.parse(match[0]) as Partial<InsightPayload>;
+  const parseCandidate = (input: string): Partial<InsightPayload> | null => {
+    try {
+      const match = input.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+      return JSON.parse(match[0]) as Partial<InsightPayload>;
+    } catch {
+      return null;
+    }
+  };
 
-    return {
-      reply: p.reply ?? fallback.reply,
-      wonder: p.wonder ?? null,
-      title: p.title ?? fallback.title,
-      revelation: p.revelation ?? fallback.revelation,
-      brain_science_gem: p.brain_science_gem ?? fallback.brain_science_gem,
-      activity: {
-        main: p.activity?.main ?? fallback.activity?.main ?? '',
-        express: p.activity?.express ?? fallback.activity?.express ?? '',
-      },
-      observe_next: p.observe_next ?? fallback.observe_next,
-      schemas_detected: p.schemas_detected ?? [],
-    };
-  } catch {
-    return fallback;
-  }
+  const cleaned = raw
+    .replace(/^```json\s*/i, '')
+    .replace(/^json\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  const parsed =
+    parseCandidate(cleaned) ??
+    parseCandidate(cleaned.replaceAll('\\"', '"').replaceAll('\\n', '\n').replaceAll('\\t', '\t'));
+
+  if (!parsed) return fallback;
+
+  return {
+    reply: parsed.reply ?? fallback.reply,
+    wonder: parsed.wonder ?? null,
+    title: parsed.title ?? fallback.title,
+    revelation: parsed.revelation ?? fallback.revelation,
+    brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
+    activity: {
+      main: parsed.activity?.main ?? fallback.activity?.main ?? '',
+      express: parsed.activity?.express ?? fallback.activity?.express ?? '',
+    },
+    observe_next: parsed.observe_next ?? fallback.observe_next,
+    schemas_detected: parsed.schemas_detected ?? [],
+  };
 }
 
 function withChildName(text: string, childName: string): string {
