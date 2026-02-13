@@ -155,6 +155,24 @@ function deserializeAssistantInsight(content: string): InsightPayload {
   try {
     const parsed = JSON.parse(content) as Partial<InsightPayload>;
     if (!parsed || typeof parsed !== 'object') return parseInsightPayload(content);
+
+    if (parsed.reply || parsed.wonder) {
+      return {
+        reply: parsed.reply ?? '',
+        wonder: parsed.wonder ?? null,
+        title: parsed.title,
+        revelation: parsed.revelation,
+        brain_science_gem: parsed.brain_science_gem,
+        activity: parsed.activity,
+        observe_next: parsed.observe_next,
+        schemas_detected: Array.isArray(parsed.schemas_detected) ? parsed.schemas_detected : [],
+      };
+    }
+
+    if (typeof parsed.revelation === 'string' && parsed.revelation.includes('"reply"')) {
+      return parseInsightPayload(parsed.revelation);
+    }
+
     return {
       title: parsed.title ?? 'A wonder in motion',
       revelation: parsed.revelation ?? '',
