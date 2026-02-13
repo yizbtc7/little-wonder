@@ -1,8 +1,8 @@
 export const theme = {
   colors: {
-    brand: '#6B5CE7',
-    brandLight: '#EDE9F7',
-    brandDark: '#4A3DB5',
+    brand: '#E3B938',
+    brandLight: '#FFF6DA',
+    brandDark: '#B68E1E',
     coral: '#E8725A',
     coralLight: '#FFF0ED',
     sage: '#4AA87D',

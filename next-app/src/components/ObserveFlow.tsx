@@ -536,13 +536,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   return (
     <main style={{ minHeight: '100vh', background: theme.colors.cream, paddingBottom: 96 }}>
-      <header style={{ background: `linear-gradient(135deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 100%)`, padding: '32px 24px 28px', borderRadius: '0 0 28px 28px' }}>
+      <header style={{ background: theme.colors.white, padding: '28px 24px 20px', borderBottom: `1px solid ${theme.colors.grayBg}` }}>
         <FadeIn delay={80}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>Good morning, {parentName} 👋</p>
-              <h1 style={{ color: theme.colors.white, fontSize: 42, lineHeight: 1.1 }}>{childName}&apos;s World Today</h1>
-              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 4 }}>{childAgeLabel} · {stageContent.stage}</p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray, marginBottom: 4 }}>Good morning, {parentName} 👋</p>
+              <h1 style={{ color: theme.colors.dark, fontSize: 36, lineHeight: 1.15 }}>{childName}&apos;s World Today</h1>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 4 }}>{childAgeLabel} · {stageContent.stage}</p>
             </div>
             <LogoutButton />
           </div>
@@ -556,17 +556,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             style={{
               width: '100%',
               textAlign: 'left',
-              background: `linear-gradient(135deg, ${theme.colors.brandLight} 0%, ${theme.colors.white} 100%)`,
-              borderRadius: theme.radius.card,
+              background: theme.colors.white,
+              borderRadius: 20,
               padding: '18px 18px',
-              marginBottom: 14,
-              boxShadow: theme.shadows.elevated,
-              border: `2px solid ${theme.colors.brand}`,
+              marginBottom: 16,
+              boxShadow: theme.shadows.subtle,
+              border: `1px solid ${theme.colors.grayBg}`,
               cursor: 'pointer',
             }}
           >
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brandDark, fontWeight: 700, marginBottom: 4 }}>
-              ✨ NUEVO MOMENTO
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.brandDark, fontWeight: 700, marginBottom: 6 }}>
+              ✨ Moment of wonder
             </p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 18, color: theme.colors.dark, fontWeight: 800 }}>
               What&apos;s {childName} up to?
@@ -579,9 +579,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 display: 'inline-block',
                 marginTop: 10,
                 background: theme.colors.brand,
-                color: theme.colors.white,
+                color: theme.colors.dark,
                 borderRadius: 999,
-                padding: '8px 14px',
+                padding: '9px 16px',
                 fontFamily: theme.fonts.body,
                 fontSize: 13,
                 fontWeight: 700,

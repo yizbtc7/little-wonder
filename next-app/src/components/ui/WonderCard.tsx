@@ -39,7 +39,7 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
           marginBottom: 12,
           cursor: onClick ? 'pointer' : 'default',
           boxShadow: hovered ? theme.shadows.elevated : theme.shadows.subtle,
-          border: hovered ? `1px solid ${theme.colors.brandLight}` : `1px solid #F0F0F0`,
+          border: hovered ? `1px solid ${theme.colors.brand}` : `1px solid ${theme.colors.grayBg}`,
           transition: `all ${theme.motion.normal} ${theme.motion.spring}`,
           transform: pressed ? 'scale(0.985)' : hovered ? 'translateY(-2px)' : 'none',
         }}
