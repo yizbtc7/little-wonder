@@ -220,8 +220,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
         </FadeUp>
 
         <FadeUp delay={320}>
-          <h2 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 24, color: theme.colors.charcoal }}>Inside {childName}'s brain</h2>
-          <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
+          <h2 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 24, color: theme.colors.charcoal }}>What might be happening in {childName}&apos;s brain</h2>
+          <p style={{ margin: '3px 0 10px', fontSize: 12, color: theme.colors.lightText }}>Science-backed possibilities based on this stage</p>
         </FadeUp>
 
         {personalizedCards.map((card, index) => (
