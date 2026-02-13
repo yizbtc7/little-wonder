@@ -345,6 +345,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   }, []);
 
   useEffect(() => {
+    autoResizeTextArea();
+  }, [input]);
+
+  useEffect(() => {
     if (!typing) {
       setTypingMessageIndex(0);
       return;
@@ -479,6 +483,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     return id;
   };
 
+  const autoResizeTextArea = () => {
+    const el = textAreaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+    el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden';
+  };
+
   const sendMessage = async (directText?: string) => {
     const text = (directText ?? input).trim();
     if (!text) return;
@@ -486,6 +498,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setInput('');
     setTyping(true);
+    requestAnimationFrame(autoResizeTextArea);
 
     const convId = await ensureConversation(text);
 
@@ -969,7 +982,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <textarea
                 ref={textAreaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  autoResizeTextArea();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -978,7 +994,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 }}
                 placeholder={`What is ${childName} doing?`}
                 rows={1}
-                style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.4, maxHeight: 100, minHeight: 20, background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.45, maxHeight: 140, minHeight: 24, padding: '4px 0', background: 'transparent', overflowY: 'hidden' }}
               />
               <button onClick={() => void sendMessage()} disabled={!input.trim()} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: input.trim() ? theme.colors.charcoal : theme.colors.blushMid, color: '#fff', cursor: input.trim() ? 'pointer' : 'default' }}>↑</button>
             </div>
