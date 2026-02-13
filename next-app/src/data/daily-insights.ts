@@ -7,6 +7,13 @@ export type DailyInsight = {
   sourceUrl: string;
 };
 
+export const DAILY_INSIGHT = {
+  tip: "When you read with {{child_name}} tonight, let them turn the pages — even if they skip around.",
+  why: "Every page turn is a decision. The prefrontal cortex runs: evaluate, choose, act. At this stage, those decision circuits are wiring quickly. You are not only reading — you are training decision-making plus language in one moment.",
+  source: '📚 Harvard Center on the Developing Child',
+  sourceUrl: 'https://developingchild.harvard.edu/science/key-concepts/executive-function/',
+};
+
 export const dailyInsights: DailyInsight[] = [
   // 0-4m
   {
