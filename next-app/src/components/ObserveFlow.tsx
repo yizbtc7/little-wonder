@@ -162,12 +162,33 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
   if (activeTab === 'explore' && selectedExploreCard !== null) {
     const card = personalizedCards[selectedExploreCard];
     return (
-      <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: 20 }}>
+      <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: 20, paddingBottom: 110 }}>
         <button onClick={() => setSelectedExploreCard(null)} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>← Back</button>
         <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 26, color: theme.colors.charcoal, margin: '0 0 14px', fontWeight: 700 }}>{card.title}</h2>
+
         <section style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 14, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
           <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🔍 What&apos;s happening</p>
           <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.whats_happening}</p>
+        </section>
+
+        <section style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 14, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+          <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.rose }}>✨ You&apos;ll see it when...</p>
+          {card.full.youll_see_it_when.map((item) => (
+            <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, marginTop: 7, background: theme.colors.rose, flexShrink: 0 }} />
+              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.55, color: theme.colors.darkText }}>{item}</p>
+            </div>
+          ))}
+        </section>
+
+        <section style={{ background: theme.colors.lavenderBg, borderRadius: 24, padding: '18px 20px', marginBottom: 14 }}>
+          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🧠 The fascinating part</p>
+          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.fascinating_part}</p>
+        </section>
+
+        <section style={{ background: theme.colors.sageBg, borderRadius: 24, padding: '18px 20px' }}>
+          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.sage }}>🤲 How to be present</p>
+          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.how_to_be_present}</p>
         </section>
       </main>
     );
