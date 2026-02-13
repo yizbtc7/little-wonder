@@ -161,35 +161,223 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel }: Pr
 
   if (activeTab === 'explore' && selectedExploreCard !== null) {
     const card = personalizedCards[selectedExploreCard];
+
     return (
-      <main style={{ minHeight: '100vh', background: theme.colors.cream, padding: 20, paddingBottom: 110 }}>
-        <button onClick={() => setSelectedExploreCard(null)} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>← Back</button>
-        <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 26, color: theme.colors.charcoal, margin: '0 0 14px', fontWeight: 700 }}>{card.title}</h2>
+      <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
+        <div
+          style={{
+            background: `linear-gradient(180deg, ${card.color ?? theme.colors.blush} 0%, ${theme.colors.cream} 100%)`,
+            padding: '16px 24px 40px',
+          }}
+        >
+          <button
+            onClick={() => setSelectedExploreCard(null)}
+            style={{
+              background: 'rgba(255,255,255,0.5)',
+              border: 'none',
+              borderRadius: 50,
+              padding: '8px 16px',
+              fontFamily: theme.fonts.sans,
+              fontSize: 13,
+              fontWeight: 600,
+              color: theme.colors.darkText,
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 28,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>←</span> Back
+          </button>
 
-        <section style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 14, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🔍 What&apos;s happening</p>
-          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.whats_happening}</p>
-        </section>
-
-        <section style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 14, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.rose }}>✨ You&apos;ll see it when...</p>
-          {card.full.youll_see_it_when.map((item) => (
-            <div key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 6, height: 6, borderRadius: 3, marginTop: 7, background: theme.colors.rose, flexShrink: 0 }} />
-              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.55, color: theme.colors.darkText }}>{item}</p>
+          <FadeUp delay={100}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  background: 'rgba(255,255,255,0.6)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 24,
+                }}
+              >
+                {card.icon}
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: theme.colors.roseDark,
+                  background: 'rgba(255,255,255,0.6)',
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  fontFamily: theme.fonts.sans,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  textTransform: 'uppercase',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                {card.domain}
+              </span>
             </div>
-          ))}
-        </section>
+            <h1
+              style={{
+                fontFamily: theme.fonts.serif,
+                fontSize: 30,
+                color: theme.colors.charcoal,
+                margin: 0,
+                fontWeight: 700,
+                lineHeight: 1.15,
+                letterSpacing: -0.3,
+              }}
+            >
+              {card.title}
+            </h1>
+          </FadeUp>
+        </div>
 
-        <section style={{ background: theme.colors.lavenderBg, borderRadius: 24, padding: '18px 20px', marginBottom: 14 }}>
-          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>🧠 The fascinating part</p>
-          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.fascinating_part}</p>
-        </section>
+        <div style={{ padding: '0 24px 120px', marginTop: -8 }}>
+          <FadeUp delay={300}>
+            <p
+              style={{
+                fontFamily: theme.fonts.sans,
+                fontSize: 16.5,
+                color: theme.colors.darkText,
+                margin: '0 0 28px',
+                lineHeight: 1.75,
+                fontWeight: 400,
+              }}
+            >
+              {card.full.whats_happening}
+            </p>
+          </FadeUp>
 
-        <section style={{ background: theme.colors.sageBg, borderRadius: 24, padding: '18px 20px' }}>
-          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.sage }}>🤲 How to be present</p>
-          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.65, color: theme.colors.darkText }}>{card.full.how_to_be_present}</p>
-        </section>
+          <FadeUp delay={500}>
+            <div
+              style={{
+                margin: '0 0 32px',
+                padding: '24px 0',
+                borderTop: `2px solid ${theme.colors.rose}30`,
+                borderBottom: `2px solid ${theme.colors.rose}30`,
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: theme.fonts.serif,
+                  fontSize: 19,
+                  color: theme.colors.charcoal,
+                  margin: 0,
+                  lineHeight: 1.5,
+                  fontWeight: 600,
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  padding: '0 8px',
+                }}
+              >
+                {card.full.fascinating_part}
+              </p>
+            </div>
+          </FadeUp>
+
+          <FadeUp delay={700}>
+            <p
+              style={{
+                fontFamily: theme.fonts.sans,
+                fontSize: 12,
+                fontWeight: 700,
+                color: theme.colors.rose,
+                margin: '0 0 14px',
+                textTransform: 'uppercase',
+                letterSpacing: 0.8,
+              }}
+            >
+              ✨ You&apos;ll recognize it when…
+            </p>
+            <div style={{ marginBottom: 32 }}>
+              {card.full.youll_see_it_when.map((item, i) => (
+                <div key={item} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      background: theme.colors.blush,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      marginTop: 1,
+                    }}
+                  >
+                    <span style={{ fontSize: 13, color: theme.colors.roseDark, fontWeight: 700 }}>{i + 1}</span>
+                  </div>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.6 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </FadeUp>
+
+          <FadeUp delay={850}>
+            <div
+              style={{
+                width: 40,
+                height: 3,
+                borderRadius: 2,
+                background: theme.colors.blushMid,
+                margin: '0 auto 32px',
+              }}
+            />
+          </FadeUp>
+
+          <FadeUp delay={900}>
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${theme.colors.blush}90 0%, ${theme.colors.warmWhite} 100%)`,
+                borderRadius: 32,
+                padding: '28px 24px',
+                marginBottom: 16,
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: theme.fonts.sans,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: theme.colors.sage,
+                  margin: '0 0 10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                }}
+              >
+                🤲 How to be present
+              </p>
+              <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: 0, lineHeight: 1.7 }}>
+                {card.full.how_to_be_present}
+              </p>
+            </div>
+          </FadeUp>
+
+          <FadeUp delay={1050}>
+            <p
+              style={{
+                fontFamily: theme.fonts.sans,
+                fontSize: 12,
+                color: theme.colors.lightText,
+                textAlign: 'center',
+                margin: '24px 0 0',
+                lineHeight: 1.5,
+              }}
+            >
+              Based on developmental research from Gopnik, Athey &amp; Harvard CCHD
+            </p>
+          </FadeUp>
+        </div>
       </main>
     );
   }
