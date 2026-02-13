@@ -5,6 +5,7 @@ import LogoutButton from '@/components/LogoutButton';
 import Button from '@/components/ui/Button';
 import FadeIn from '@/components/ui/FadeIn';
 import WonderCard from '@/components/ui/WonderCard';
+import { dailyInsights } from '@/data/daily-insights';
 import { theme } from '@/styles/theme';
 
 type InsightPayload = {
@@ -92,6 +93,31 @@ function rotateByDay<T>(items: T[]): T[] {
   if (items.length <= 1) return items;
   const dayIndex = new Date().getDate() % items.length;
   return [...items.slice(dayIndex), ...items.slice(0, dayIndex)];
+}
+
+function withChildName(text: string, childName: string): string {
+  return text.replaceAll('{{child_name}}', childName);
+}
+
+function getDailyParentingInsight(childAgeMonths: number, childName: string) {
+  const filteredInsights = dailyInsights.filter(
+    (insight) => childAgeMonths >= insight.ageRangeMin && childAgeMonths <= insight.ageRangeMax
+  );
+
+  if (filteredInsights.length === 0) {
+    return {
+      text: `Today, follow ${childName}'s lead for 10 focused minutes. Describe what you see, pause, and let ${childName} take the next step.`,
+      source: '📚 Responsive caregiving — early development foundations',
+    };
+  }
+
+  const index = new Date().getDate() % filteredInsights.length;
+  const selected = filteredInsights[index];
+
+  return {
+    text: withChildName(selected.text, childName),
+    source: selected.source,
+  };
 }
 
 function getStageContent(ageMonths: number, childName: string) {
@@ -228,6 +254,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     [baseStageContent]
   );
   const parsedInsight = useMemo(() => currentInsight ?? parseInsightPayload(rawInsightResponse), [currentInsight, rawInsightResponse]);
+  const dailyParentingInsight = useMemo(
+    () => getDailyParentingInsight(ageMonths, childName),
+    [ageMonths, childName]
+  );
 
   const generateInsight = async () => {
     if (!observation.trim()) {
@@ -392,7 +422,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <FadeIn delay={650}>
           <div style={{ background: `linear-gradient(135deg, ${theme.colors.warm} 0%, #F7EDE0 100%)`, borderRadius: theme.radius.card, padding: 20, marginTop: 8, marginBottom: 14 }}>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 700, color: theme.colors.warmDark, marginBottom: 8 }}>TODAY'S PARENTING INSIGHT</p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>{stageContent.tip}</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.dark, lineHeight: 1.6 }}>
+              {dailyParentingInsight.text}
+            </p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.grayLight, marginTop: 8 }}>
+              {dailyParentingInsight.source}
+            </p>
           </div>
         </FadeIn>
 
