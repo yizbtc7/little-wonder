@@ -305,12 +305,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   useEffect(() => {
     if (activeTab !== 'chat') return;
-    void (async () => {
-      const list = await fetchConversations();
-      if (list.length > 0) {
-        await loadConversationMessages(list[0].id);
-      }
-    })();
+    setConversationId(null);
+    setMessages([]);
+    void fetchConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
