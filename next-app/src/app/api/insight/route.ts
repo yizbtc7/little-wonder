@@ -111,7 +111,6 @@ export async function POST(request: Request) {
         child_id: child.id,
         text: observationText,
         observation_text: observationText,
-        created_by: user.id,
       })
       .select('id')
       .single<{ id: string }>();
