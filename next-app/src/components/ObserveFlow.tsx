@@ -2212,9 +2212,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <button
                     onClick={() => setProfileTab('settings')}
                     aria-label={locale === 'es' ? 'Abrir configuración' : 'Open settings'}
-                    style={{ width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.62)', color: '#5B4A45', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(113,82,72,0.08)' }}
+                    style={{ width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.62)', color: '#5B4A45', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(113,82,72,0.08)', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif" }}
                   >
-                    ⚙
+                    ⚙️
                   </button>
                 </div>
 
