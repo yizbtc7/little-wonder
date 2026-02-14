@@ -2410,7 +2410,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             {activitiesStats.total > 0 ? (
               <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 14, background: '#fff', border: `1px solid ${theme.colors.divider}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32' }}>✅ {locale === 'es' ? 'Actividades de la semana' : 'Activities of the week'}</p>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 13, fontWeight: 400, color: '#2D2B32' }}>✅ {locale === 'es' ? 'Actividades de la semana' : 'Activities of the week'}</p>
                   <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: weeklyActivitiesGoalCompleted ? '#2E7D32' : theme.colors.midText, fontWeight: 700 }}>
                     {weeklyActivitiesGoalCompleted ? (locale === 'es' ? '✅ Meta de la semana completada' : '✅ Weekly goal completed') : `${weeklyActivitiesProgress}/${weeklyActivitiesGoalTarget}`}
                   </span>
