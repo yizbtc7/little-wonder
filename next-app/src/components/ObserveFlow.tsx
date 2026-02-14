@@ -919,6 +919,11 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [typingMessageIndex, setTypingMessageIndex] = useState(0);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [isTranscribingVoice, setIsTranscribingVoice] = useState(false);
+  const [voiceTranscriptDraft, setVoiceTranscriptDraft] = useState('');
+  const [voicePreviewUrl, setVoicePreviewUrl] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState('');
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
   const [settingsStatus, setSettingsStatus] = useState('');
@@ -987,6 +992,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileBookmarksRef = useRef<HTMLDivElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const voiceChunksRef = useRef<BlobPart[]>([]);
   const completeOpenArticleReadRef = useRef<(() => void) | null>(null);
   const supabase = createSupabaseBrowserClient();
 
@@ -997,6 +1005,18 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
       setFocusChatComposerIntent(false);
     });
   }, [activeTab, focusChatComposerIntent]);
+
+  useEffect(() => {
+    return () => {
+      if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
+      try {
+        if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+      } catch {
+        // no-op cleanup
+      }
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, [voicePreviewUrl]);
 
   const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName, locale), [childBirthdate, childName, locale]);
 
@@ -1741,6 +1761,89 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden';
   };
 
+  const clearVoiceDraft = () => {
+    setVoiceTranscriptDraft('');
+    setVoiceError('');
+    if (voicePreviewUrl) {
+      URL.revokeObjectURL(voicePreviewUrl);
+      setVoicePreviewUrl(null);
+    }
+  };
+
+  const transcribeVoiceBlob = async (blob: Blob) => {
+    setIsTranscribingVoice(true);
+    setVoiceError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', blob, `voice-note-${Date.now()}.webm`);
+      formData.append('language', locale);
+
+      const response = await fetch(apiUrl('/api/chat/voice'), {
+        method: 'POST',
+        body: formData,
+      });
+
+      const payload = (await response.json()) as { transcript?: string; error?: string };
+      if (!response.ok || !payload.transcript) {
+        throw new Error(payload.error || 'transcription_failed');
+      }
+
+      setVoiceTranscriptDraft(payload.transcript.trim());
+    } catch (error) {
+      setVoiceError(locale === 'es' ? 'No pudimos transcribir la nota. Intenta grabar de nuevo.' : 'We could not transcribe your note. Please try recording again.');
+      setVoiceTranscriptDraft('');
+    } finally {
+      setIsTranscribingVoice(false);
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    if (isRecordingVoice || isTranscribingVoice) return;
+
+    setVoiceError('');
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      voiceChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) voiceChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(voiceChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        const nextUrl = URL.createObjectURL(blob);
+        if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
+        setVoicePreviewUrl(nextUrl);
+        void transcribeVoiceBlob(blob);
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      };
+
+      recorder.start();
+      setIsRecordingVoice(true);
+    } catch {
+      setVoiceError(locale === 'es' ? 'Necesitamos permiso de micrófono para grabar.' : 'Microphone permission is required to record.');
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (!isRecordingVoice) return;
+    setIsRecordingVoice(false);
+    mediaRecorderRef.current?.stop();
+  };
+
+  const sendVoiceNote = async () => {
+    const transcript = voiceTranscriptDraft.trim();
+    if (!transcript || isTranscribingVoice || typing) return;
+    await sendMessage(transcript);
+    clearVoiceDraft();
+  };
+
   const sendMessage = async (directText?: string) => {
     const text = (directText ?? input).trim();
     if (!text) return;
@@ -2155,7 +2258,52 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
           </div>
 
           <div style={{ padding: '12px 16px 28px', borderTop: `1px solid ${theme.colors.divider}` }}>
+            {voicePreviewUrl || isTranscribingVoice || voiceError ? (
+              <div style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '10px 12px', marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.sageDark }}>
+                    {locale === 'es' ? '🎤 Nota de voz' : '🎤 Voice note'}
+                  </span>
+                  <button type='button' onClick={clearVoiceDraft} style={{ border: 'none', background: 'transparent', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.midText, cursor: 'pointer' }}>
+                    {locale === 'es' ? 'Descartar' : 'Discard'}
+                  </button>
+                </div>
+
+                {voicePreviewUrl ? <audio controls src={voicePreviewUrl} style={{ width: '100%', marginBottom: 8 }} /> : null}
+
+                {isTranscribingVoice ? (
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{locale === 'es' ? 'Transcribiendo audio…' : 'Transcribing audio…'}</p>
+                ) : (
+                  <>
+                    <textarea
+                      value={voiceTranscriptDraft}
+                      onChange={(e) => setVoiceTranscriptDraft(e.target.value)}
+                      placeholder={locale === 'es' ? 'Aquí aparecerá la transcripción…' : 'Transcript will appear here…'}
+                      rows={2}
+                      style={{ width: '100%', border: `1px solid ${theme.colors.divider}`, borderRadius: 10, padding: '8px 10px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.45, resize: 'vertical', minHeight: 56 }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                      <button type='button' onClick={() => void sendVoiceNote()} disabled={!voiceTranscriptDraft.trim() || typing} style={{ border: 'none', borderRadius: 10, padding: '8px 12px', background: voiceTranscriptDraft.trim() ? theme.colors.sage : theme.colors.divider, color: '#fff', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, cursor: voiceTranscriptDraft.trim() ? 'pointer' : 'default' }}>
+                        {locale === 'es' ? 'Enviar nota' : 'Send note'}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {voiceError ? <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B34747' }}>{voiceError}</p> : null}
+              </div>
+            ) : null}
+
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, background: '#fff', borderRadius: 24, padding: '10px 12px 10px 18px', border: `1.5px solid ${theme.colors.blushMid}` }}>
+              <button
+                type='button'
+                onClick={isRecordingVoice ? stopVoiceRecording : () => void startVoiceRecording()}
+                disabled={typing || isTranscribingVoice}
+                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : theme.colors.sageLight, color: isRecordingVoice ? '#fff' : theme.colors.sageDark, cursor: typing || isTranscribingVoice ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                aria-label={locale === 'es' ? 'Grabar nota de voz' : 'Record voice note'}
+              >
+                {isRecordingVoice ? '■' : '🎤'}
+              </button>
               <textarea
                 ref={textAreaRef}
                 value={input}
@@ -2173,7 +2321,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 rows={1}
                 style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.45, maxHeight: 140, minHeight: 24, padding: '4px 0', background: 'transparent', overflowY: 'hidden' }}
               />
-              <button onClick={() => void sendMessage()} disabled={!input.trim()} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: input.trim() ? theme.colors.charcoal : theme.colors.blushMid, color: '#fff', cursor: input.trim() ? 'pointer' : 'default' }}>↑</button>
+              <button onClick={() => void sendMessage()} disabled={!input.trim() || typing} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: input.trim() ? theme.colors.charcoal : theme.colors.blushMid, color: '#fff', cursor: input.trim() ? 'pointer' : 'default' }}>↑</button>
             </div>
           </div>
         </>
