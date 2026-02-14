@@ -1373,7 +1373,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </div>
       ) : null}
 
-      {activeTab === 'activities' ? (
+      {activeTab === 'activities' && !openActivityDetail ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
             <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Activities</h1>
