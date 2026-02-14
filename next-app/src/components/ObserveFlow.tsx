@@ -1397,7 +1397,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 40px' }}>
                 <button onClick={() => setOpenWonder(null)} style={{ border: 'none', borderRadius: 50, background: 'rgba(255,255,255,0.6)', padding: '8px 16px', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>← {locale === 'es' ? 'Volver al chat' : 'Back to chat'}</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <span style={{ background: theme.colors.blush, color: '#E8A090', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 }}>✨ {locale === 'es' ? 'MARAVILLA' : 'WONDER'}</span>
+                  <span style={{ background: theme.colors.blush, color: '#E8A090', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 }}>✨ WONDER</span>
                   {(openWonder.schemas_detected ?? []).map((schema) => (
                     <span
                       key={schema}
