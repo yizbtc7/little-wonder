@@ -561,8 +561,27 @@ function TopSchemaCards({ schemaStats, childName, locale }: { schemaStats: Schem
         const contextLine = schemaContextLine(key, childName, locale);
         return (
           <div key={key} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '13px 14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{info.label}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: info.bg,
+                    border: `1px solid ${info.color}33`,
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>{info.emoji}</span>
+                </span>
+                <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{info.label}</p>
+              </div>
               <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '4px 10px', minWidth: 30, textAlign: 'center' }}>{`${count} veces`}</span>
             </div>
             {contextLine ? <p style={{ margin: '5px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 12, color: '#8E8891' }}>{contextLine}</p> : null}
