@@ -268,6 +268,96 @@ function formatSchemaLabel(value: string): string {
     .join(' ');
 }
 
+function formatExploreTypeLabel(type: ExploreArticleRow['type']): string {
+  if (type === 'guide') return 'Guide';
+  if (type === 'research') return 'Research';
+  return 'Article';
+}
+
+function estimateReadTime(text: string): string {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.ceil(words / 220));
+  return `${minutes} min read`;
+}
+
+function formatInlineMarkdown(text: string): string {
+  const escaped = text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
+function markdownToHtml(markdown: string): string {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const html: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  const closeLists = () => {
+    if (inUl) html.push('</ul>');
+    if (inOl) html.push('</ol>');
+    inUl = false;
+    inOl = false;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      closeLists();
+      continue;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      closeLists();
+      html.push(`<h3>${formatInlineMarkdown(trimmed.slice(4))}</h3>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      closeLists();
+      html.push(`<h2>${formatInlineMarkdown(trimmed.slice(3))}</h2>`);
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(trimmed)) {
+      if (!inOl) {
+        if (inUl) {
+          html.push('</ul>');
+          inUl = false;
+        }
+        html.push('<ol>');
+        inOl = true;
+      }
+      html.push(`<li>${formatInlineMarkdown(trimmed.replace(/^\d+\.\s+/, ''))}</li>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      if (!inUl) {
+        if (inOl) {
+          html.push('</ol>');
+          inOl = false;
+        }
+        html.push('<ul>');
+        inUl = true;
+      }
+      html.push(`<li>${formatInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}</li>`);
+      continue;
+    }
+
+    closeLists();
+    html.push(`<p>${formatInlineMarkdown(trimmed)}</p>`);
+  }
+
+  closeLists();
+  return html.join('');
+}
+
 function deserializeAssistantInsight(content: string): InsightPayload {
   return parseInsightPayload(content);
 }
@@ -521,7 +611,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       try {
         const [exploreResponse, articlesResponse] = await Promise.all([
           fetch(apiUrl('/api/explore')),
-          fetch(apiUrl('/api/explore/articles')),
+          fetch(apiUrl(`/api/explore/articles?language=${locale}`)),
         ]);
 
         if (exploreResponse.ok) {
@@ -541,7 +631,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         // ignore fetch errors in non-browser test environments
       }
     })();
-  }, [activeTab]);
+  }, [activeTab, locale]);
 
   useEffect(() => {
     if (activeTab !== 'profile') return;
@@ -666,24 +756,36 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     };
 
     const accent = accentByType[openExploreArticle.type] ?? theme.colors.rose;
-    const bodySections = openExploreArticle.body.split('\n\n').map((section) => section.trim()).filter(Boolean);
 
     return (
       <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
-        <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 40px' }}>
-          <button onClick={() => setOpenExploreArticle(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>
+        <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 36px' }}>
+          <button onClick={() => setOpenExploreArticle(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22 }}>
             <span style={{ fontSize: 14 }}>←</span> Back to Explore
           </button>
-          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: accent }}>{openExploreArticle.emoji} {openExploreArticle.type}</p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <span style={{ fontSize: 30 }}>{openExploreArticle.emoji}</span>
+            <span style={{ fontSize: 10, color: accent, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{formatExploreTypeLabel(openExploreArticle.type)}</span>
+            {openExploreArticle.domain ? <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.domain}</span> : null}
+            <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{estimateReadTime(openExploreArticle.body)}</span>
+          </div>
+
           <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openExploreArticle.title}</h1>
         </div>
 
         <div style={{ padding: '0 24px 40px' }}>
-          {bodySections.map((section, index) => (
-            <p key={index} style={{ margin: index === 0 ? '0 0 16px' : '0 0 16px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText, whiteSpace: 'pre-wrap' }}>
-              {section}
-            </p>
-          ))}
+          <div
+            style={{ fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(openExploreArticle.body) }}
+          />
+          <style>{`
+            h2 { font-family: ${theme.fonts.serif}; font-size: 22px; margin: 24px 0 8px; color: ${theme.colors.charcoal}; }
+            h3 { font-family: ${theme.fonts.serif}; font-size: 18px; margin: 18px 0 6px; color: ${theme.colors.charcoal}; }
+            p { margin: 0 0 14px; }
+            ul, ol { margin: 0 0 14px 20px; padding: 0; }
+            li { margin-bottom: 6px; }
+          `}</style>
         </div>
       </main>
     );
@@ -1176,25 +1278,39 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             })}
 
             <h2 style={{ margin: '18px 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>More to explore</h2>
-            {exploreArticles.map((article) => {
+            {(['article', 'guide', 'research'] as const).map((type) => {
               const accentByType: Record<ExploreArticleRow['type'], string> = {
                 article: theme.colors.rose,
                 research: theme.colors.lavender,
                 guide: theme.colors.sage,
               };
-
-              const accent = accentByType[article.type] ?? theme.colors.rose;
+              const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
+              const articlesByType = exploreArticles.filter((article) => article.type === type);
+              if (articlesByType.length === 0) return null;
 
               return (
-                <button
-                  key={article.id}
-                  onClick={() => setOpenExploreArticle(article)}
-                  style={{ width: '100%', background: '#fff', borderRadius: 18, padding: '14px 16px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, textAlign: 'left' }}
-                >
-                  <span style={{ fontSize: 22 }}>{article.emoji}</span>
-                  <span style={{ flex: 1, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText }}>{article.title}</span>
-                  <span style={{ fontSize: 10, color: accent, background: theme.colors.blushLight, padding: '3px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{article.type}</span>
-                </button>
+                <div key={type} style={{ marginBottom: 14 }}>
+                  <p style={{ margin: '4px 0 10px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: accentByType[type] }}>{formatExploreTypeLabel(type)}</p>
+                  {articlesByType.map((article, index) => {
+                    const accent = accentByType[article.type] ?? theme.colors.rose;
+                    const bg = iconBackgrounds[index % iconBackgrounds.length];
+
+                    return (
+                      <button
+                        key={article.id}
+                        onClick={() => setOpenExploreArticle(article)}
+                        style={{ width: '100%', background: '#fff', borderRadius: 18, padding: '14px 16px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, textAlign: 'left' }}
+                      >
+                        <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: bg }}>{article.emoji}</span>
+                        <span style={{ flex: 1 }}>
+                          <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText }}>{article.title}</span>
+                          <span style={{ display: 'block', marginTop: 4, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {estimateReadTime(article.body)}</span>
+                        </span>
+                        <span style={{ fontSize: 10, color: accent, background: theme.colors.blushLight, padding: '3px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{formatExploreTypeLabel(article.type)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>

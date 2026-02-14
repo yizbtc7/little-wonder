@@ -7,7 +7,7 @@ function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabaseAuth = await createSupabaseServerClient();
   const {
     data: { user },
@@ -32,14 +32,15 @@ export async function GET() {
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
+  const search = new URL(request.url).searchParams;
+  const lang = (search.get('language') || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
 
   const { data, error } = await db
     .from('explore_articles')
     .select('id,title,emoji,type,body,age_min_months,age_max_months,domain,language,created_at')
-    .eq('language', 'en')
+    .eq('language', lang)
     .lte('age_min_months', ageMonths)
     .gte('age_max_months', ageMonths)
-    .order('type', { ascending: true })
     .order('created_at', { ascending: false });
 
   if (error) {
