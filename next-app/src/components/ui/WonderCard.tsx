@@ -12,13 +12,14 @@ type WonderCardProps = {
   delay?: number;
   onClick?: () => void;
   iconBackground?: string;
+  ctaLabel?: string;
 };
 
 function toPreview(text: string): string {
   return text.length > 190 ? `${text.slice(0, 190)}...` : text;
 }
 
-export default function WonderCard({ icon, title, body, domain, delay = 0, onClick, iconBackground }: WonderCardProps) {
+export default function WonderCard({ icon, title, body, domain, delay = 0, onClick, iconBackground, ctaLabel = 'Read more' }: WonderCardProps) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -104,7 +105,7 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
         </div>
 
         <div style={{ padding: '0 20px 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>Read more</span>
+          <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>{ctaLabel}</span>
           <span style={{ fontSize: 12, color: theme.colors.rose }}>→</span>
         </div>
       </article>

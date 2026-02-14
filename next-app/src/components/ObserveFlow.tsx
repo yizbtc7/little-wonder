@@ -1489,6 +1489,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   body={card.preview}
                   delay={idx * 100}
                   iconBackground={iconBackgrounds[idx % iconBackgrounds.length]}
+                  ctaLabel={locale === 'es' ? 'Leer más' : 'Read more'}
                   onClick={() => setSelectedExploreCard(idx)}
                 />
               );
