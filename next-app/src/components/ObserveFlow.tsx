@@ -1454,11 +1454,35 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   };
 
   const completeActivity = async (activityId: string) => {
-    await fetch(apiUrl(`/api/activities/${activityId}/complete`), {
+    const targetActivity = [activitiesFeatured, ...activitiesList, ...savedActivities].find((item) => item?.id === activityId) ?? null;
+
+    const response = await fetch(apiUrl(`/api/activities/${activityId}/complete`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
+
+    if (!response.ok) {
+      setActivitiesLoaded(false);
+      setActivitiesRetry((v) => v + 1);
+      return;
+    }
+
+    const completedAt = new Date().toISOString();
+
+    setActivitiesFeatured((prev) => (prev?.id === activityId ? null : prev));
+    setActivitiesList((prev) => prev.filter((item) => item.id !== activityId));
+    setSavedActivities((prev) => prev.filter((item) => item.id !== activityId));
+    setCompletedActivities((prev) => {
+      if (!targetActivity) return prev;
+      const completedItem = { ...targetActivity, is_completed: true, completed_at: completedAt };
+      return [completedItem, ...prev.filter((item) => item.id !== activityId)];
+    });
+    setActivitiesStats((prev) => ({
+      ...prev,
+      completed: Math.min(prev.total, prev.completed + 1),
+    }));
+
     setOpenActivityDetail(null);
     setActivitiesLoaded(false);
     setActivitiesRetry((v) => v + 1);
