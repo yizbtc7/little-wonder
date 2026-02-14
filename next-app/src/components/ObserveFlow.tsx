@@ -715,6 +715,7 @@ function dedupeArticleTitleKey(title: string): string {
 
 function cleanActivityTitle(title: string): string {
   return title
+    .replace(/\s*[·•]\s*refill-[^\n]+$/i, '')
     .replace(/\s*·\s*(?:ACT)?B\d+-[\w-]+$/i, '')
     .replace(/\s*\((?:ACT)?B\d+-[\w-]+\)$/i, '')
     .replace(/\s+/g, ' ')
@@ -2296,7 +2297,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {activitiesFeatured ? (
               <div onClick={() => setOpenActivityDetail(activitiesFeatured)} style={{ background: `linear-gradient(135deg, #E8E0F0 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 32, padding: '24px 22px', marginBottom: 20, cursor: 'pointer', border: '1.5px solid #D8D0E8', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
                 <div style={{ marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.7)', padding: '4px 12px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>🎯 Made for {childName}</span>
+                  <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.7)', padding: '4px 12px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>🎯 {locale === 'es' ? `Hecho para ${childName}` : `Made for ${childName}`}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{activitiesFeatured.emoji}</div>

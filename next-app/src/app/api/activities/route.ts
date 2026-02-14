@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
-import { getUserLanguage, languagePriority } from '@/lib/language';
+import { getUserLanguage } from '@/lib/language';
 import { normalizeSchemaList } from '@/lib/schemas';
 
 type ActivityRow = {
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
           shortage: MIN_AVAILABLE_TO_DO,
         },
       },
-      inventory: { languages_checked: languagePriority(preferredLanguage), sources_used: [] },
+      inventory: { languages_checked: [preferredLanguage], sources_used: [] },
     });
   }
 
@@ -125,33 +125,31 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map(([schema]) => schema);
 
-  const prioritizedLanguages = languagePriority(preferredLanguage);
+  const prioritizedLanguages = [preferredLanguage];
   const rowsByLanguage = new Map<string, ActivityRow[]>();
+
+  const { data: languageRows, error: languageError } = await db
+    .from('activities')
+    .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,is_featured,created_at')
+    .eq('language', preferredLanguage)
+    .lte('age_min_months', ageMonths)
+    .gte('age_max_months', ageMonths)
+    .order('created_at', { ascending: false });
+
+  if (languageError) {
+    return NextResponse.json({ error: languageError.message }, { status: 500 });
+  }
+
+  const typedRows = (languageRows ?? []) as ActivityRow[];
+  rowsByLanguage.set(preferredLanguage, typedRows);
+
   const mergedRows: ActivityRow[] = [];
   const seenTitles = new Set<string>();
-
-  for (const language of prioritizedLanguages) {
-    const { data: languageRows, error: languageError } = await db
-      .from('activities')
-      .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,is_featured,created_at')
-      .eq('language', language)
-      .lte('age_min_months', ageMonths)
-      .gte('age_max_months', ageMonths)
-      .order('created_at', { ascending: false });
-
-    if (languageError) {
-      return NextResponse.json({ error: languageError.message }, { status: 500 });
-    }
-
-    const typedRows = (languageRows ?? []) as ActivityRow[];
-    rowsByLanguage.set(language, typedRows);
-
-    for (const row of typedRows) {
-      const key = canonicalTitleKey(row.title);
-      if (seenTitles.has(key)) continue;
-      seenTitles.add(key);
-      mergedRows.push(row);
-    }
+  for (const row of typedRows) {
+    const key = canonicalTitleKey(row.title);
+    if (seenTitles.has(key)) continue;
+    seenTitles.add(key);
+    mergedRows.push(row);
   }
 
   if (mergedRows.length === 0) {
