@@ -35,7 +35,11 @@ type Props = {
 function replacePlaceholders(text: string, childName: string, childAge: string) {
   return text
     .replaceAll('{childName}', childName)
+    .replaceAll('{child_name}', childName)
+    .replaceAll('{{child_name}}', childName)
     .replaceAll('{childAge}', childAge)
+    .replaceAll('{child_age}', childAge)
+    .replaceAll('{{child_age}}', childAge)
     .replaceAll('Leo', childName);
 }
 
