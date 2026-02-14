@@ -18,17 +18,17 @@ export function getAgeInMonths(birthdate: string): number {
 
 export function formatAgeLabel(ageInMonths: number): string {
   if (ageInMonths < MONTHS_PER_YEAR) {
-    return `${ageInMonths} meses`;
+    return ageInMonths === 1 ? '1 month' : `${ageInMonths} months`;
   }
 
   const years = Math.floor(ageInMonths / MONTHS_PER_YEAR);
   const months = ageInMonths % MONTHS_PER_YEAR;
 
   if (months === 0) {
-    return years === 1 ? '1 año' : `${years} años`;
+    return years === 1 ? '1 year' : `${years} years`;
   }
 
-  const yearLabel = years === 1 ? '1 año' : `${years} años`;
-  const monthLabel = months === 1 ? '1 mes' : `${months} meses`;
+  const yearLabel = years === 1 ? '1 year' : `${years} years`;
+  const monthLabel = months === 1 ? '1 month' : `${months} months`;
   return `${yearLabel} ${monthLabel}`;
 }
