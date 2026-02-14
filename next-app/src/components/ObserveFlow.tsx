@@ -1002,6 +1002,45 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     }));
   }, [childName, exploreCards]);
 
+  const recentlyReadTitleKeys = useMemo(() => new Set(recentlyReadArticles.map((a) => dedupeArticleTitleKey(a.title))), [recentlyReadArticles]);
+
+  const brainSectionCards = useMemo(() => {
+    const unique = personalizedCards.filter(
+      (card, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(card.title)) === index
+    );
+    return unique.filter((card) => !card.is_read && !recentlyReadTitleKeys.has(dedupeArticleTitleKey(card.title)));
+  }, [personalizedCards, recentlyReadTitleKeys]);
+
+  const newForYouSection = useMemo(() => {
+    const used = new Set(brainSectionCards.map((c) => dedupeArticleTitleKey(c.title)));
+    return newForYouArticles.filter((article) => {
+      const key = dedupeArticleTitleKey(article.title);
+      if (article.is_read || recentlyReadTitleKeys.has(key) || used.has(key)) return false;
+      used.add(key);
+      return true;
+    });
+  }, [brainSectionCards, newForYouArticles, recentlyReadTitleKeys]);
+
+  const deepDiveSection = useMemo(() => {
+    const used = new Set([...brainSectionCards, ...newForYouSection].map((c) => dedupeArticleTitleKey(c.title)));
+    return deepDiveArticles.filter((article) => {
+      const key = dedupeArticleTitleKey(article.title);
+      if (article.is_read || recentlyReadTitleKeys.has(key) || used.has(key)) return false;
+      used.add(key);
+      return true;
+    });
+  }, [brainSectionCards, newForYouSection, deepDiveArticles, recentlyReadTitleKeys]);
+
+  const moreForAgeSection = useMemo(() => {
+    const used = new Set([...brainSectionCards, ...newForYouSection, ...deepDiveSection].map((c) => dedupeArticleTitleKey(c.title)));
+    return [...keepReadingArticles, ...comingNextArticles].filter((article) => {
+      const key = dedupeArticleTitleKey(article.title);
+      if (article.is_read || recentlyReadTitleKeys.has(key) || used.has(key)) return false;
+      used.add(key);
+      return true;
+    });
+  }, [brainSectionCards, newForYouSection, deepDiveSection, keepReadingArticles, comingNextArticles, recentlyReadTitleKeys]);
+
   const schemaGardenSorted = useMemo<SchemaStat[]>(() => {
     const rollup = new Map<SchemaKey, number>();
     for (const stat of profileSchemaStats) {
@@ -1961,14 +2000,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <div style={{ marginTop: 16, height: 1, background: '#F0EDE8' }} />
           </div>
           <div style={{ padding: '12px 16px 0' }}>
-            {exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip ? (
+            {exploreStats.total_available === 0 && brainSectionCards.length === 0 && !exploreDailyTip ? (
               <div style={{ textAlign: 'center', padding: '40px 24px', background: `linear-gradient(135deg, ${theme.colors.blushLight} 0%, ${theme.colors.cream} 100%)`, borderRadius: 20, border: `1px dashed ${theme.colors.divider}` }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
                 <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 600, color: theme.colors.charcoal }}>Contenido en camino</p>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, lineHeight: 1.5 }}>Estamos preparando artículos fascinantes sobre el desarrollo de {childName} a esta edad. ¡Vuelve pronto!</p>
               </div>
             ) : null}
-            {!(exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip) ? (
+            {!(exploreStats.total_available === 0 && brainSectionCards.length === 0 && !exploreDailyTip) ? (
             <>
             {exploreStats.total_available > 0 ? (
               <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
@@ -2016,7 +2055,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
-            {personalizedCards.filter((card) => !card.is_read).slice(0, 3).map((card) => {
+            {brainSectionCards.slice(0, 3).map((card) => {
               const d = card.domain?.toLowerCase() ?? '';
               const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
               const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
@@ -2037,7 +2076,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             })}
 
             <h2 style={{ margin: '28px 4px 14px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🆕 {t.learn.newForYou}</h2>
-            {newForYouArticles.length === 0 ? (
+            {newForYouSection.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.allCaughtUp(childName)}</p>
                 {comingNextArticles.length > 0 ? (
@@ -2046,7 +2085,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingLeft: 4, paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
-                {newForYouArticles.slice(0, 3).map((article) => (
+                {newForYouSection.slice(0, 3).map((article) => (
                   <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                     <div style={{ height: 6, background: article.type === 'guide' ? '#8FAE8B' : article.type === 'research' ? '#C4B5D4' : '#E8A090' }} />
                     <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: article.type === 'guide' ? '#5A9E6F' : article.type === 'research' ? '#8B6CAE' : '#D4766A' }}>{formatExploreTypeLabel(article.type, locale)}</div>
@@ -2059,12 +2098,11 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             )}
 
 
-            {deepDiveArticles.length > 0 ? (
+            {deepDiveSection.length > 0 ? (
               <>
                 <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
-                {deepDiveArticles
-                  .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
+                {deepDiveSection
                   .slice(0, 3)
                   .map((article) => (
                   <button key={`deep-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -2083,11 +2121,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </>
             ) : null}
 
-            {(keepReadingArticles.length > 0 || comingNextArticles.length > 0) ? (
+            {moreForAgeSection.length > 0 ? (
               <>
                 <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
-                {[...keepReadingArticles, ...comingNextArticles]
-                  .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
+                {moreForAgeSection
                   .slice(0, 8)
                   .map((article) => (
                   <button key={`more-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
