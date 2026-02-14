@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import FadeIn from '@/components/ui/FadeIn';
 import ProgressDots from '@/components/ui/ProgressDots';
 import { translations, type Language } from '@/lib/translations';
+import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
 
 type OnboardingFormProps = {
   userId: string;
@@ -21,16 +22,6 @@ const parentGoals = [
   'Tracking development',
   'Being more present',
   'Less screen time',
-];
-const childInterests = [
-  '🎵 Music & sounds',
-  '📦 Stacking & building',
-  '🌊 Water play',
-  '🐛 Animals & bugs',
-  '📚 Books',
-  '🏃 Movement & climbing',
-  '🎨 Drawing & messy play',
-  '🔧 How things work',
 ];
 
 function toggleSelection(values: string[], value: string) {
@@ -263,7 +254,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               {t.onboarding.optionalInterests}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {childInterests.map((interest) => (
+              {CHILD_INTEREST_OPTIONS.map((interest) => (
                 <SelectChip
                   key={interest}
                   text={interest}

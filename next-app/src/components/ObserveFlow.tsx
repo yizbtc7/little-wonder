@@ -10,6 +10,7 @@ import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 import { translations, type Language } from '@/lib/translations';
 import { SCHEMA_INFO, normalizeSchemaKey, normalizeSchemaList, type SchemaKey } from '@/lib/schemas';
+import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
 import ArticleReader from '@/components/article-reader/ArticleReader';
 
 type WonderPayload = {
@@ -802,6 +803,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [newInterestInput, setNewInterestInput] = useState('');
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [interestError, setInterestError] = useState('');
+  const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profilePhotoError, setProfilePhotoError] = useState<string>('');
@@ -1245,6 +1247,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileInterests(payload.interests ?? []);
         setNewInterestInput('');
         setInterestError('');
+        setShowInterestPicker(false);
         setProfileRecentMoments(payload.recent_moments ?? []);
         setProfilePhotoUrl(payload.child?.photo_url ?? null);
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
@@ -1268,8 +1271,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     return hasLeadingEmoji(normalized) ? normalized : `✨ ${normalized}`;
   };
 
-  const submitNewInterest = async () => {
-    const normalized = ensureInterestEmoji(newInterestInput);
+  const submitNewInterest = async (interestValue?: string) => {
+    const normalizedSource = interestValue ?? newInterestInput;
+    const normalized = ensureInterestEmoji(normalizedSource);
     if (!normalized) return;
 
     const duplicateExists = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(normalized));
@@ -1296,6 +1300,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       const payload = (await response.json()) as { interests?: string[] };
       setProfileInterests(payload.interests ?? profileInterests);
       setNewInterestInput('');
+      setShowInterestPicker(false);
     } catch {
       setInterestError(locale === 'es' ? 'No pudimos guardar el interés.' : 'Could not save interest.');
     } finally {
@@ -2530,6 +2535,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         value={newInterestInput}
                         onChange={(event) => {
                           setNewInterestInput(event.target.value);
+                          setShowInterestPicker(false);
                           if (interestError) setInterestError('');
                         }}
                         onKeyDown={(event) => {
@@ -2554,8 +2560,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       />
                       <button
                         type='button'
-                        onClick={() => void submitNewInterest()}
-                        disabled={isAddingInterest || normalizeInterestLabel(newInterestInput).length === 0}
+                        onClick={() => {
+                          if (normalizeInterestLabel(newInterestInput).length > 0) {
+                            void submitNewInterest();
+                            return;
+                          }
+                          setShowInterestPicker((prev) => !prev);
+                        }}
+                        disabled={isAddingInterest}
                         style={{
                           border: '1px dashed #E1B7AF',
                           background: '#FFF7F5',
@@ -2566,11 +2578,42 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                           color: theme.colors.roseDark,
                           fontWeight: 700,
                           cursor: isAddingInterest ? 'wait' : 'pointer',
-                          opacity: isAddingInterest || normalizeInterestLabel(newInterestInput).length === 0 ? 0.6 : 1,
+                          opacity: isAddingInterest ? 0.6 : 1,
                         }}
                       >
                         + {locale === 'es' ? 'Agregar' : 'Add'}
                       </button>
+                      {showInterestPicker ? (
+                        <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: 8, padding: '2px 2px 0' }}>
+                          {CHILD_INTEREST_OPTIONS.map((interestOption) => {
+                            const alreadyAdded = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(interestOption));
+                            return (
+                              <button
+                                key={interestOption}
+                                type='button'
+                                onClick={() => {
+                                  if (alreadyAdded || isAddingInterest) return;
+                                  void submitNewInterest(interestOption);
+                                }}
+                                disabled={alreadyAdded || isAddingInterest}
+                                style={{
+                                  border: `1px solid ${alreadyAdded ? '#E6D9D6' : '#F0C9C1'}`,
+                                  background: alreadyAdded ? '#F9F6F5' : '#FFF7F5',
+                                  borderRadius: 999,
+                                  padding: '7px 12px',
+                                  fontFamily: theme.fonts.sans,
+                                  fontSize: 12,
+                                  color: alreadyAdded ? theme.colors.lightText : theme.colors.roseDark,
+                                  cursor: alreadyAdded || isAddingInterest ? 'not-allowed' : 'pointer',
+                                  opacity: alreadyAdded ? 0.65 : 1,
+                                }}
+                              >
+                                {interestOption}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                       {interestError ? <p style={{ margin: 0, width: '100%', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{interestError}</p> : null}
                     </div>
 
