@@ -510,6 +510,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
   const [settingsStatus, setSettingsStatus] = useState('');
+  const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -865,6 +866,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setOpenActivityDetail(null);
     setActivitiesLoaded(false);
     setActivitiesRetry((v) => v + 1);
+  };
+
+  const copyInviteLink = async () => {
+    const inviteUrl = `https://www.littlewonder.ai/join/${childId.slice(0, 8)}`;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopiedInviteLink(true);
+      setTimeout(() => setCopiedInviteLink(false), 1800);
+    } catch {
+      setCopiedInviteLink(false);
+    }
   };
 
   const ensureConversation = async (previewText: string): Promise<string | null> => {
@@ -1742,13 +1754,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <div style={{ padding: 20 }}>
               <button onClick={() => setProfileTab('overview')} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>{`← ${t.common.back}`}</button>
               <h1 style={{ margin: '0 0 24px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.settings.title}</h1>
+
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.yourName}</label>
                 <input defaultValue={parentName} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.role}</label>
-                <input defaultValue={'Dad'} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+                <input defaultValue={locale === 'es' ? 'Mamá/Papá' : 'Dad'} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.language}</label>
@@ -1777,6 +1790,50 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <option value='en'>{t.settings.english}</option>
                 </select>
               </div>
+
+              <div style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, border: `1px solid ${theme.colors.divider}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: theme.colors.sageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>👨‍👩‍👧</div>
+                  <div>
+                    <h3 style={{ fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: theme.colors.charcoal, margin: 0 }}>{locale === 'es' ? 'Invitar cuidadores' : 'Invite caregivers'}</h3>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: '2px 0 0' }}>{locale === 'es' ? 'Más ojos, más descubrimientos' : 'More eyes, more discoveries'}</p>
+                  </div>
+                </div>
+
+                <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 14px', lineHeight: 1.5 }}>
+                  {locale === 'es'
+                    ? `Comparte este enlace con quienes cuidan a ${childName}. Tendrán su propia cuenta conectada al mismo perfil.`
+                    : `Share this link with anyone caring for ${childName}. They'll get their own account connected to the same profile.`}
+                </p>
+
+                <p style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.lightText, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {locale === 'es' ? 'Personas con acceso' : 'People with access'}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', marginBottom: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: theme.colors.blush, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>👤</div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText, margin: 0 }}>{parentName}</p>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText, margin: 0 }}>{locale === 'es' ? 'Propietario/a' : 'Owner'}</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ flex: 1, padding: '10px 14px', borderRadius: 12, background: theme.colors.blushLight, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, border: `1px solid ${theme.colors.blushMid}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {`https://www.littlewonder.ai/join/${childId.slice(0, 8)}`}
+                  </div>
+                  <button onClick={() => void copyInviteLink()} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: copiedInviteLink ? theme.colors.sageBg : theme.colors.charcoal, color: copiedInviteLink ? theme.colors.sage : '#fff', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    {copiedInviteLink ? (locale === 'es' ? '✓ Copiado' : '✓ Copied') : (locale === 'es' ? 'Copiar' : 'Copy')}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 16, border: `1px solid ${theme.colors.divider}` }}>
+                <h3 style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Sobre Little Wonder' : 'About Little Wonder'}</h3>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, lineHeight: 1.5 }}>
+                  {locale === 'es' ? 'Compañero de curiosidad para madres y padres. Basado en investigación de Harvard, MIT y NAEYC.' : 'A curiosity companion for parents. Built on research from Harvard, MIT, and NAEYC.'}
+                </p>
+              </div>
+
               <SoftButton variant='soft' full onClick={() => void handleSignOut()} style={{ color: theme.colors.roseDark }}>{t.settings.signOut}</SoftButton>
               {settingsStatus ? <p style={{ marginTop: 10, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sage }}>{settingsStatus}</p> : null}
               {signOutError ? <p style={{ marginTop: 10, fontFamily: theme.fonts.sans, fontSize: 12, color: 'crimson' }}>{signOutError}</p> : null}
@@ -1797,9 +1854,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
                   {[
-                    { n: profileTimeline.length, l: t.profile.wonders },
-                    { n: profileSchemaStats.length, l: t.profile.schemas },
-                    { n: new Set(profileTimeline.map((entry) => new Date(entry.created_at).toDateString())).size, l: t.profile.days },
+                    { n: profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
+                    { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
+                    { n: (locale === 'es' ? ['🎵 Música', '📦 Construcción', '🐛 Animales', '📚 Libros'] : ['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books']).length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
                     <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.5)', borderRadius: 18, padding: 12, textAlign: 'center' }}>
                       <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
