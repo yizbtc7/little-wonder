@@ -49,6 +49,7 @@ export default async function HomePage() {
   return (
     <ObserveFlow
       parentName={profile.parent_name}
+      parentRole={profile.parent_role ?? null}
       childName={child.name}
       childAgeLabel={ageLabel}
       childBirthdate={child.birthdate}

@@ -144,6 +144,7 @@ type ChildProfilePayload = {
 
 type Props = {
   parentName: string;
+  parentRole?: string | null;
   childName: string;
   childAgeLabel: string;
   childBirthdate: string;
@@ -709,6 +710,27 @@ function getAgeMonths(birthdate: string): number {
   return Math.max(months, 0);
 }
 
+function formatParentRole(role: string | null | undefined, locale: Language): string {
+  const normalized = (role ?? '').trim().toLowerCase();
+  if (!normalized) return locale === 'es' ? 'Mamá/Papá' : 'Mom/Dad';
+
+  if (locale === 'es') {
+    if (normalized === 'mom') return 'Mamá';
+    if (normalized === 'dad') return 'Papá';
+    if (normalized === 'caregiver') return 'Cuidador/a';
+    if (normalized === 'other') return 'Otro';
+  }
+
+  if (locale === 'en') {
+    if (normalized === 'mom') return 'Mom';
+    if (normalized === 'dad') return 'Dad';
+    if (normalized === 'caregiver') return 'Caregiver';
+    if (normalized === 'other') return 'Other';
+  }
+
+  return role ?? (locale === 'es' ? 'Mamá/Papá' : 'Mom/Dad');
+}
+
 function dedupeArticleTitleKey(title: string): string {
   return title
     .replace(/\s*·\s*(?:ACT)?B\d+-[\w-]+$/i, '')
@@ -842,7 +864,7 @@ function getQuickPrompts(ageMonths: number, childName: string, locale: Language)
       ];
 }
 
-export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, childId, initialLanguage = 'es' }: Props) {
+export default function ObserveFlow({ parentName, parentRole, childName, childAgeLabel, childBirthdate, childId, initialLanguage = 'es' }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [profileTab, setProfileTab] = useState<ProfileTab>('overview');
 
@@ -2387,7 +2409,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.role}</label>
-                <input defaultValue={locale === 'es' ? 'Mamá/Papá' : 'Dad'} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+                <input defaultValue={formatParentRole(parentRole, locale)} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.language}</label>

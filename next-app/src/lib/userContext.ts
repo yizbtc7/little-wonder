@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 export type ParentProfile = {
   user_id: string;
   parent_name: string;
+  parent_role?: string | null;
 };
 
 export type ChildProfile = {
@@ -24,7 +25,7 @@ export async function getAuthenticatedUser() {
 export async function getParentProfile(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, userId: string) {
   const { data } = await supabase
     .from('profiles')
-    .select('user_id,parent_name')
+    .select('user_id,parent_name,parent_role')
     .eq('user_id', userId)
     .maybeSingle<ParentProfile>();
 
