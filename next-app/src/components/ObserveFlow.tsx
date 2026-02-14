@@ -1590,10 +1590,30 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             )}
 
 
-            {(deepDiveArticles.length > 0 || keepReadingArticles.length > 0 || comingNextArticles.length > 0) ? (
+            {deepDiveArticles.length > 0 ? (
+              <>
+                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🔬 {t.learn.deepDives}</h2>
+                <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
+                {deepDiveArticles.slice(0, 3).map((article) => (
+                  <button key={`deep-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#EDE5F5' }}>{article.emoji}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                        <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#8B6CAE', background: '#EDE5F5', padding: '3px 10px', borderRadius: 20 }}>{locale === 'es' ? 'INVESTIGACIÓN' : 'RESEARCH'}</span>
+                        <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>{article.read_time_minutes ?? 6} min</span>
+                      </span>
+                    </span>
+                    <span style={{ color: '#B0ADB5' }}>›</span>
+                  </button>
+                ))}
+              </>
+            ) : null}
+
+            {(keepReadingArticles.length > 0 || comingNextArticles.length > 0) ? (
               <>
                 <h3 style={{ margin: '10px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h3>
-                {[...deepDiveArticles, ...keepReadingArticles, ...comingNextArticles]
+                {[...keepReadingArticles, ...comingNextArticles]
                   .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
                   .slice(0, 8)
                   .map((article) => (
