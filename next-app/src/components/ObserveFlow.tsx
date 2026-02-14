@@ -2326,32 +2326,31 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 13, color: theme.colors.lightText }}>{t.profile.noSchemaData}</p>
                       ) : (
                         <>
-                          <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #EEE2DF', boxShadow: '0 8px 18px rgba(103,80,74,0.06)', padding: '16px 14px 14px', marginBottom: 12 }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, minHeight: 154, padding: '2px 2px 0' }}>
+                          <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #EEE2DF', boxShadow: '0 8px 18px rgba(103,80,74,0.06)', padding: '16px 12px 14px', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, minHeight: 162, padding: '2px 2px 0' }}>
                               {schemaGardenSorted.map((schema) => {
                                 const info = schemaGardenInfo[schema.name] ?? { emoji: '✨', color: '#A08AA8', bg: '#F5F1F8' };
                                 const barHeight = schemaGardenMax > 0 ? 38 + (schema.count / schemaGardenMax) * 86 : 38;
                                 return (
                                   <div key={schema.name} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 13, fontWeight: 800, color: info.color, lineHeight: 1, marginBottom: 7 }}>{schema.count}</span>
+                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 13, fontWeight: 800, color: info.color, lineHeight: 1, marginBottom: 8 }}>{schema.count}</span>
                                     <div
                                       style={{
-                                        width: '100%',
-                                        maxWidth: 54,
+                                        width: 52,
                                         height: barHeight,
-                                        borderRadius: '18px 18px 10px 10px',
+                                        borderRadius: '16px 16px 6px 6px',
                                         background: `linear-gradient(180deg, ${info.bg} 0%, ${info.color}2B 100%)`,
                                         border: `1px solid ${info.color}33`,
                                         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65)',
-                                        paddingTop: 7,
+                                        paddingTop: 9,
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'flex-start',
                                       }}
                                     >
-                                      <span style={{ fontSize: 17, lineHeight: 1 }}>{info.emoji}</span>
+                                      <span style={{ fontSize: 18, lineHeight: 1 }}>{info.emoji}</span>
                                     </div>
-                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10.5, fontWeight: 700, color: '#938E97', marginTop: 7, textAlign: 'center', lineHeight: 1.1 }}>
+                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10.5, fontWeight: 700, color: '#938E97', marginTop: 8, textAlign: 'center', lineHeight: 1.1, minHeight: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
                                       {formatSchemaLabel(schema.name)}
                                     </span>
                                   </div>
