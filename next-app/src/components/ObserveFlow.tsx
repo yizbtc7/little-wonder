@@ -17,6 +17,7 @@ type WonderPayload = {
     pull_quote: string;
     signs: string[];
     how_to_be_present: string;
+    curiosity_closer?: string;
   };
   schemas_detected?: string[];
 };
@@ -24,12 +25,6 @@ type WonderPayload = {
 type InsightPayload = {
   reply?: string;
   wonder?: WonderPayload | null;
-  title?: string;
-  revelation?: string;
-  brain_science_gem?: string;
-  activity?: { main: string; express: string };
-  observe_next?: string;
-  schemas_detected?: string[];
 };
 
 type ChatMessage =
@@ -101,12 +96,6 @@ function parseInsightPayload(raw: string): InsightPayload {
   const fallback: InsightPayload = {
     reply: raw,
     wonder: null,
-    title: 'A wonder in motion',
-    revelation: raw,
-    brain_science_gem: 'Small repeated moments build big neural architecture.',
-    activity: { main: 'Repeat the same play with one tiny variation.', express: 'Name one thing they tested and pause.' },
-    observe_next: 'Watch the pause before action — that is often a hypothesis.',
-    schemas_detected: [],
   };
 
   const cleanJsonText = (input: string): string =>
@@ -118,19 +107,14 @@ function parseInsightPayload(raw: string): InsightPayload {
       .replace(/`{3,}$/i, '')
       .trim();
 
-  const looksStructured = (input: string): boolean => {
-    const text = input.trim();
-    return text.startsWith('{') || text.startsWith('```json') || text.startsWith('```') || text.includes('"wonder"') || text.includes('"reply"');
-  };
-
   const parseCandidate = (input: string): Partial<InsightPayload> | null => {
     const cleanedInput = cleanJsonText(input);
     try {
       return JSON.parse(cleanedInput) as Partial<InsightPayload>;
     } catch {
+      const match = cleanedInput.match(/\{[\s\S]*\}/);
+      if (!match) return null;
       try {
-        const match = cleanedInput.match(/\{[\s\S]*\}/);
-        if (!match) return null;
         return JSON.parse(match[0]) as Partial<InsightPayload>;
       } catch {
         return null;
@@ -138,51 +122,25 @@ function parseInsightPayload(raw: string): InsightPayload {
     }
   };
 
-  const cleaned = cleanJsonText(raw);
-
   let parsed =
-    parseCandidate(cleaned) ??
-    parseCandidate(cleaned.replaceAll('\\"', '"').replaceAll('\\n', '\n').replaceAll('\\t', '\t'));
-
-  if (!parsed && cleaned.startsWith('"') && cleaned.endsWith('"')) {
-    const unquoted = cleaned.slice(1, -1).replaceAll('\\"', '"').replaceAll('\\n', '\n');
-    parsed = parseCandidate(unquoted);
-  }
+    parseCandidate(raw) ??
+    parseCandidate(raw.replaceAll('\\"', '"').replaceAll('\\n', '\n').replaceAll('\\t', '\t'));
 
   if (!parsed) return fallback;
 
+  let parsedPayload: Partial<InsightPayload> = parsed;
+
   for (let i = 0; i < 3; i += 1) {
-    if (typeof parsed.reply !== 'string' || !looksStructured(parsed.reply)) break;
-    const nested = parseCandidate(parsed.reply) ?? parseCandidate(parsed.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
+    if (typeof parsedPayload.reply !== 'string') break;
+    const nested = parseCandidate(parsedPayload.reply) ?? parseCandidate(parsedPayload.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
     if (!nested) break;
-    parsed = { ...parsed, ...nested };
+    parsedPayload = { ...parsedPayload, ...nested };
   }
 
-  if (!parsed.wonder && parsed.title && (parsed as { article?: WonderPayload['article']; schemas_detected?: string[] }).article) {
-    const legacy = parsed as { title?: string; article?: WonderPayload['article']; schemas_detected?: string[] };
-    parsed.wonder = {
-      title: legacy.title ?? 'New Wonder',
-      article: legacy.article!,
-      schemas_detected: legacy.schemas_detected ?? [],
-    };
-  }
-
-  const replyBase = parsed.reply ?? parsed.revelation ?? fallback.reply ?? '';
-  const replyText = replyBase.toString().replace(/^`{3,}\s*json\s*/i, '').replace(/`{3,}$/i, '').trim();
-  const conciseReply = replyText.length > 700 ? `${replyText.slice(0, 680).trim()}…` : replyText;
-
+  const replyText = (parsedPayload.reply ?? '').toString().trim();
   return {
-    reply: conciseReply,
-    wonder: parsed.wonder ?? null,
-    title: parsed.title ?? fallback.title,
-    revelation: parsed.revelation ?? fallback.revelation,
-    brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
-    activity: {
-      main: parsed.activity?.main ?? fallback.activity?.main ?? '',
-      express: parsed.activity?.express ?? fallback.activity?.express ?? '',
-    },
-    observe_next: parsed.observe_next ?? fallback.observe_next,
-    schemas_detected: parsed.schemas_detected ?? [],
+    reply: replyText.length > 0 ? replyText : fallback.reply,
+    wonder: parsedPayload.wonder ?? null,
   };
 }
 
@@ -219,66 +177,7 @@ function formatConversationDate(dateInput: string, locale: 'en' | 'es'): string 
 }
 
 function deserializeAssistantInsight(content: string): InsightPayload {
-  try {
-    const parsed = JSON.parse(content) as Partial<InsightPayload>;
-    if (!parsed || typeof parsed !== 'object') return parseInsightPayload(content);
-
-    if (parsed.reply || parsed.wonder) {
-      if (typeof parsed.reply === 'string') {
-        const replyText = parsed.reply.trim();
-        const replyLooksStructured =
-          replyText.startsWith('```json') ||
-          replyText.startsWith('{') ||
-          replyText.includes('"wonder"') ||
-          replyText.includes('"reply"');
-
-        if (replyLooksStructured) {
-          return parseInsightPayload(parsed.reply);
-        }
-
-        const nestedFromReply = parseInsightPayload(parsed.reply);
-        if (nestedFromReply.wonder || nestedFromReply.reply !== parsed.reply) {
-          return nestedFromReply;
-        }
-      }
-
-      if (typeof parsed.revelation === 'string' && parsed.revelation.includes('"reply"')) {
-        const nestedFromRevelation = parseInsightPayload(parsed.revelation);
-        if (nestedFromRevelation.wonder || nestedFromRevelation.reply.length > 0) {
-          return nestedFromRevelation;
-        }
-      }
-
-      return {
-        reply: parsed.reply ?? '',
-        wonder: parsed.wonder ?? null,
-        title: parsed.title,
-        revelation: parsed.revelation,
-        brain_science_gem: parsed.brain_science_gem,
-        activity: parsed.activity,
-        observe_next: parsed.observe_next,
-        schemas_detected: Array.isArray(parsed.schemas_detected) ? parsed.schemas_detected : [],
-      };
-    }
-
-    if (typeof parsed.revelation === 'string' && parsed.revelation.includes('"reply"')) {
-      return parseInsightPayload(parsed.revelation);
-    }
-
-    return {
-      title: parsed.title ?? 'A wonder in motion',
-      revelation: parsed.revelation ?? '',
-      brain_science_gem: parsed.brain_science_gem ?? '',
-      activity: {
-        main: parsed.activity?.main ?? '',
-        express: parsed.activity?.express ?? '',
-      },
-      observe_next: parsed.observe_next ?? '',
-      schemas_detected: Array.isArray(parsed.schemas_detected) ? parsed.schemas_detected : [],
-    };
-  } catch {
-    return parseInsightPayload(content);
-  }
+  return parseInsightPayload(content);
 }
 
 type Tab = 'chat' | 'explore' | 'activities' | 'profile';
@@ -877,6 +776,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 24, padding: '24px 22px' }}>
                   <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.sage, textTransform: 'uppercase', letterSpacing: 0.8 }}>🤲 How to be present</p>
                   <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{openWonder.article.how_to_be_present}</p>
+                  {openWonder.article.curiosity_closer ? (
+                    <p style={{ margin: '14px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.55, color: theme.colors.charcoal }}>{openWonder.article.curiosity_closer}</p>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -970,49 +872,34 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </div>
                   ) : (
                     <div key={idx} style={{ maxWidth: '92%' }}>
-                      {msg.insight.reply ? (
-                        <>
-                          <FadeUp delay={120}>
-                            <div style={{ background: '#fff', borderRadius: '20px 20px 20px 4px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 10 }}>
-                              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.7, color: theme.colors.darkText }}>{msg.insight.reply}</p>
-                            </div>
-                          </FadeUp>
-                          {msg.insight.wonder ? (
-                            <FadeUp delay={240}>
-                              <button
-                                onClick={() => setOpenWonder(msg.insight.wonder ?? null)}
-                                style={{ width: '100%', textAlign: 'left', border: `1.5px solid ${theme.colors.blushMid}`, borderRadius: 20, background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, padding: '18px 20px', cursor: 'pointer' }}
-                              >
-                                <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.5 }}>✨ New Wonder</p>
-                                <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: theme.colors.charcoal }}>{msg.insight.wonder.title}</p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                    {(msg.insight.wonder.schemas_detected ?? []).map((schema) => (
-                                      <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>
-                                        {schema}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>Read →</span>
+                      <>
+                        <FadeUp delay={120}>
+                          <div style={{ background: '#fff', borderRadius: '20px 20px 20px 4px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 10 }}>
+                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.7, color: theme.colors.darkText }}>{msg.insight.reply ?? ''}</p>
+                          </div>
+                        </FadeUp>
+                        {msg.insight.wonder ? (
+                          <FadeUp delay={240}>
+                            <button
+                              onClick={() => setOpenWonder(msg.insight.wonder ?? null)}
+                              style={{ width: '100%', textAlign: 'left', border: `1.5px solid ${theme.colors.blushMid}`, borderRadius: 20, background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, padding: '18px 20px', cursor: 'pointer' }}
+                            >
+                              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.5 }}>✨ New Wonder</p>
+                              <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: theme.colors.charcoal }}>{msg.insight.wonder.title}</p>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                  {(msg.insight.wonder.schemas_detected ?? []).map((schema) => (
+                                    <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>
+                                      {schema}
+                                    </span>
+                                  ))}
                                 </div>
-                              </button>
-                            </FadeUp>
-                          ) : null}
-                        </>
-                      ) : (
-                        <>
-                          <FadeUp delay={80}>
-                            <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: theme.colors.charcoal }}>{msg.insight.title}</h3>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.rose }}>Read →</span>
+                              </div>
+                            </button>
                           </FadeUp>
-
-                          <FadeUp delay={180}>
-                            <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, borderLeft: `4px solid ${theme.colors.lavender}`, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lavender }}>💡 What&apos;s really happening</p>
-                              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.65, color: theme.colors.darkText }}>{msg.insight.revelation}</p>
-                            </div>
-                          </FadeUp>
-                        </>
-                      )}
+                        ) : null}
+                      </>
                     </div>
                   )
                 )}

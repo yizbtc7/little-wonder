@@ -31,6 +31,7 @@ type WonderPayload = {
     pull_quote: string;
     signs: string[];
     how_to_be_present: string;
+    curiosity_closer: string;
   };
   schemas_detected: string[];
 };
@@ -38,15 +39,6 @@ type WonderPayload = {
 type InsightPayload = {
   reply: string;
   wonder: WonderPayload | null;
-  title: string;
-  revelation: string;
-  brain_science_gem: string;
-  activity: {
-    main: string;
-    express: string;
-  };
-  observe_next: string;
-  schemas_detected: string[];
 };
 
 let systemPromptCache: string | null = null;
@@ -109,57 +101,66 @@ function buildPromptContext(params: {
 }
 
 function parseInsightPayload(raw: string): InsightPayload {
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  const source = jsonMatch?.[0] ?? raw;
+  const clean = raw
+    .trim()
+    .replace(/^`{3,}\s*json\s*/i, '')
+    .replace(/^`{3,}\s*/i, '')
+    .replace(/^json\s*/i, '')
+    .replace(/`{3,}$/i, '')
+    .trim();
 
   const fallback: InsightPayload = {
-    reply: raw,
+    reply: clean,
     wonder: null,
-    title: 'A revelation from today\'s learning',
-    revelation: raw,
-    brain_science_gem: 'Each repetition strengthens neural pathways for deeper learning.',
-    activity: {
-      main: 'Invite your child to repeat the same exploration with one small material change and observe what strategy shifts first.',
-      express: 'Quick version: name one thing they are testing and pause for the next attempt.',
-    },
-    observe_next: 'Next time, watch the pause right before action — that often reveals the hypothesis.',
-    schemas_detected: [],
   };
 
-  try {
-    const parsed = JSON.parse(source) as Partial<InsightPayload>;
+  const parseCandidate = (input: string): Partial<InsightPayload> | null => {
+    try {
+      return JSON.parse(input) as Partial<InsightPayload>;
+    } catch {
+      const match = input.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+      try {
+        return JSON.parse(match[0]) as Partial<InsightPayload>;
+      } catch {
+        return null;
+      }
+    }
+  };
 
-    const wonder = parsed.wonder
-      ? {
-          title: parsed.wonder.title ?? '',
-          article: {
-            lead: parsed.wonder.article?.lead ?? '',
-            pull_quote: parsed.wonder.article?.pull_quote ?? '',
-            signs: Array.isArray(parsed.wonder.article?.signs) ? parsed.wonder.article?.signs ?? [] : [],
-            how_to_be_present: parsed.wonder.article?.how_to_be_present ?? '',
-          },
-          schemas_detected: Array.isArray(parsed.wonder.schemas_detected) ? parsed.wonder.schemas_detected : [],
-        }
-      : null;
+  let parsed = parseCandidate(clean) ?? parseCandidate(clean.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
 
-    return {
-      reply: parsed.reply ?? fallback.reply,
-      wonder,
-      title: parsed.title ?? fallback.title,
-      revelation: parsed.revelation ?? fallback.revelation,
-      brain_science_gem: parsed.brain_science_gem ?? fallback.brain_science_gem,
-      activity: {
-        main: parsed.activity?.main ?? fallback.activity.main,
-        express: parsed.activity?.express ?? fallback.activity.express,
-      },
-      observe_next: parsed.observe_next ?? fallback.observe_next,
-      schemas_detected: Array.isArray(parsed.schemas_detected)
-        ? parsed.schemas_detected.filter((value): value is string => typeof value === 'string')
-        : fallback.schemas_detected,
-    };
-  } catch {
-    return fallback;
+  if (!parsed) return fallback;
+
+  let parsedPayload: Partial<InsightPayload> = parsed;
+
+  for (let i = 0; i < 3; i += 1) {
+    if (typeof parsedPayload.reply !== 'string') break;
+    const nested = parseCandidate(parsedPayload.reply) ?? parseCandidate(parsedPayload.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
+    if (!nested) break;
+    parsedPayload = { ...parsedPayload, ...nested };
   }
+
+  const wonder = parsedPayload.wonder
+    ? {
+        title: parsedPayload.wonder.title ?? 'New Wonder',
+        article: {
+          lead: parsedPayload.wonder.article?.lead ?? '',
+          pull_quote: parsedPayload.wonder.article?.pull_quote ?? '',
+          signs: Array.isArray(parsedPayload.wonder.article?.signs) ? parsedPayload.wonder.article.signs : [],
+          how_to_be_present: parsedPayload.wonder.article?.how_to_be_present ?? '',
+          curiosity_closer: parsedPayload.wonder.article?.curiosity_closer ?? '',
+        },
+        schemas_detected: Array.isArray(parsedPayload.wonder.schemas_detected)
+          ? parsedPayload.wonder.schemas_detected.filter((value): value is string => typeof value === 'string')
+          : [],
+      }
+    : null;
+
+  return {
+    reply: typeof parsedPayload.reply === 'string' && parsedPayload.reply.trim().length > 0 ? parsedPayload.reply.trim() : fallback.reply,
+    wonder,
+  };
 }
 
 export async function POST(request: Request) {
@@ -270,23 +271,25 @@ export async function POST(request: Request) {
       `Today\'s observation about ${child.name}:`,
       observationText,
       '',
-      'Return ONLY valid JSON with no markdown or extra text using this exact schema:',
+      'Return ONLY valid JSON with no markdown, no code fences, and no extra text.',
+      'Use EXACTLY this JSON schema and keys:',
       '{',
-      '  "reply": "conversational chat response",',
-      '  "wonder": null OR {',
-      '    "title": "5-8 word revelation",',
+      '  "reply": "Short conversational response (2-3 sentences)",',
+      '  "wonder": {',
+      '    "title": "Wonder article title",',
       '    "article": {',
-      '      "lead": "editorial lead paragraph(s)",',
-      '      "pull_quote": "one striking scientific fact",',
-      '      "signs": ["sign 1", "sign 2", "sign 3"],',
-      '      "how_to_be_present": "warm practical closing"',
+      '      "lead": "Opening paragraph of the Wonder article",',
+      '      "pull_quote": "One-sentence insight the parent will remember",',
+      '      "signs": ["Sign 1", "Sign 2", "Sign 3"],',
+      '      "how_to_be_present": "Practical suggestion",',
+      '      "curiosity_closer": "One sentence connecting to long-term curiosity"',
       '    },',
-      '    "schemas_detected": ["Trajectory", "Connecting"]',
+      '    "schemas_detected": ["trajectory", "connecting"]',
       '  }',
       '}',
-      'When observation is specific, include a wonder object. For follow-up/general questions, use wonder=null.',
-      'Return raw JSON only. No markdown, no fences, no commentary.',
-      'Use the child\'s name at least 3 times and keep a warm, specific tone.',
+      'Do NOT return top-level keys like title, revelation, brain_science_gem, activity, observe_next, or schemas_detected.',
+      'Always include both reply and wonder.',
+      'Use the child\'s name naturally and keep the tone warm and specific.',
     ].join('\n');
 
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
@@ -315,7 +318,7 @@ export async function POST(request: Request) {
 
           const parsedPayload = parseInsightPayload(fullResponse);
 
-          const insightText = parsedPayload.reply || parsedPayload.revelation;
+          const insightText = parsedPayload.reply;
 
           const { error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
