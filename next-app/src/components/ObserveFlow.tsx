@@ -958,6 +958,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     return schemaGardenSorted.reduce((max, item) => Math.max(max, item.count), 0);
   }, [schemaGardenSorted]);
 
+  const hasSavedArticles = savedArticles.length > 0;
+
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
       const response = await fetch(apiUrl('/api/conversations?limit=20'));
@@ -1247,7 +1249,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileInterests(payload.interests ?? []);
         setNewInterestInput('');
         setInterestError('');
-        setShowInterestPicker(false);
         setProfileRecentMoments(payload.recent_moments ?? []);
         setProfilePhotoUrl(payload.child?.photo_url ?? null);
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
@@ -1300,7 +1301,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       const payload = (await response.json()) as { interests?: string[] };
       setProfileInterests(payload.interests ?? profileInterests);
       setNewInterestInput('');
-      setShowInterestPicker(false);
     } catch {
       setInterestError(locale === 'es' ? 'No pudimos guardar el interés.' : 'Could not save interest.');
     } finally {
@@ -2511,7 +2511,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       </p>
                     </div>
 
-                    <div style={{ marginBottom: 30 }}>
+                    <div style={{ marginBottom: 32 }}>
                       <SchemaGardenSection
                         locale={locale}
                         childName={childName}
@@ -2521,7 +2521,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       />
                     </div>
 
-                    <div style={{ marginBottom: 30 }}>
+                    <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                         <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
                         <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
@@ -2621,7 +2621,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       </div>
                     </div>
 
-                    <div style={{ marginBottom: 30 }}>
+                    <div style={{ marginBottom: 32 }}>
                       <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
                     {profileRecentMoments.length === 0 ? (
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
@@ -2640,8 +2640,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     })}
                     </div>
 
-                    {savedArticles.length > 0 ? (
-                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 18 }}>
+                    {hasSavedArticles ? (
+                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 32 }}>
                         <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'}</h3>
                         <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span>{locale === 'es' ? 'Colección guardada' : 'Saved collection'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
