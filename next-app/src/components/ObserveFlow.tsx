@@ -565,9 +565,12 @@ function TopSchemaCards({ schemaStats, childName }: { schemaStats: SchemaStat[];
 function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMessage }: { locale: Language; childName: string; schemaStats: SchemaStat[]; maxCount: number; emptyMessage: string }) {
   return (
     <div style={{ marginTop: 2, marginBottom: 22 }}>
-      <h3 style={{ margin: '0 0 4px', fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 24, lineHeight: 1 }}>🌱</span>
+        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
+      </div>
       <p style={{ margin: '0 0 12px', fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#938E97', lineHeight: 1.32 }}>
-        {locale === 'es' ? `Los patrones que más explora ${childName}` : `${childName}'s strongest play patterns`}
+        {locale === 'es' ? `Los patrones de exploración que ${childName} cultiva` : `${childName}'s strongest play patterns`}
       </p>
 
       {schemaStats.length === 0 ? (
@@ -2399,9 +2402,24 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <div style={{ padding: 20 }}>
                 {profileTab === 'overview' ? (
                   <>
-                    <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 14, border: `1px solid ${theme.colors.divider}` }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lightText }}>{locale === 'es' ? 'Frase de curiosidad' : 'Curiosity quote'}</p>
-                      <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.5, color: theme.colors.roseDark }}>
+                    <div style={{ position: 'relative', overflow: 'hidden', background: '#EEE8F8', borderRadius: 18, padding: '18px 20px 20px', marginBottom: 16, border: '1px solid #E1D6F1' }}>
+                      <span
+                        aria-hidden
+                        style={{
+                          position: 'absolute',
+                          top: -22,
+                          right: -20,
+                          width: 102,
+                          height: 102,
+                          borderRadius: '50%',
+                          background: 'rgba(146, 115, 191, 0.18)',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: '#665286', fontWeight: 700, position: 'relative', zIndex: 1 }}>
+                        💜 {locale === 'es' ? 'Frase de curiosidad' : 'Curiosity quote'}
+                      </p>
+                      <p style={{ margin: '14px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 20, lineHeight: 1.68, color: '#2F253D', position: 'relative', zIndex: 1 }}>
                         {profileCuriosityQuote || (locale === 'es' ? `${childName} está construyendo su mundo, un momento a la vez.` : `${childName} is building a world, one moment at a time.`)}
                       </p>
                     </div>
