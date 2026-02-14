@@ -2021,7 +2021,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     setMessages([]);
                     setShowSidebar(false);
                   }}
-                  style={{ width: '100%', marginBottom: 12, border: 'none', borderRadius: 14, background: theme.colors.charcoal, color: '#fff', padding: '12px 14px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ width: '100%', marginBottom: 12, border: 'none', borderRadius: 14, background: theme.colors.roseDark, color: '#fff', padding: '12px 14px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
                   ✏️ {locale === 'es' ? 'Nueva conversación' : 'New conversation'}
                 </button>
