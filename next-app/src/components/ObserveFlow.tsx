@@ -2012,7 +2012,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               <div onClick={() => setShowSidebar(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
               <div style={{ position: 'relative', width: '82%', maxWidth: 320, background: theme.colors.cream, height: '100%', boxShadow: '4px 0 24px rgba(0,0,0,0.1)', padding: 16, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal }}>Conversations</p>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal }}>{locale === 'es' ? 'Conversaciones' : 'Conversations'}</p>
                   <button onClick={() => setShowSidebar(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18 }}>✕</button>
                 </div>
                 <button
@@ -2023,7 +2023,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   }}
                   style={{ width: '100%', marginBottom: 12, border: 'none', borderRadius: 14, background: theme.colors.charcoal, color: '#fff', padding: '12px 14px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
-                  ✏️ New conversation
+                  ✏️ {locale === 'es' ? 'Nueva conversación' : 'New conversation'}
                 </button>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {conversations.map((conversation) => (
