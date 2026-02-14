@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage } from '@/lib/language';
-import { normalizeLanguage, pickUnreadSection, type ExploreArticle } from '@/lib/exploreGuarantees';
+import { canonicalTitleKey, cleanArticleTitle, dedupeByTitleKey, normalizeLanguage, pickUnreadSection, type ExploreArticle } from '@/lib/exploreGuarantees';
 
 type DailyTipRow = {
   id: string;
@@ -77,11 +77,14 @@ export async function GET(request: NextRequest) {
   }
 
   const readSet = new Set((reads ?? []).filter((row) => row.read_completed).map((row) => row.article_id));
-  const unreadPool = pool.filter((card) => !readSet.has(card.id));
+  const readTitleKeys = new Set(pool.filter((card) => readSet.has(card.id)).map((card) => canonicalTitleKey(card.title)));
+  const unreadPool = dedupeByTitleKey(
+    pool.filter((card) => !readSet.has(card.id) && !readTitleKeys.has(canonicalTitleKey(card.title)))
+  );
 
   const usedIds = new Set<string>();
   const brainSection = pickUnreadSection(unreadPool, usedIds, 3);
-  const brainCards = brainSection.items.map((card) => ({ ...card, is_read: false }));
+  const brainCards = brainSection.items.map((card) => ({ ...card, title: cleanArticleTitle(card.title), is_read: false }));
 
   const dailyTip = ((tipRes.data ?? [])[0] as DailyTipRow | undefined) ?? null;
 

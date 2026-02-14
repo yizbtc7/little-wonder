@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage } from '@/lib/language';
-import { normalizeLanguage, pickUnreadSection, type ExploreArticle } from '@/lib/exploreGuarantees';
+import { canonicalTitleKey, cleanArticleTitle, dedupeByTitleKey, normalizeLanguage, pickUnreadSection, type ExploreArticle } from '@/lib/exploreGuarantees';
 
 type ReadRow = {
   article_id: string;
@@ -21,6 +21,7 @@ function enrich(articles: ExploreArticle[], readsMap: Map<string, ReadRow>) {
     const r = readsMap.get(a.id);
     return {
       ...a,
+      title: cleanArticleTitle(a.title),
       is_read: Boolean(r?.read_completed),
       opened_at: r?.opened_at ?? null,
       completed_at: r?.completed_at ?? null,
@@ -112,7 +113,12 @@ export async function GET(request: NextRequest) {
     readsMap.set(r.article_id, r);
   }
 
-  const unreadPool = allArticles.filter((a) => !readsMap.get(a.id)?.read_completed);
+  const readTitleKeys = new Set(
+    allArticles.filter((a) => readsMap.get(a.id)?.read_completed).map((a) => canonicalTitleKey(a.title))
+  );
+  const unreadPool = dedupeByTitleKey(
+    allArticles.filter((a) => !readsMap.get(a.id)?.read_completed && !readTitleKeys.has(canonicalTitleKey(a.title)))
+  );
 
   const usedIds = new Set<string>();
   const newForYouPick = pickUnreadSection(interleaveByType(unreadPool), usedIds, 3);
