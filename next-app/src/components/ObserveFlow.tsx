@@ -658,7 +658,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     if (activeTab !== 'activities' || activitiesLoaded) return;
     void (async () => {
       try {
-        const response = await fetch(apiUrl(`/api/activities?child_id=${childId}&language=${locale}`));
+        const response = await fetch(apiUrl(`/api/activities?child_id=${childId}`));
         if (!response.ok) return;
 
         const payload = (await response.json()) as {

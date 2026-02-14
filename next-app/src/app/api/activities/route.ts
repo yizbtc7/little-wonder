@@ -24,10 +24,6 @@ function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-function normalizeLang(raw: string | null): 'en' | 'es' {
-  return (raw || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
-}
-
 function toCountMap(schemas: string[]): Map<string, number> {
   const map = new Map<string, number>();
   for (const schema of schemas) {
@@ -58,7 +54,7 @@ export async function GET(request: Request) {
   const db = dbClient();
   const search = new URL(request.url).searchParams;
   const requestedChildId = search.get('child_id');
-  const language = normalizeLang(search.get('language'));
+  const language = 'en';
 
   let childQuery = db.from('children').select('id,birthdate').eq('user_id', user.id).order('created_at', { ascending: true }).limit(1);
   if (requestedChildId) {
@@ -90,7 +86,7 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map(([schema]) => schema);
 
-  let activitiesQuery = db
+  const activitiesQuery = db
     .from('activities')
     .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,created_at')
     .eq('language', language)
@@ -103,22 +99,6 @@ export async function GET(request: Request) {
   }
 
   let rows = (languageRows ?? []) as ActivityRow[];
-
-  if (rows.length === 0 && language === 'en') {
-    const { data: fallbackRows, error: fallbackError } = await db
-      .from('activities')
-      .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,created_at')
-      .eq('language', 'es')
-      .lte('age_min_months', ageMonths)
-      .gte('age_max_months', ageMonths)
-      .order('created_at', { ascending: false });
-
-    if (fallbackError) {
-      return NextResponse.json({ error: fallbackError.message }, { status: 500 });
-    }
-
-    rows = (fallbackRows ?? []) as ActivityRow[];
-  }
 
   if (rows.length === 0) {
     return NextResponse.json({ featured: null, activities: [], child_schemas: topSchemas });
