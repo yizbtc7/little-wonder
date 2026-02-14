@@ -2530,7 +2530,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         {profileInterests.length === 0 ? (
                           <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
                         ) : profileInterests.map((interest) => (
-                          <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{ensureInterestEmoji(interest)}</span>
+                          <span key={interest} style={{ background: '#FFFFFF', borderRadius: 999, padding: '10px 18px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: '#3E302C', border: '1px solid #EDE4DF', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>{ensureInterestEmoji(interest)}</span>
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
