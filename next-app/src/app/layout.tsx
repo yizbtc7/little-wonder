@@ -25,10 +25,11 @@ export const metadata: Metadata = {
     title: 'Little Wonder',
     description: 'See the extraordinary things your child is already doing.',
     url: 'https://littlewonder.ai',
-    images: ['https://littlewonder.ai/og-image.png'],
+    images: ['https://littlewonder.ai/social-share.png'],
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['https://littlewonder.ai/social-share.png'],
   },
   icons: {
     icon: [
