@@ -25,26 +25,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'audio file is required' }, { status: 400 });
     }
 
-    const providerForm = new FormData();
-    providerForm.append('file', audio);
-    providerForm.append('model', 'gpt-4o-mini-transcribe');
-    providerForm.append('language', language === 'en' ? 'en' : 'es');
+    const targetLanguage = language === 'en' ? 'en' : 'es';
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: providerForm,
-    });
+    const transcribeWithModel = async (model: 'gpt-4o-mini-transcribe' | 'whisper-1') => {
+      const providerForm = new FormData();
+      providerForm.append('file', audio);
+      providerForm.append('model', model);
+      providerForm.append('language', targetLanguage);
 
-    const payload = (await response.json()) as { text?: string; error?: { message?: string } };
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: providerForm,
+      });
 
-    if (!response.ok) {
-      return NextResponse.json({ error: payload?.error?.message ?? 'transcription_failed' }, { status: 502 });
+      const payload = (await response.json()) as { text?: string; error?: { message?: string } };
+      return { ok: response.ok, payload };
+    };
+
+    const firstAttempt = await transcribeWithModel('gpt-4o-mini-transcribe');
+    const finalAttempt = firstAttempt.ok ? firstAttempt : await transcribeWithModel('whisper-1');
+
+    if (!finalAttempt.ok) {
+      return NextResponse.json({ error: finalAttempt.payload?.error?.message ?? 'transcription_failed' }, { status: 502 });
     }
 
-    const transcript = payload.text?.trim() ?? '';
+    const transcript = finalAttempt.payload.text?.trim() ?? '';
     if (!transcript) {
       return NextResponse.json({ error: 'empty_transcript' }, { status: 422 });
     }

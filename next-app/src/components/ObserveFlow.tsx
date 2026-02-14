@@ -1791,7 +1791,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
       setVoiceTranscriptDraft(payload.transcript.trim());
     } catch (error) {
-      setVoiceError(locale === 'es' ? 'No pudimos transcribir la nota. Intenta grabar de nuevo.' : 'We could not transcribe your note. Please try recording again.');
+      const fallback = locale === 'es' ? 'No pudimos transcribir la nota. Intenta grabar de nuevo.' : 'We could not transcribe your note. Please try recording again.';
+      const detail = error instanceof Error && error.message ? error.message : '';
+      setVoiceError(detail ? `${fallback} (${detail})` : fallback);
       setVoiceTranscriptDraft('');
     } finally {
       setIsTranscribingVoice(false);
