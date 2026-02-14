@@ -2419,7 +2419,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: '#665286', fontWeight: 700, position: 'relative', zIndex: 1 }}>
                         💜 {locale === 'es' ? `En qué está ${childName} ahora` : `What is ${childName} into right now`}
                       </p>
-                      <p style={{ margin: '14px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 20, lineHeight: 1.68, color: '#2F253D', position: 'relative', zIndex: 1 }}>
+                      <p style={{ margin: '14px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.66, color: '#2F253D', position: 'relative', zIndex: 1 }}>
                         {profileCuriosityQuote || (locale === 'es' ? `${childName} está construyendo su mundo, un momento a la vez.` : `${childName} is building a world, one moment at a time.`)}
                       </p>
                     </div>
