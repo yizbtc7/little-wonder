@@ -388,6 +388,53 @@ function formatSchemaChipLabel(value: string): string {
   return key ? `${SCHEMA_INFO[key].emoji} ${SCHEMA_INFO[key].label}` : '';
 }
 
+const SPANISH_SCHEMA_FALLBACK: SchemaKey = 'connecting';
+
+function looksSpanish(text: string): boolean {
+  const value = text.toLowerCase();
+  if (!value.trim()) return false;
+
+  if (/[áéíóúñ¿¡]/.test(value)) return true;
+
+  const spanishMarkers = [
+    ' el ', ' la ', ' los ', ' las ', ' un ', ' una ', ' unos ', ' unas ',
+    ' de ', ' del ', ' y ', ' en ', ' con ', ' para ', ' por ', ' que ',
+    ' está ', ' esta ', ' hoy ', ' ayer ', ' mamá', ' papá', ' niño', ' niña',
+  ];
+
+  return spanishMarkers.some((marker) => value.includes(marker));
+}
+
+function looksEnglish(text: string): boolean {
+  const value = text.toLowerCase();
+  if (!value.trim()) return false;
+
+  const englishMarkers = [
+    ' the ', ' and ', ' with ', ' for ', ' to ', ' from ', ' is ', ' are ',
+    ' today ', ' yesterday ', ' child ', ' baby ', ' mom ', ' dad ',
+  ];
+
+  return englishMarkers.some((marker) => value.includes(marker));
+}
+
+function pickRecentMomentBody(moment: { title?: string; observation?: string }, locale: Language): string {
+  const observation = moment.observation?.trim() ?? '';
+  const title = moment.title?.trim() ?? '';
+
+  if (locale !== 'es') return observation || title || '';
+
+  const candidates = [observation, title].filter(Boolean);
+  if (candidates.length === 0) return '';
+
+  const spanish = candidates.find((text) => looksSpanish(text));
+  if (spanish) return spanish;
+
+  const nonEnglish = candidates.find((text) => !looksEnglish(text));
+  if (nonEnglish) return nonEnglish;
+
+  return candidates[0];
+}
+
 function formatExploreTypeLabel(type: ExploreArticleRow['type'], locale: Language): string {
   if (locale === 'es') {
     if (type === 'guide') return 'Guía práctica';
@@ -2486,26 +2533,31 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '0 20px', marginTop: 14, borderBottom: `1px solid #F1DFDA` }}>
-                {(['overview', 'timeline'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setProfileTab(tab)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      padding: '10px 0 13px',
-                      fontFamily: theme.fonts.sans,
-                      fontSize: 15,
-                      fontWeight: profileTab === tab ? 800 : 600,
-                      color: profileTab === tab ? '#3F322E' : '#B49891',
-                      borderBottom: profileTab === tab ? '2.5px solid #D16F61' : '2.5px solid transparent',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {tab === 'overview' ? (locale === 'es' ? 'Resumen' : 'Overview') : (locale === 'es' ? 'Línea De Tiempo' : 'Timeline')}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 22, padding: '0 20px', marginTop: 14, borderBottom: '1px solid #EFDFDA' }}>
+                {(['overview', 'timeline'] as const).map((tab) => {
+                  const isActive = profileTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setProfileTab(tab)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '11px 0 12px',
+                        marginBottom: -1,
+                        fontFamily: theme.fonts.sans,
+                        fontSize: 15,
+                        fontWeight: isActive ? 800 : 700,
+                        color: isActive ? '#3F322E' : '#B7A09A',
+                        borderBottom: isActive ? '3px solid #D47567' : '3px solid transparent',
+                        cursor: 'pointer',
+                        letterSpacing: -0.1,
+                      }}
+                    >
+                      {tab === 'overview' ? (locale === 'es' ? 'Resumen' : 'Overview') : (locale === 'es' ? 'Línea De Tiempo' : 'Timeline')}
+                    </button>
+                  );
+                })}
               </div>
 
               <div style={{ padding: 20 }}>
@@ -2676,8 +2728,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       {profileRecentMoments.length === 0 ? (
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                       ) : (showAllRecentMoments ? profileRecentMoments : profileRecentMoments.slice(0, 3)).map((moment) => {
-                        const firstSchema = moment.schemas?.[0];
-                        const momentBody = moment.observation?.trim() || moment.title?.trim() || '';
+                        const normalizedSchemas = normalizeSchemaList(moment.schemas ?? []);
+                        const schemaForChip = normalizedSchemas[0] ?? SPANISH_SCHEMA_FALLBACK;
+                        const momentBody = pickRecentMomentBody(moment, locale);
                         return (
                           <div key={moment.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '13px 14px 14px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
@@ -2685,11 +2738,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                 <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
                                 {formatRelativeMomentDate(moment.created_at, locale)}
                               </span>
-                              {firstSchema ? (
-                                <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
-                                  {formatSchemaChipLabel(firstSchema)}
-                                </span>
-                              ) : <span />}
+                              <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
+                                {formatSchemaChipLabel(schemaForChip)}
+                              </span>
                             </div>
                             <p style={{ margin: '10px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 15.5, fontWeight: 700, lineHeight: 1.4, color: '#4A3A36' }}>{momentBody}</p>
                           </div>
@@ -2809,24 +2860,79 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     {profileTimeline.length === 0 ? (
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                     ) : (
-                      profileTimeline.map((entry, i) => {
-                        const dayLabel = formatConversationDate(entry.created_at, locale);
-                        const prevDayLabel = i > 0 ? formatConversationDate(profileTimeline[i - 1].created_at, locale) : null;
-                        return (
-                          <div key={entry.id}>
-                            {i === 0 || prevDayLabel !== dayLabel ? <p style={{ margin: '16px 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>{dayLabel}</p> : null}
-                            <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-                              <h4 style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>{entry.title}</h4>
-                              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.observation}</p>
-                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                {entry.schemas.map((schema) => (
-                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, letterSpacing: 0.1 }}>{formatSchemaChipLabel(schema)}</span>
-                                ))}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {profileTimeline.map((entry, i) => {
+                          const schemaKey = normalizeSchemaKey(entry.schemas[0]);
+                          const schemaInfo = schemaKey ? SCHEMA_INFO[schemaKey] : null;
+                          const railColor = schemaInfo?.color ?? '#D3C5C1';
+                          const chipLabel = schemaInfo ? `${schemaInfo.emoji} ${schemaInfo.label}` : (locale === 'es' ? '✨ Momento' : '✨ Moment');
+                          const bodyText = entry.observation?.trim() || entry.title?.trim() || '';
+
+                          return (
+                            <div key={entry.id} style={{ display: 'flex', alignItems: 'stretch', gap: 12 }}>
+                              <div style={{ position: 'relative', width: 22, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                                {i < profileTimeline.length - 1 ? (
+                                  <span
+                                    aria-hidden
+                                    style={{
+                                      position: 'absolute',
+                                      top: 18,
+                                      bottom: -14,
+                                      width: 1.5,
+                                      borderRadius: 999,
+                                      background: 'rgba(194,174,168,0.48)',
+                                    }}
+                                  />
+                                ) : null}
+                                <span
+                                  aria-hidden
+                                  style={{
+                                    marginTop: 7,
+                                    width: 11,
+                                    height: 11,
+                                    borderRadius: 999,
+                                    background: railColor,
+                                    border: '2px solid #FFF7F3',
+                                    boxShadow: '0 0 0 1px rgba(210,194,188,0.55)',
+                                    zIndex: 1,
+                                  }}
+                                />
+                              </div>
+
+                              <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 16, border: '1px solid #E9DFDB', padding: '12px 14px 13px', minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, fontWeight: 700, color: '#9B8D88' }}>
+                                    {formatRelativeMomentDate(entry.created_at, locale)}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontFamily: theme.fonts.sans,
+                                      fontSize: 10.5,
+                                      fontWeight: 800,
+                                      color: schemaInfo?.color ?? '#8E7C77',
+                                      background: schemaInfo?.bg ?? '#F7F0EE',
+                                      border: `1px solid ${schemaInfo?.color ?? '#D7C8C4'}33`,
+                                      borderRadius: 999,
+                                      padding: '4px 9px',
+                                      lineHeight: 1,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {chipLabel}
+                                  </span>
+                                </div>
+                                <p style={{ margin: '9px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 15, lineHeight: 1.42, fontWeight: 700, color: '#493A36' }}>
+                                  {bodyText}
+                                </p>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        })}
+
+                        <p style={{ margin: '28px 4px 2px', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: 'rgba(89,69,65,0.7)' }}>
+                          {locale === 'es' ? `${childName} sigue tejiendo su historia, momento a momento ✨` : `${childName} keeps weaving their story, one moment at a time ✨`}
+                        </p>
+                      </div>
                     )}
                   </>
                 ) : null}
