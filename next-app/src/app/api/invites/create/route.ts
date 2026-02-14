@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { resolveOwnedChild } from '@/lib/childAccess';
+import { resolveAccessibleChild } from '@/lib/childAccess';
 
 const INVITE_TTL_HOURS = 24 * 14;
 
@@ -26,10 +26,10 @@ export async function POST() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = dbClient();
-  const child = await resolveOwnedChild(db, user.id);
+  const child = await resolveAccessibleChild(db, user.id);
 
   if (!child?.id) {
-    return NextResponse.json({ error: 'No owned child found for this user' }, { status: 400 });
+    return NextResponse.json({ error: 'No accessible child found for this user' }, { status: 400 });
   }
 
   const now = new Date();
