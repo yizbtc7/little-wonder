@@ -1473,6 +1473,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
             </div>
 
+            <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
+              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
+              <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
+                <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
+              </div>
+            </div>
+
             <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
             {personalizedCards.length === 0 ? (
@@ -1496,13 +1503,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 />
               );
             })}
-
-            <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
-              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
-              <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
-                <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
-              </div>
-            </div>
 
             <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.newForYou}</h2>
             {exploreStats.total_available === 0 ? (
