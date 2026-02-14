@@ -428,6 +428,15 @@ function getAgeMonths(birthdate: string): number {
   return (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
 }
 
+function dedupeArticleTitleKey(title: string): string {
+  return title
+    .replace(/\s*·\s*(?:ACT)?B\d+-[\w-]+$/i, '')
+    .replace(/\s*\((?:ACT)?B\d+-[\w-]+\)$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function getQuickPrompts(ageMonths: number, childName: string, locale: Language): string[] {
   const es = locale === 'es';
 
@@ -1642,7 +1651,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
                 {deepDiveArticles
-                  .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
+                  .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
                   .slice(0, 3)
                   .map((article) => (
                   <button key={`deep-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -1664,7 +1673,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <>
                 <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
                 {[...keepReadingArticles, ...comingNextArticles]
-                  .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
+                  .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
                   .slice(0, 8)
                   .map((article) => (
                   <button key={`more-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
