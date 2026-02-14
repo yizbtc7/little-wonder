@@ -562,8 +562,8 @@ function TopSchemaCards({ schemaStats, childName, locale }: { schemaStats: Schem
         return (
           <div key={key} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '13px 14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{`${info.emoji} ${info.label}`}</p>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '4px 10px', minWidth: 30, textAlign: 'center' }}>{count}</span>
+              <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{info.label}</p>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '4px 10px', minWidth: 30, textAlign: 'center' }}>{`${count} veces`}</span>
             </div>
             {contextLine ? <p style={{ margin: '5px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 12, color: '#8E8891' }}>{contextLine}</p> : null}
           </div>
