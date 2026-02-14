@@ -2669,7 +2669,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     </button>
                   </div>
 
-                  <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.display, fontSize: 31, lineHeight: 1.02, fontWeight: 400, color: '#3E302C' }}>{childName}</h1>
+                  <h1 style={{ margin: '12px 0 8px', fontFamily: theme.fonts.display, fontSize: 31, lineHeight: 1.02, fontWeight: 400, color: '#3E302C' }}>{childName}</h1>
                   {profilePhotoUploading ? (
                     <p style={{ margin: '4px 0 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#6E5A55' }}>{locale === 'es' ? 'Subiendo foto…' : 'Uploading photo…'}</p>
                   ) : null}
