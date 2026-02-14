@@ -27,7 +27,7 @@ export default function SignInButton() {
 
   return (
     <div>
-      <Button onClick={handleGoogleSignIn} size="lg" style={{ width: '100%', maxWidth: 320 }}>
+      <Button onClick={handleGoogleSignIn} size="lg" style={{ width: '100%', maxWidth: 280 }}>
         Continue with Google
       </Button>
       {error ? <p style={{ color: '#E8725A', marginTop: 12 }}>{error}</p> : null}

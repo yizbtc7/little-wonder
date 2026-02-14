@@ -52,14 +52,14 @@ function SelectChip({
       style={{
         padding: '9px 16px',
         borderRadius: theme.radius.chip,
-        border: `1.5px solid ${selected ? theme.colors.brand : theme.colors.grayBg}`,
-        background: selected ? theme.colors.brandLight : theme.colors.white,
-        color: selected ? theme.colors.brand : theme.colors.dark,
-        fontFamily: theme.fonts.body,
-        fontSize: 14,
-        fontWeight: 500,
+        border: `1.5px solid ${selected ? theme.colors.rose : theme.colors.blushMid}`,
+        background: selected ? theme.colors.blush : theme.colors.white,
+        color: selected ? theme.colors.roseDark : theme.colors.midText,
+        fontFamily: theme.fonts.sans,
+        fontSize: 13,
+        fontWeight: selected ? 700 : 500,
         cursor: 'pointer',
-        transition: 'all 0.15s ease',
+        transition: 'all 0.2s ease',
       }}
     >
       {selected ? '✓ ' : ''}
@@ -117,7 +117,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: theme.colors.white }}>
+    <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
       {step === 0 ? (
         <section
           style={{
@@ -128,38 +128,38 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
             alignItems: 'center',
             padding: '40px 28px',
             textAlign: 'center',
-            background: `linear-gradient(180deg, ${theme.colors.cream} 0%, ${theme.colors.white} 100%)`,
+            background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 40%, ${theme.colors.warmWhite} 100%)`,
           }}
         >
           <FadeIn delay={100}>
-            <div style={{ fontSize: 64, marginBottom: 8 }}>✨</div>
+            <div style={{ fontSize: 56, marginBottom: 4 }}>✨</div>
           </FadeIn>
           <FadeIn delay={250}>
-            <h1 style={{ fontSize: 58, color: theme.colors.dark, marginBottom: 10 }}>Little Wonder</h1>
+            <h1 style={{ fontSize: 38, color: theme.colors.charcoal, marginBottom: 8, letterSpacing: -0.5, lineHeight: 1.1 }}>Little Wonder</h1>
           </FadeIn>
           <FadeIn delay={400}>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 20, color: theme.colors.gray, lineHeight: 1.5, marginBottom: 32 }}>
-              See the extraordinary things your child is already doing.
+            <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.midText, lineHeight: 1.6, marginBottom: 48, maxWidth: 280 }}>
+              See the extraordinary science inside your child's everyday moments.
             </p>
           </FadeIn>
           <FadeIn delay={550}>
-            <Button onClick={() => setStep(1)} size="lg" style={{ width: 320 }}>
-              Get Started
+            <Button onClick={() => setStep(1)} size="lg" style={{ width: 280 }}>
+              Get Started →
             </Button>
           </FadeIn>
           <FadeIn delay={700}>
-            <p style={{ marginTop: 14, fontSize: 13, color: theme.colors.grayLight }}>Takes less than 2 minutes to set up</p>
+            <p style={{ marginTop: 20, fontSize: 12, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>Less than 2 minutes</p>
           </FadeIn>
         </section>
       ) : null}
 
       {step === 1 ? (
-        <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '40px 28px', background: theme.colors.white }}>
+        <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 24px', background: theme.colors.cream }}>
           <ProgressDots total={3} current={0} />
           <FadeIn delay={100}>
-            <h2 style={{ fontSize: 42, color: theme.colors.dark, margin: '32px 0 8px' }}>About you</h2>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.gray, marginBottom: 26 }}>
-              Just the basics so we can personalize your experience.
+            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>About you</h2>
+            <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText, marginBottom: 32 }}>
+              Just the basics to personalize.
             </p>
           </FadeIn>
 
@@ -173,10 +173,10 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               placeholder="First name"
               style={{
                 width: '100%',
-                borderRadius: 12,
-                border: `1.5px solid ${theme.colors.grayBg}`,
+                borderRadius: theme.radius.md,
+                border: `1.5px solid ${theme.colors.blushMid}`,
                 padding: '14px 16px',
-                background: theme.colors.grayBg,
+                background: theme.colors.white,
                 marginBottom: 20,
                 fontFamily: theme.fonts.body,
                 fontSize: 16,
@@ -217,12 +217,12 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
       ) : null}
 
       {step === 2 ? (
-        <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '40px 28px', background: theme.colors.white }}>
+        <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 24px', background: theme.colors.cream }}>
           <ProgressDots total={3} current={1} />
           <FadeIn delay={100}>
-            <h2 style={{ fontSize: 40, color: theme.colors.dark, margin: '32px 0 8px' }}>Tell us about your little one</h2>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.gray, marginBottom: 26, lineHeight: 1.5 }}>
-              This helps us show you exactly what&apos;s amazing about what they&apos;re doing right now.
+            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>Your little one</h2>
+            <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText, marginBottom: 32, lineHeight: 1.5 }}>
+              This helps us show you what&apos;s amazing about what they&apos;re doing.
             </p>
           </FadeIn>
 
@@ -234,7 +234,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               value={childName}
               onChange={(event) => setChildName(event.target.value)}
               placeholder="First name or nickname"
-              style={{ width: '100%', borderRadius: 12, border: `1.5px solid ${theme.colors.grayBg}`, padding: '14px 16px', background: theme.colors.grayBg, marginBottom: 20, fontFamily: theme.fonts.body, fontSize: 16 }}
+              style={{ width: '100%', borderRadius: theme.radius.md, border: `1.5px solid ${theme.colors.blushMid}`, padding: '14px 16px', background: theme.colors.white, marginBottom: 20, fontFamily: theme.fonts.sans, fontSize: 16 }}
             />
 
             <label style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, display: 'block', marginBottom: 8 }}>
@@ -244,7 +244,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               type="date"
               value={birthdate}
               onChange={(event) => setBirthdate(event.target.value)}
-              style={{ width: '100%', borderRadius: 12, border: `1.5px solid ${theme.colors.grayBg}`, padding: '14px 16px', background: theme.colors.grayBg, marginBottom: 20, fontFamily: theme.fonts.body, fontSize: 16 }}
+              style={{ width: '100%', borderRadius: theme.radius.md, border: `1.5px solid ${theme.colors.blushMid}`, padding: '14px 16px', background: theme.colors.white, marginBottom: 20, fontFamily: theme.fonts.sans, fontSize: 16 }}
             />
           </FadeIn>
 
@@ -291,7 +291,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
                 { icon: '🌱', title: 'Together, you grow', desc: 'Get personalized ideas to nurture exactly what your child is naturally curious about right now.' },
               ].map((item) => (
                 <div key={item.title} style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: theme.colors.brandLight, display: 'grid', placeItems: 'center', fontSize: 22 }}>{item.icon}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: theme.radius.md, background: theme.colors.brandLight, display: 'grid', placeItems: 'center', fontSize: 22 }}>{item.icon}</div>
                   <div>
                     <p style={{ fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 700, color: theme.colors.dark }}>{item.title}</p>
                     <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.gray, marginTop: 4, lineHeight: 1.45 }}>{item.desc}</p>

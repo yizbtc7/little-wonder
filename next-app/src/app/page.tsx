@@ -29,19 +29,19 @@ export default async function HomePage() {
         justifyContent: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        background: `linear-gradient(180deg, ${theme.colors.cream} 0%, ${theme.colors.white} 100%)`,
-        padding: '40px 24px',
+        background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 40%, ${theme.colors.warmWhite} 100%)`,
+        padding: '40px 28px',
       }}
     >
       <FadeIn delay={100}>
-        <div style={{ fontSize: 64, marginBottom: 10 }}>✨</div>
+        <div style={{ fontSize: 56, marginBottom: 4 }}>✨</div>
       </FadeIn>
       <FadeIn delay={250}>
-        <h1 style={{ color: theme.colors.dark, fontSize: 56, marginBottom: 10 }}>Little Wonder</h1>
+        <h1 style={{ color: theme.colors.charcoal, fontSize: 38, marginBottom: 8, letterSpacing: -0.5, lineHeight: 1.1 }}>Little Wonder</h1>
       </FadeIn>
       <FadeIn delay={400}>
-        <p style={{ color: theme.colors.gray, fontSize: 22, maxWidth: 540, lineHeight: 1.4, marginBottom: 28 }}>
-          See the extraordinary things your child is already doing.
+        <p style={{ color: theme.colors.midText, fontFamily: theme.fonts.sans, fontSize: 16, maxWidth: 280, lineHeight: 1.6, marginBottom: 48 }}>
+          See the extraordinary science inside your child&apos;s everyday moments.
         </p>
       </FadeIn>
       <FadeIn delay={550}>
