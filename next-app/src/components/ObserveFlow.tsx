@@ -2872,41 +2872,45 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                     {hasSavedArticles ? (
                       <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 32 }}>
-                        <div style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                          <button
-                            type='button'
-                            onClick={() => setShowProfileBookmarks((v) => !v)}
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              cursor: 'pointer',
-                              padding: 0,
-                              margin: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 10,
-                              minWidth: 0,
-                            }}
-                          >
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                              <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
-                              <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
-                                {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
-                              </h3>
-                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
-                                {savedArticles.length}
+                        <div style={{ margin: '0 0 10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                            <button
+                              type='button'
+                              onClick={() => setShowProfileBookmarks((v) => !v)}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: 0,
+                                margin: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                minWidth: 0,
+                              }}
+                            >
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
+                                <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                                  {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
+                                </h3>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
+                                  {savedArticles.length}
+                                </span>
                               </span>
-                            </span>
-                            <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
-                          </button>
+                              <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                            </button>
+                          </div>
 
-                          <button
-                            type='button'
-                            onClick={() => openSavedArticlesView('profile')}
-                            style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                          >
-                            {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
-                          </button>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                            <button
+                              type='button'
+                              onClick={() => openSavedArticlesView('profile')}
+                              style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
+                            </button>
+                          </div>
                         </div>
 
                         <div style={{ marginTop: 2 }}>
