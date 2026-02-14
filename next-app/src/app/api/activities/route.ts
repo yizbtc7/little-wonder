@@ -215,7 +215,13 @@ export async function GET(request: Request) {
 
   const nonCompleted = decorated.filter((a) => !a.is_completed);
   const featured = nonCompleted.find((a) => a.is_featured) ?? nonCompleted[0] ?? decorated.find((a) => a.is_featured) ?? decorated[0] ?? null;
-  const nonFeatured = decorated.filter((a) => !featured || a.id !== featured.id);
+  const featuredKey = featured ? canonicalTitleKey(featured.title) : null;
+  const nonFeatured = decorated.filter((a) => {
+    if (!featured) return true;
+    if (a.id === featured.id) return false;
+    if (featuredKey && canonicalTitleKey(a.title) === featuredKey) return false;
+    return true;
+  });
   const moreToTry = nonFeatured.filter((a) => !a.is_completed);
   const saved = decorated.filter((a) => a.is_saved && !a.is_completed);
   const completed = decorated.filter((a) => a.is_completed);
