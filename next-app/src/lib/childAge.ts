@@ -16,8 +16,11 @@ export function getAgeInMonths(birthdate: string): number {
   return Math.max(ageInMonths, 0);
 }
 
-export function formatAgeLabel(ageInMonths: number): string {
+export function formatAgeLabel(ageInMonths: number, locale: 'es' | 'en' = 'en'): string {
+  const isEs = locale === 'es';
+
   if (ageInMonths < MONTHS_PER_YEAR) {
+    if (isEs) return ageInMonths === 1 ? '1 mes' : `${ageInMonths} meses`;
     return ageInMonths === 1 ? '1 month' : `${ageInMonths} months`;
   }
 
@@ -25,7 +28,14 @@ export function formatAgeLabel(ageInMonths: number): string {
   const months = ageInMonths % MONTHS_PER_YEAR;
 
   if (months === 0) {
+    if (isEs) return years === 1 ? '1 año' : `${years} años`;
     return years === 1 ? '1 year' : `${years} years`;
+  }
+
+  if (isEs) {
+    const yearLabel = years === 1 ? '1 año' : `${years} años`;
+    const monthLabel = months === 1 ? '1 mes' : `${months} meses`;
+    return `${yearLabel} ${monthLabel}`;
   }
 
   const yearLabel = years === 1 ? '1 year' : `${years} years`;

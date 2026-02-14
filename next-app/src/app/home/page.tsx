@@ -41,10 +41,10 @@ export default async function HomePage() {
     .eq('date', today)
     .maybeSingle<DailyContentRow>();
 
-  const ageInMonths = getAgeInMonths(child.birthdate);
-  const ageLabel = formatAgeLabel(ageInMonths);
-
   const initialLanguage = userRow.data?.language === 'en' ? 'en' : 'es';
+
+  const ageInMonths = getAgeInMonths(child.birthdate);
+  const ageLabel = formatAgeLabel(ageInMonths, initialLanguage);
 
   return (
     <ObserveFlow
