@@ -520,6 +520,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [activitiesList, setActivitiesList] = useState<ActivityItem[]>([]);
   const [childSchemas, setChildSchemas] = useState<string[]>([]);
   const [activitiesLoaded, setActivitiesLoaded] = useState(false);
+  const [activitiesRetry, setActivitiesRetry] = useState(0);
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<Language>(initialLanguage);
@@ -798,7 +799,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     void (async () => {
       try {
         const response = await fetch(apiUrl(`/api/activities?child_id=${childId}`));
-        if (!response.ok) return;
+        if (!response.ok) {
+          setTimeout(() => setActivitiesRetry((v) => v + 1), 1200);
+          return;
+        }
 
         const payload = (await response.json()) as {
           featured?: ActivityItem | null;
@@ -811,17 +815,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setChildSchemas(payload.child_schemas ?? []);
         setActivitiesLoaded(true);
       } catch {
-        // ignore fetch errors in non-browser test environments
+        setTimeout(() => setActivitiesRetry((v) => v + 1), 1200);
       }
     })();
-  }, [activeTab, activitiesLoaded, childId, locale]);
+  }, [activeTab, activitiesLoaded, childId, locale, activitiesRetry]);
 
   useEffect(() => {
     if (activeTab !== 'profile') return;
     void (async () => {
       try {
         const response = await fetch(apiUrl('/api/profile/wonders'));
-        if (!response.ok) return;
+        if (!response.ok) {
+          setTimeout(() => setActivitiesRetry((v) => v + 1), 1200);
+          return;
+        }
         const payload = (await response.json()) as {
           timeline?: ProfileWonderTimelineEntry[];
           schema_stats?: ProfileSchemaStat[];
