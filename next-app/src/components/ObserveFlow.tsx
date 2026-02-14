@@ -282,8 +282,13 @@ function formatSchemaLabel(value: string): string {
     .join(' ');
 }
 
-function formatExploreTypeLabel(type: ExploreArticleRow['type']): string {
-  if (type === 'guide') return 'Guide';
+function formatExploreTypeLabel(type: ExploreArticleRow['type'], locale: Language): string {
+  if (locale === 'es') {
+    if (type === 'guide') return 'Guía práctica';
+    if (type === 'research') return 'Investigación';
+    return 'Artículo';
+  }
+  if (type === 'guide') return 'Practical Guide';
   if (type === 'research') return 'Research';
   return 'Article';
 }
@@ -968,7 +973,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <span style={{ fontSize: 30 }}>{openExploreArticle.emoji}</span>
-            <span style={{ fontSize: 10, color: accent, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{formatExploreTypeLabel(openExploreArticle.type)}</span>
+            <span style={{ fontSize: 10, color: accent, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{formatExploreTypeLabel(openExploreArticle.type, locale)}</span>
             {openExploreArticle.domain ? <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.domain}</span> : null}
             <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.read_time_minutes ? `${openExploreArticle.read_time_minutes} min read` : estimateReadTime(openExploreArticle.body)}</span>
           </div>
@@ -1511,14 +1516,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 ) : null}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
                 {newForYouArticles.slice(0, 3).map((article, idx) => {
                   const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
                   return (
-                    <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ minWidth: 230, background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '12px 12px', textAlign: 'left', cursor: 'pointer' }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: iconBackgrounds[idx % iconBackgrounds.length], marginBottom: 8 }}>{article.emoji}</div>
-                      <p style={{ margin: '0 0 5px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{formatExploreTypeLabel(article.type)} • {article.read_time_minutes ? t.common.minRead(article.read_time_minutes) : estimateReadTime(article.body)}</p>
+                    <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ minWidth: 262, maxWidth: 280, background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 2px 12px rgba(45,43,50,0.06)' }}>
+                      <div style={{ height: 4, background: article.type === 'guide' ? `linear-gradient(90deg, ${theme.colors.sage}, #6B8E68)` : article.type === 'research' ? `linear-gradient(90deg, ${theme.colors.lavender}, #9B8BB5)` : `linear-gradient(90deg, ${theme.colors.rose}, ${theme.colors.roseDark})` }} />
+                      <div style={{ padding: '14px 14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: theme.fonts.sans, color: article.type === 'guide' ? '#6B8E68' : article.type === 'research' ? '#7B6B8D' : theme.colors.roseDark, background: article.type === 'guide' ? '#E8F2E6' : article.type === 'research' ? '#F0EBF5' : theme.colors.blush, padding: '3px 10px', borderRadius: 20, letterSpacing: 0.3, textTransform: 'uppercase' }}>{formatExploreTypeLabel(article.type, locale)}</span>
+                          <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText, fontWeight: 600 }}>{article.read_time_minutes ? t.common.min(article.read_time_minutes) : estimateReadTime(article.body)}</span>
+                        </div>
+                        <div style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: iconBackgrounds[idx % iconBackgrounds.length], marginBottom: 8 }}>{article.emoji}</div>
+                        <p style={{ margin: '0 0 5px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, lineHeight: 1.35 }}>{article.title}</p>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.summary ?? ''}</p>
+                      </div>
                     </button>
                   );
                 })}
@@ -1537,7 +1549,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </>
             ) : null}
 
-            <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.deepDives}</h2>
+            <h2 style={{ margin: '16px 0 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.deepDives}</h2>
+            <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
             {deepDiveArticles.map((article, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (
