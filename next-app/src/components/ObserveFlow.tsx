@@ -1857,10 +1857,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             </p>
           ) : savedArticles.map((article) => {
             const badge = article.type === 'research'
-              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EFE7FA', color: '#7A5AA3' }
+              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#7A5AA3', color: '#FFFFFF' }
               : article.type === 'guide'
-                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F4EC', color: '#4F8E65' }
-                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#C4685B' };
+                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#4F8E65', color: '#FFFFFF' }
+                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#C4685B', color: '#FFFFFF' };
             const readTime = article.read_time_minutes ?? 6;
             const domainLabel = article.domain?.trim() || (locale === 'es' ? 'Crianza' : 'Parenting');
 
@@ -2948,10 +2948,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                         <div style={{ marginTop: 2 }}>
                           {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
                             const badge = article.type === 'research'
-                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EFE7FA', color: '#7A5AA3' }
+                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#7A5AA3', color: '#FFFFFF' }
                               : article.type === 'guide'
-                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F4EC', color: '#4F8E65' }
-                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#C4685B' };
+                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#4F8E65', color: '#FFFFFF' }
+                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#C4685B', color: '#FFFFFF' };
                             const readTime = article.read_time_minutes ?? 6;
                             const domainLabel = article.domain?.trim() || (locale === 'es' ? 'Crianza' : 'Parenting');
 
