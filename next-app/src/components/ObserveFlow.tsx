@@ -803,7 +803,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [newInterestInput, setNewInterestInput] = useState('');
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [interestError, setInterestError] = useState('');
-  // onboarding interest options are always visible below +Agregar
+  const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profilePhotoError, setProfilePhotoError] = useState<string>('');
@@ -1249,6 +1249,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileInterests(payload.interests ?? []);
         setNewInterestInput('');
         setInterestError('');
+        setShowInterestPicker(false);
         setProfileRecentMoments(payload.recent_moments ?? []);
         setProfilePhotoUrl(payload.child?.photo_url ?? null);
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
@@ -1301,6 +1302,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       const payload = (await response.json()) as { interests?: string[] };
       setProfileInterests(payload.interests ?? profileInterests);
       setNewInterestInput('');
+      setShowInterestPicker(false);
     } catch {
       setInterestError(locale === 'es' ? 'No pudimos guardar el interés.' : 'Could not save interest.');
     } finally {
@@ -2526,11 +2528,11 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
                         <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
                       </div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                         {profileInterests.length === 0 ? (
                           <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
                         ) : profileInterests.map((interest) => (
-                          <span key={interest} style={{ background: '#FFFFFF', borderRadius: 999, padding: '10px 18px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: '#3E302C', border: '1px solid #EDE4DF', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>{ensureInterestEmoji(interest)}</span>
+                          <span key={interest} style={{ background: '#FFFFFF', borderRadius: 999, padding: '11px 20px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2F2623', border: '1px solid #E9DFDA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>{ensureInterestEmoji(interest)}</span>
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -2538,6 +2540,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         value={newInterestInput}
                         onChange={(event) => {
                           setNewInterestInput(event.target.value);
+                          setShowInterestPicker(false);
                           if (interestError) setInterestError('');
                         }}
                         onKeyDown={(event) => {
@@ -2565,7 +2568,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         onClick={() => {
                           if (normalizeInterestLabel(newInterestInput).length > 0) {
                             void submitNewInterest();
+                            return;
                           }
+                          setShowInterestPicker((prev) => !prev);
                         }}
                         disabled={isAddingInterest}
                         style={{
@@ -2583,35 +2588,37 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       >
                         + {locale === 'es' ? 'Agregar' : 'Add'}
                       </button>
-                      <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: 8, padding: '2px 2px 0' }}>
-                        {CHILD_INTEREST_OPTIONS.map((interestOption) => {
-                          const alreadyAdded = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(interestOption));
-                          return (
-                            <button
-                              key={interestOption}
-                              type='button'
-                              onClick={() => {
-                                if (alreadyAdded || isAddingInterest) return;
-                                void submitNewInterest(interestOption);
-                              }}
-                              disabled={alreadyAdded || isAddingInterest}
-                              style={{
-                                border: `1px solid ${alreadyAdded ? '#E6D9D6' : '#F0C9C1'}`,
-                                background: alreadyAdded ? '#F9F6F5' : '#FFF7F5',
-                                borderRadius: 999,
-                                padding: '7px 12px',
-                                fontFamily: theme.fonts.sans,
-                                fontSize: 12,
-                                color: alreadyAdded ? theme.colors.lightText : theme.colors.roseDark,
-                                cursor: alreadyAdded || isAddingInterest ? 'not-allowed' : 'pointer',
-                                opacity: alreadyAdded ? 0.65 : 1,
-                              }}
-                            >
-                              {interestOption}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {showInterestPicker ? (
+                        <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: 8, padding: '2px 2px 0' }}>
+                          {CHILD_INTEREST_OPTIONS.map((interestOption) => {
+                            const alreadyAdded = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(interestOption));
+                            return (
+                              <button
+                                key={interestOption}
+                                type='button'
+                                onClick={() => {
+                                  if (alreadyAdded || isAddingInterest) return;
+                                  void submitNewInterest(interestOption);
+                                }}
+                                disabled={alreadyAdded || isAddingInterest}
+                                style={{
+                                  border: `1px solid ${alreadyAdded ? '#E6D9D6' : '#F0C9C1'}`,
+                                  background: alreadyAdded ? '#F9F6F5' : '#FFF7F5',
+                                  borderRadius: 999,
+                                  padding: '7px 12px',
+                                  fontFamily: theme.fonts.sans,
+                                  fontSize: 12,
+                                  color: alreadyAdded ? theme.colors.lightText : theme.colors.roseDark,
+                                  cursor: alreadyAdded || isAddingInterest ? 'not-allowed' : 'pointer',
+                                  opacity: alreadyAdded ? 0.65 : 1,
+                                }}
+                              >
+                                {interestOption}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                       {interestError ? <p style={{ margin: 0, width: '100%', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{interestError}</p> : null}
                       </div>
                     </div>
