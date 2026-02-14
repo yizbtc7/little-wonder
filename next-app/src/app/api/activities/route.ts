@@ -18,6 +18,7 @@ type ActivityRow = {
   age_min_months: number;
   age_max_months: number;
   language: string;
+  is_featured?: boolean | null;
   created_at: string;
 };
 
@@ -35,9 +36,14 @@ function toCountMap(schemas: string[]): Map<string, number> {
 
 function rankActivities(rows: ActivityRow[], schemaCounts: Map<string, number>): ActivityRow[] {
   return [...rows].sort((a, b) => {
+    const aFeatured = a.is_featured ? 1 : 0;
+    const bFeatured = b.is_featured ? 1 : 0;
+    if (bFeatured !== aFeatured) return bFeatured - aFeatured;
+
     const aScore = schemaCounts.get(a.schema_target) ?? 0;
     const bScore = schemaCounts.get(b.schema_target) ?? 0;
     if (bScore !== aScore) return bScore - aScore;
+
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 }
@@ -65,7 +71,7 @@ export async function GET(request: Request) {
   const { data: child } = await childQuery.maybeSingle();
 
   if (!child?.id || !child.birthdate) {
-    return NextResponse.json({ featured: null, activities: [], child_schemas: [] });
+    return NextResponse.json({ featured: null, activities: [], saved: [], completed: [], stats: { total: 0, completed: 0 }, child_schemas: [] });
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
@@ -88,11 +94,12 @@ export async function GET(request: Request) {
     .map(([schema]) => schema);
 
   let rows: ActivityRow[] = [];
+  let selectedLanguage = preferredLanguage;
 
   for (const language of languagePriority(preferredLanguage)) {
     const { data: languageRows, error: languageError } = await db
       .from('activities')
-      .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,created_at')
+      .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,is_featured,created_at')
       .eq('language', language)
       .lte('age_min_months', ageMonths)
       .gte('age_max_months', ageMonths)
@@ -104,19 +111,51 @@ export async function GET(request: Request) {
 
     if ((languageRows?.length ?? 0) > 0) {
       rows = (languageRows ?? []) as ActivityRow[];
+      selectedLanguage = language;
       break;
     }
   }
 
   if (rows.length === 0) {
-    return NextResponse.json({ featured: null, activities: [], child_schemas: topSchemas });
+    return NextResponse.json({ featured: null, activities: [], saved: [], completed: [], stats: { total: 0, completed: 0 }, child_schemas: topSchemas });
   }
 
-  const ranked = rankActivities(rows, schemaCounts);
-  const selected = ranked.slice(0, 6);
+  const activityIds = rows.map((r) => r.id);
 
-  const featured = selected[0] ?? null;
-  const activities = selected.slice(1);
+  const [{ data: savesRows }, { data: completionRows }] = await Promise.all([
+    db.from('activity_saves').select('activity_id,saved_at').eq('user_id', user.id).in('activity_id', activityIds),
+    db.from('activity_completions').select('activity_id,completed_at,rating,note').eq('user_id', user.id).in('activity_id', activityIds),
+  ]);
 
-  return NextResponse.json({ featured, activities, child_schemas: topSchemas });
+  const saveMap = new Map((savesRows ?? []).map((r) => [r.activity_id as string, r]));
+  const completionMap = new Map((completionRows ?? []).map((r) => [r.activity_id as string, r]));
+
+  const decorated = rankActivities(rows, schemaCounts).map((row) => ({
+    ...row,
+    is_saved: saveMap.has(row.id),
+    saved_at: (saveMap.get(row.id) as { saved_at?: string } | undefined)?.saved_at ?? null,
+    is_completed: completionMap.has(row.id),
+    completed_at: (completionMap.get(row.id) as { completed_at?: string } | undefined)?.completed_at ?? null,
+    rating: (completionMap.get(row.id) as { rating?: number | null } | undefined)?.rating ?? null,
+    note: (completionMap.get(row.id) as { note?: string | null } | undefined)?.note ?? null,
+  }));
+
+  const featured = decorated.find((a) => a.is_featured) ?? decorated[0] ?? null;
+  const nonFeatured = decorated.filter((a) => !featured || a.id !== featured.id);
+  const moreToTry = nonFeatured.filter((a) => !a.is_completed);
+  const saved = decorated.filter((a) => a.is_saved && !a.is_completed);
+  const completed = decorated.filter((a) => a.is_completed);
+
+  return NextResponse.json({
+    featured,
+    activities: moreToTry,
+    saved,
+    completed,
+    stats: {
+      total: decorated.length,
+      completed: completed.length,
+    },
+    child_schemas: topSchemas,
+    language: selectedLanguage,
+  });
 }

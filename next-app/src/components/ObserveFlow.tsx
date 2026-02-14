@@ -110,6 +110,13 @@ type ActivityItem = {
   age_max_months: number;
   language: string;
   created_at: string;
+  is_featured?: boolean;
+  is_saved?: boolean;
+  is_completed?: boolean;
+  saved_at?: string | null;
+  completed_at?: string | null;
+  rating?: number | null;
+  note?: string | null;
 };
 
 type ProfileWonderTimelineEntry = {
@@ -523,6 +530,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
   const [activitiesList, setActivitiesList] = useState<ActivityItem[]>([]);
+  const [savedActivities, setSavedActivities] = useState<ActivityItem[]>([]);
+  const [completedActivities, setCompletedActivities] = useState<ActivityItem[]>([]);
+  const [activitiesStats, setActivitiesStats] = useState({ total: 0, completed: 0 });
+  const [showCompletedActivities, setShowCompletedActivities] = useState(false);
   const [childSchemas, setChildSchemas] = useState<string[]>([]);
   const [activitiesLoaded, setActivitiesLoaded] = useState(false);
   const [activitiesRetry, setActivitiesRetry] = useState(0);
@@ -801,11 +812,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         const payload = (await response.json()) as {
           featured?: ActivityItem | null;
           activities?: ActivityItem[];
+          saved?: ActivityItem[];
+          completed?: ActivityItem[];
+          stats?: { total: number; completed: number };
           child_schemas?: string[];
         };
 
         setActivitiesFeatured(payload.featured ?? null);
         setActivitiesList(payload.activities ?? []);
+        setSavedActivities(payload.saved ?? []);
+        setCompletedActivities(payload.completed ?? []);
+        setActivitiesStats(payload.stats ?? { total: 0, completed: 0 });
         setChildSchemas(payload.child_schemas ?? []);
         setActivitiesLoaded(true);
       } catch {
@@ -834,6 +851,23 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       }
     })();
   }, [activeTab]);
+
+  const toggleSaveActivity = async (activityId: string, isSaved: boolean) => {
+    await fetch(apiUrl(`/api/activities/${activityId}/save`), { method: isSaved ? 'DELETE' : 'POST' });
+    setActivitiesLoaded(false);
+    setActivitiesRetry((v) => v + 1);
+  };
+
+  const completeActivity = async (activityId: string) => {
+    await fetch(apiUrl(`/api/activities/${activityId}/complete`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    setOpenActivityDetail(null);
+    setActivitiesLoaded(false);
+    setActivitiesRetry((v) => v + 1);
+  };
 
   const ensureConversation = async (previewText: string): Promise<string | null> => {
     if (conversationId) return conversationId;
@@ -1632,10 +1666,19 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <div style={{ fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText, marginBottom: 24 }} dangerouslySetInnerHTML={{ __html: markdownToHtml(withChildName(openActivityDetail.steps, childName)) }} />
 
-            <div style={{ background: theme.colors.lavenderBg, borderRadius: 24, padding: '18px 18px' }}>
-              <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>🧠 The science behind this</p>
+            <div style={{ background: theme.colors.lavenderBg, borderRadius: 24, padding: '18px 18px', marginBottom: 100 }}>
+              <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>🧠 {locale === 'es' ? 'La ciencia detrás' : 'The science behind this'}</p>
               <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.65 }}>{withChildName(openActivityDetail.science_note, childName)}</p>
             </div>
+          </div>
+
+          <div style={{ position: 'sticky', bottom: 0, padding: '10px 16px 14px', background: 'rgba(255,251,247,0.94)', borderTop: `1px solid ${theme.colors.divider}`, backdropFilter: 'blur(10px)', display: 'grid', gap: 8 }}>
+            <button onClick={() => void completeActivity(openActivityDetail.id)} style={{ border: 'none', borderRadius: 14, padding: '12px 16px', background: theme.colors.sage, color: '#fff', fontFamily: theme.fonts.sans, fontWeight: 700, cursor: 'pointer' }}>
+              ✅ {locale === 'es' ? '¡Lo hicimos!' : 'We did it!'}
+            </button>
+            <button onClick={() => void toggleSaveActivity(openActivityDetail.id, Boolean(openActivityDetail.is_saved))} style={{ border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '12px 16px', background: '#fff', color: theme.colors.darkText, fontFamily: theme.fonts.sans, fontWeight: 700, cursor: 'pointer' }}>
+              {openActivityDetail.is_saved ? '🔖 ' : '📑 '} {locale === 'es' ? 'Guardar para después' : 'Save for later'}
+            </button>
           </div>
         </div>
       ) : null}
@@ -1643,8 +1686,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       {activeTab === 'activities' && !openActivityDetail ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.activities.title}</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.activities.subtitle(childName)}</p>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{t.activities.title}</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.lightText }}>{t.activities.subtitle(childName)}</p>
+            {activitiesStats.total > 0 ? (
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: '#fff', border: `1px solid ${theme.colors.divider}` }}>
+                <span style={{ fontSize: 16 }}>✅</span>
+                <div style={{ flex: 1, height: 6, background: theme.colors.divider, borderRadius: 10 }}>
+                  <div style={{ width: `${Math.round((activitiesStats.completed / activitiesStats.total) * 100)}%`, height: 6, borderRadius: 10, background: `linear-gradient(90deg, ${theme.colors.sage}, ${theme.colors.sage})` }} />
+                </div>
+                <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, fontWeight: 700 }}>{activitiesStats.completed}/{activitiesStats.total}</span>
+              </div>
+            ) : null}
           </div>
 
           <div style={{ padding: '20px 20px 0' }}>
@@ -1686,9 +1738,38 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       <span style={{ fontSize: 10, color: '#fff', background: schemaBadgeColors[activity.schema_target] ?? theme.colors.rose, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(activity.schema_target)}</span>
                     </div>
                   </div>
+                  <button onClick={(e) => { e.stopPropagation(); void toggleSaveActivity(activity.id, Boolean(activity.is_saved)); }} style={{ border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer', opacity: 0.9 }}>
+                    {activity.is_saved ? '🔖' : '📑'}
+                  </button>
                 </div>
               );
             })}
+
+            {savedActivities.length > 0 ? (
+              <>
+                <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: '14px 0 10px', fontWeight: 600 }}>🔖 {locale === 'es' ? 'Guardadas' : 'Saved'}</h2>
+                {savedActivities.map((activity) => (
+                  <div key={`saved-${activity.id}`} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{withChildName(activity.title, childName)}</span>
+                    <span style={{ fontSize: 16 }}>🔖</span>
+                  </div>
+                ))}
+              </>
+            ) : null}
+
+            {completedActivities.length > 0 ? (
+              <>
+                <button onClick={() => setShowCompletedActivities((v) => !v)} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: '10px 0', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText, fontWeight: 700, cursor: 'pointer' }}>
+                  ✅ {completedActivities.length} {locale === 'es' ? 'completadas' : 'completed'} {showCompletedActivities ? '▾' : '▸'}
+                </button>
+                {showCompletedActivities ? completedActivities.map((activity) => (
+                  <div key={`completed-${activity.id}`} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, cursor: 'pointer', opacity: 0.75, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{withChildName(activity.title, childName)}</span>
+                    <span style={{ fontSize: 16 }}>✅</span>
+                  </div>
+                )) : null}
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}
