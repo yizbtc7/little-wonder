@@ -674,8 +674,11 @@ function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMe
         <span style={{ fontSize: 18, lineHeight: 1 }}>🌱</span>
         <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
       </div>
-      <p style={{ margin: '0 0 12px', fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#938E97', lineHeight: 1.32 }}>
+      <p style={{ margin: '0 0 4px', fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#938E97', lineHeight: 1.32 }}>
         {locale === 'es' ? `Los patrones de exploración que ${childName} cultiva` : `${childName}'s strongest play patterns`}
+      </p>
+      <p style={{ margin: '0 0 12px', fontFamily: "'Nunito', sans-serif", fontSize: 11.5, color: '#A39DA6', lineHeight: 1.35 }}>
+        {locale === 'es' ? 'Los esquemas son formas repetidas de jugar que muestran cómo está aprendiendo.' : 'Schemas are repeated play patterns that show how your child is learning.'}
       </p>
 
       {schemaStats.length === 0 ? (
