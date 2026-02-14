@@ -2222,13 +2222,18 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     ))}
 
 
-                    {savedArticles.length > 0 ? (
-                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
-                        <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
-                          <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
-                        </button>
+                    <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
+                      <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
+                        <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                      </button>
+                      {showProfileBookmarks ? (
                         <div style={{ marginTop: 10 }}>
+                          {savedArticles.length === 0 ? (
+                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>
+                              {locale === 'es' ? 'Aún no hay artículos guardados.' : 'No saved articles yet.'}
+                            </p>
+                          ) : null}
                           {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
                             const badge = article.type === 'research'
                               ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
@@ -2244,18 +2249,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                               </button>
                             );
                           })}
-                          {showProfileBookmarks ? (
+                          {savedArticles.length > 0 && showProfileBookmarks ? (
                             <button onClick={() => setShowProfileBookmarks(false)} style={{ border: 'none', background: 'none', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
                               {locale === 'es' ? 'Mostrar menos' : 'Show less'}
                             </button>
-                          ) : savedArticles.length > 2 ? (
-                            <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'none', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
-                              {locale === 'es' ? `Ver ${savedArticles.length - 2} más →` : `View ${savedArticles.length - 2} more →`}
-                            </button>
                           ) : null}
                         </div>
-                      </div>
-                    ) : null}
+                      ) : null}
+                    </div>
                   </>
                 ) : null}
 
