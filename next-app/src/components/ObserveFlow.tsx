@@ -1638,7 +1638,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
             ) : null}
 
-            <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: '0 0 12px', fontWeight: 600 }}>More to try</h2>
+            <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: '0 0 12px', fontWeight: 600 }}>{t.activities.moreToTry}</h2>
+            {!activitiesFeatured && activitiesList.length === 0 ? (
+              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '14px 16px', marginBottom: 12 }}>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.activities.emptyState}</p>
+              </div>
+            ) : null}
             {activitiesList.map((activity, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (

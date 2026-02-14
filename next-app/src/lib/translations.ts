@@ -88,6 +88,7 @@ export const translations = {
       moreToTry: 'Más para intentar',
       whatYouNeed: '🏠 Lo que necesitas',
       scienceBehind: '🧠 La ciencia detrás de esto',
+      emptyState: 'Estamos creando actividades para esta edad — ¡vuelve pronto!',
     },
     chat: {
       conversations: 'Conversaciones',
@@ -191,6 +192,7 @@ export const translations = {
       moreToTry: 'More to try',
       whatYouNeed: '🏠 What you need',
       scienceBehind: '🧠 The science behind this',
+      emptyState: "We're building activities for this age — check back soon!",
     },
     chat: {
       conversations: 'Conversations',
