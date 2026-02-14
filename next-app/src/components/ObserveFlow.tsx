@@ -721,7 +721,7 @@ function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMe
     <div style={{ marginTop: 20, marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <span style={{ fontSize: 18, lineHeight: 1 }}>🌱</span>
-        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
+        <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
       </div>
       <p style={{ margin: '0 0 4px', fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#938E97', lineHeight: 1.32 }}>
         {locale === 'es' ? `Los patrones de exploración que ${childName} cultiva` : `${childName}'s strongest play patterns`}
@@ -2761,7 +2761,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                         <span style={{ fontSize: 18, lineHeight: 1 }}>💜</span>
-                        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>Lo que le fascina</h3>
+                        <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>Lo que le fascina</h3>
                       </div>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                         {profileInterests.length === 0 ? (
@@ -2862,7 +2862,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 18, lineHeight: 1 }}>📝</span>
-                          <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
+                          <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>
                             {locale === 'es' ? 'Últimos momentos' : 'Latest moments'}
                           </h3>
                         </div>
@@ -2932,7 +2932,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                             >
                               <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                                 <span style={{ fontSize: 18, lineHeight: 1 }}>🔖</span>
-                                <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
+                                <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>
                                   {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
                                 </h3>
                                 <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: '#A65E52', background: '#FFE3DD', borderRadius: 999, padding: '5px 12px', lineHeight: 1, minWidth: 30, textAlign: 'center' }}>
@@ -3042,7 +3042,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ fontSize: 18, lineHeight: 1 }}>✅</span>
-                            <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
+                            <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>
                               {locale === 'es' ? 'Actividades realizadas' : 'Completed activities'}
                             </h3>
                             <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: '#4F8E65', background: '#EAF7ED', borderRadius: 999, padding: '5px 12px', lineHeight: 1, minWidth: 30, textAlign: 'center' }}>
