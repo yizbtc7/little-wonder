@@ -469,6 +469,29 @@ function getNewForYouAccent(type: ExploreArticleRow['type'], index: number): { s
   return articlePalette[index % articlePalette.length];
 }
 
+function getBrainDomainAccent(domain: string | null | undefined, index: number): { bg: string; color: string } {
+  const key = (domain ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  if (key.includes('bienestar') || key.includes('emoc')) return { bg: '#FFF2E8', color: '#C27A5A' };
+  if (key.includes('autonomia') || key.includes('identidad')) return { bg: '#EDE5F5', color: '#8B6CAE' };
+  if (key.includes('social')) return { bg: '#E8F5EE', color: '#5A9E6F' };
+  if (key.includes('leng')) return { bg: '#FFEFE8', color: '#D4766A' };
+  if (key.includes('motor') || key.includes('cuerpo')) return { bg: '#E7F2FA', color: '#5A8AA0' };
+  if (key.includes('cogn')) return { bg: '#ECE8FA', color: '#7C67B3' };
+
+  const palette = [
+    { bg: '#F7EFE8', color: '#8C7A6B' },
+    { bg: '#EEE8F8', color: '#7E6AA8' },
+    { bg: '#EAF4EC', color: '#5D8C68' },
+    { bg: '#FBECE6', color: '#C07766' },
+  ];
+
+  const hashBase = key || String(index);
+  let hash = 0;
+  for (let i = 0; i < hashBase.length; i += 1) hash = (hash + hashBase.charCodeAt(i)) % 997;
+  return palette[hash % palette.length];
+}
+
 
 function estimateReadTime(text: string): string {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -2214,17 +2237,15 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </p>
               </div>
             ) : (
-              brainSectionCards.slice(0, 3).map((card) => {
-                const d = card.domain?.toLowerCase() ?? '';
-                const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
-                const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
+              brainSectionCards.slice(0, 3).map((card, index) => {
+                const accent = getBrainDomainAccent(card.domain, index);
                 return (
                   <button key={card.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(card); }} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: accent.bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
-                        <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
+                        <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: accent.color, background: accent.bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
                       </div>
                       <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
                       <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
