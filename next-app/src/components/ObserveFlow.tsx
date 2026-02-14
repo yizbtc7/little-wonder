@@ -230,6 +230,15 @@ function formatConversationDate(dateInput: string, locale: 'en' | 'es'): string 
   });
 }
 
+function formatSchemaLabel(value: string): string {
+  return value
+    .replaceAll('_', ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function deserializeAssistantInsight(content: string): InsightPayload {
   return parseInsightPayload(content);
 }
@@ -949,7 +958,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                   {(msg.insight.wonder.schemas_detected ?? []).map((schema) => (
                                     <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>
-                                      {schema}
+                                      {formatSchemaLabel(schema)}
                                     </span>
                                   ))}
                                 </div>
@@ -1136,7 +1145,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                           const bg = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#E8F0E4'][idx % 4];
                           return (
                             <div key={schema.name} style={{ background: bg, borderRadius: 18, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{schema.name}</span>
+                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{formatSchemaLabel(schema.name)}</span>
                               <span style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 10, padding: '2px 7px', fontSize: 11, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
                             </div>
                           );
@@ -1168,7 +1177,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.observation}</p>
                               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                 {entry.schemas.map((schema) => (
-                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{schema}</span>
+                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{formatSchemaLabel(schema)}</span>
                                 ))}
                               </div>
                             </div>
