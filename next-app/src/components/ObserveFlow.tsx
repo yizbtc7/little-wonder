@@ -11,6 +11,7 @@ import { replaceChildName } from '@/utils/personalize';
 import { translations, type Language } from '@/lib/translations';
 import { SCHEMA_INFO, normalizeSchemaKey, normalizeSchemaList, type SchemaKey } from '@/lib/schemas';
 import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
+import { PARENT_ROLES } from '@/lib/parent-roles';
 import ArticleReader from '@/components/article-reader/ArticleReader';
 
 type WonderPayload = {
@@ -710,25 +711,24 @@ function getAgeMonths(birthdate: string): number {
   return Math.max(months, 0);
 }
 
-function formatParentRole(role: string | null | undefined, locale: Language): string {
+function normalizeParentRoleValue(role: string | null | undefined): string {
   const normalized = (role ?? '').trim().toLowerCase();
-  if (!normalized) return locale === 'es' ? 'Mamá/Papá' : 'Mom/Dad';
+  if (normalized === 'mamá' || normalized === 'mama' || normalized === 'mom') return 'Mom';
+  if (normalized === 'papá' || normalized === 'papa' || normalized === 'dad') return 'Dad';
+  if (normalized === 'cuidador' || normalized === 'cuidadora' || normalized === 'caregiver') return 'Caregiver';
+  if (normalized === 'otro' || normalized === 'other') return 'Other';
+  return 'Mom';
+}
 
+function formatParentRole(role: string | null | undefined, locale: Language): string {
+  const normalized = normalizeParentRoleValue(role);
   if (locale === 'es') {
-    if (normalized === 'mom') return 'Mamá';
-    if (normalized === 'dad') return 'Papá';
-    if (normalized === 'caregiver') return 'Cuidador/a';
-    if (normalized === 'other') return 'Otro';
+    if (normalized === 'Mom') return 'Mamá';
+    if (normalized === 'Dad') return 'Papá';
+    if (normalized === 'Caregiver') return 'Cuidador/a';
+    return 'Otro';
   }
-
-  if (locale === 'en') {
-    if (normalized === 'mom') return 'Mom';
-    if (normalized === 'dad') return 'Dad';
-    if (normalized === 'caregiver') return 'Caregiver';
-    if (normalized === 'other') return 'Other';
-  }
-
-  return role ?? (locale === 'es' ? 'Mamá/Papá' : 'Mom/Dad');
+  return normalized;
 }
 
 function dedupeArticleTitleKey(title: string): string {
@@ -930,6 +930,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
   const [locale, setLocale] = useState<Language>(initialLanguage);
+  const [settingsParentRole, setSettingsParentRole] = useState<string>(() => normalizeParentRoleValue(parentRole));
   const t = translations[locale];
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1017,6 +1018,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
       setLocale(saved);
     }
   }, []);
+
+  useEffect(() => {
+    setSettingsParentRole(normalizeParentRoleValue(parentRole));
+  }, [parentRole]);
 
   useEffect(() => {
     autoResizeTextArea();
@@ -2456,7 +2461,33 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.role}</label>
-                <input defaultValue={formatParentRole(parentRole, locale)} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+                <select
+                  value={settingsParentRole}
+                  onChange={(e) => setSettingsParentRole(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 44px 14px 16px',
+                    borderRadius: 18,
+                    border: `1.5px solid ${theme.colors.blushMid}`,
+                    fontFamily: theme.fonts.sans,
+                    fontSize: 16,
+                    color: theme.colors.darkText,
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage:
+                      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236E6E6E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  {PARENT_ROLES.map((roleOption) => (
+                    <option key={roleOption} value={roleOption}>
+                      {formatParentRole(roleOption, locale)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.language}</label>

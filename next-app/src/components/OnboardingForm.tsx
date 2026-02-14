@@ -9,12 +9,13 @@ import FadeIn from '@/components/ui/FadeIn';
 import ProgressDots from '@/components/ui/ProgressDots';
 import { translations, type Language } from '@/lib/translations';
 import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
+import { PARENT_ROLES } from '@/lib/parent-roles';
 
 type OnboardingFormProps = {
   userId: string;
 };
 
-const parentRoles = ['Mom', 'Dad', 'Caregiver', 'Other'];
+const parentRoles = [...PARENT_ROLES];
 const parentGoals = [
   'Understanding my child better',
   'Activity ideas',
