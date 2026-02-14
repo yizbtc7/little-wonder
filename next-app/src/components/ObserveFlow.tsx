@@ -1456,6 +1456,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.subtitle(childName)}</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
+            {exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip ? (
+              <div style={{ textAlign: 'center', padding: '40px 24px', background: `linear-gradient(135deg, ${theme.colors.blushLight} 0%, ${theme.colors.cream} 100%)`, borderRadius: 20, border: `1px dashed ${theme.colors.divider}` }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+                <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 600, color: theme.colors.charcoal }}>Contenido en camino</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, lineHeight: 1.5 }}>Estamos preparando artículos fascinantes sobre el desarrollo de {childName} a esta edad. ¡Vuelve pronto!</p>
+              </div>
+            ) : null}
+            {!(exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip) ? (
+            <>
+            {exploreDailyTip ? (
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
               <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
@@ -1464,21 +1474,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? '', childName)}</p> : null}
               </div>
             </div>
+            ) : null}
 
-            <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
+            {exploreStats.total_available > 0 ? <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
               <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
               <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
                 <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
               </div>
-            </div>
+            </div> : null}
 
             <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
-            {personalizedCards.length === 0 ? (
-              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '14px 16px', marginBottom: 12 }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.ageEmpty}</p>
-              </div>
-            ) : null}
             {personalizedCards.map((card, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (
@@ -1497,11 +1503,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             })}
 
             <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.newForYou}</h2>
-            {exploreStats.total_available === 0 ? (
-              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.ageEmpty}</p>
-              </div>
-            ) : newForYouArticles.length === 0 ? (
+            {newForYouArticles.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.allCaughtUp(childName)}</p>
                 {comingNextArticles.length > 0 ? (
@@ -1561,6 +1563,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   </button>
                 ))}
               </div>
+            ) : null}
+            </>
             ) : null}
           </div>
         </div>
