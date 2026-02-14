@@ -10,13 +10,13 @@ vi.mock('@/lib/supabaseClient', () => ({
   }),
 }));
 
-describe('ObserveFlow v3 explore behavior', () => {
-  it('shows Today\'s tip before Inside child brain in Explore tab', () => {
+describe('ObserveFlow v3 learn behavior', () => {
+  it('shows Today\'s tip before Inside child brain in Learn tab', () => {
     render(
       <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' />
     );
 
-    fireEvent.click(screen.getByText('Explore'));
+    fireEvent.click(screen.getByText('Learn'));
 
     const tipLabel = screen.getByText("🌻 Today's tip");
     const brainHeading = screen.getByText("Inside Leo's brain");
@@ -29,7 +29,7 @@ describe('ObserveFlow v3 explore behavior', () => {
       <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' />
     );
 
-    fireEvent.click(screen.getByText('Explore'));
+    fireEvent.click(screen.getByText('Learn'));
     fireEvent.click(screen.getAllByText('Read more')[0]);
 
     expect(screen.getByText("✨ You'll recognize it when…")).toBeInTheDocument();

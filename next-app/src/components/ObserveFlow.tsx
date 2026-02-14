@@ -776,7 +776,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
         <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 36px' }}>
           <button onClick={() => setOpenExploreArticle(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22 }}>
-            <span style={{ fontSize: 14 }}>←</span> Back to Explore
+            <span style={{ fontSize: 14 }}>←</span> Back to Learn
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -1264,7 +1264,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       {activeTab === 'explore' ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Explore</h1>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Learn</h1>
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Discover what&apos;s happening at {childAgeLabel}</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
@@ -1295,7 +1295,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               );
             })}
 
-            <h2 style={{ margin: '18px 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>More to explore</h2>
+            <h2 style={{ margin: '18px 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>More to learn</h2>
             {(['article', 'guide', 'research'] as const).map((type) => {
               const accentByType: Record<ExploreArticleRow['type'], string> = {
                 article: theme.colors.rose,
@@ -1580,7 +1580,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       <nav style={{ background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
         {[
           { id: 'chat' as Tab, icon: '💬', label: 'Chat' },
-          { id: 'explore' as Tab, icon: '🔭', label: 'Explore' },
+          { id: 'explore' as Tab, icon: '🔭', label: 'Learn' },
           { id: 'activities' as Tab, icon: '🎯', label: 'Activities' },
           { id: 'profile' as Tab, icon: '🧒', label: childName },
         ].map((tab) => (
