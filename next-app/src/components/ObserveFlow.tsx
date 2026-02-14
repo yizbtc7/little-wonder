@@ -1149,9 +1149,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const loadExploreArticles = useCallback(async () => {
+  const loadExploreArticles = useCallback(async (excludedIds?: string[]) => {
     try {
-      const response = await fetch(apiUrl(`/api/explore/articles?language=${locale}`));
+      const excludeParam = excludedIds && excludedIds.length > 0 ? `&exclude=${encodeURIComponent(excludedIds.join(','))}` : '';
+      const response = await fetch(apiUrl(`/api/explore/articles?language=${locale}${excludeParam}`));
       if (!response.ok) return;
       const payload = (await response.json()) as {
         new_for_you?: ExploreArticleRow[];
@@ -1181,6 +1182,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     void (async () => {
       try {
         const exploreResponse = await fetch(apiUrl('/api/explore'));
+        let brainIds: string[] = [];
 
         if (exploreResponse.ok) {
           const payload = (await exploreResponse.json()) as {
@@ -1189,9 +1191,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
           };
           setExploreCards(payload.brain_cards ?? []);
           setExploreDailyTip(payload.daily_tip ?? null);
+          brainIds = (payload.brain_cards ?? []).map((card) => card.id);
         }
 
-        await loadExploreArticles();
+        await loadExploreArticles(brainIds);
       } catch {
         // ignore fetch errors in non-browser test environments
       }

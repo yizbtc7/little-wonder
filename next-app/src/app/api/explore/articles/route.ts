@@ -85,6 +85,12 @@ export async function GET(request: NextRequest) {
   const ageMonths = getAgeInMonths(child.birthdate);
   const preferredLanguage = await getUserLanguage(user.id, 'es');
   const selectedLanguage = normalizeLanguage(request.nextUrl.searchParams.get('language'), preferredLanguage);
+  const excludeIds = new Set(
+    (request.nextUrl.searchParams.get('exclude') ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
 
   const { data: allRows, error } = await db
     .from('explore_articles')
@@ -112,7 +118,7 @@ export async function GET(request: NextRequest) {
     allArticles.filter((a) => readsMap.get(a.id)?.read_completed).map((a) => canonicalTitleKey(a.title))
   );
   const unreadPool = dedupeByTitleKey(
-    allArticles.filter((a) => !readsMap.get(a.id)?.read_completed && !readTitleKeys.has(canonicalTitleKey(a.title)))
+    allArticles.filter((a) => !excludeIds.has(a.id) && !readsMap.get(a.id)?.read_completed && !readTitleKeys.has(canonicalTitleKey(a.title)))
   );
 
   const usedIds = new Set<string>();
