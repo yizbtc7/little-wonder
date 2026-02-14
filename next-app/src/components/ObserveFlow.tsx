@@ -93,6 +93,8 @@ type ExploreArticleRow = {
   is_read?: boolean;
   opened_at?: string | null;
   completed_at?: string | null;
+  is_bookmarked?: boolean;
+  bookmarked_at?: string | null;
 };
 
 type ActivityItem = {
@@ -648,10 +650,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [deepDiveArticles, setDeepDiveArticles] = useState<ExploreArticleRow[]>([]);
   const [recentlyReadArticles, setRecentlyReadArticles] = useState<ExploreArticleRow[]>([]);
   const [comingNextArticles, setComingNextArticles] = useState<ExploreArticleRow[]>([]);
+  const [savedArticles, setSavedArticles] = useState<ExploreArticleRow[]>([]);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0, reading_streak_days: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
+  const [showProfileBookmarks, setShowProfileBookmarks] = useState(true);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
+  const [readerToast, setReaderToast] = useState('');
+  const [pendingProfileBookmarksFocus, setPendingProfileBookmarksFocus] = useState(false);
   const [focusChatComposerIntent, setFocusChatComposerIntent] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
@@ -677,6 +683,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const profileBookmarksRef = useRef<HTMLDivElement>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -881,6 +888,113 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     })();
   }, [activeTab, locale]);
 
+  const loadSavedArticles = async () => {
+    try {
+      const response = await fetch(apiUrl('/api/explore/articles/bookmarked'));
+      if (!response.ok) return;
+      const payload = (await response.json()) as { articles?: ExploreArticleRow[] };
+      setSavedArticles(payload.articles ?? []);
+    } catch {
+      // ignore in non-browser test environments
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'explore' && activeTab !== 'profile') return;
+    void loadSavedArticles();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const ids = new Set(savedArticles.map((item) => item.id));
+    const withSavedFlag = (items: ExploreArticleRow[]) => items.map((item) => ({ ...item, is_bookmarked: ids.has(item.id) }));
+    setNewForYouArticles((prev) => withSavedFlag(prev));
+    setKeepReadingArticles((prev) => withSavedFlag(prev));
+    setDeepDiveArticles((prev) => withSavedFlag(prev));
+    setRecentlyReadArticles((prev) => withSavedFlag(prev));
+    setComingNextArticles((prev) => withSavedFlag(prev));
+    setOpenExploreArticle((prev) => (prev ? { ...prev, is_bookmarked: ids.has(prev.id) } : prev));
+  }, [savedArticles]);
+
+  const toggleArticleBookmark = async (articleId: string) => {
+    const previousSaved = savedArticles;
+    const articleCandidate = [openExploreArticle, ...newForYouArticles, ...deepDiveArticles, ...keepReadingArticles, ...recentlyReadArticles, ...comingNextArticles].find((item) => item?.id === articleId) ?? null;
+    const currentlySaved = previousSaved.some((a) => a.id === articleId);
+
+    const optimisticSaved = currentlySaved
+      ? previousSaved.filter((item) => item.id !== articleId)
+      : articleCandidate
+        ? [{ ...articleCandidate, is_bookmarked: true, bookmarked_at: new Date().toISOString() }, ...previousSaved.filter((item) => item.id !== articleId)]
+        : previousSaved;
+
+    setSavedArticles(optimisticSaved);
+
+    const updateCollection = (items: ExploreArticleRow[]) => items.map((item) => (item.id === articleId ? { ...item, is_bookmarked: !currentlySaved } : item));
+    setNewForYouArticles(updateCollection);
+    setDeepDiveArticles(updateCollection);
+    setKeepReadingArticles(updateCollection);
+    setRecentlyReadArticles(updateCollection);
+    setComingNextArticles(updateCollection);
+    setOpenExploreArticle((prev) => (prev?.id === articleId ? { ...prev, is_bookmarked: !currentlySaved } : prev));
+
+    try {
+      const response = await fetch(apiUrl(`/api/explore/articles/${articleId}/bookmark`), { method: 'POST' });
+      if (!response.ok) throw new Error('bookmark_failed');
+      const payload = (await response.json()) as { bookmarked?: boolean };
+      if (typeof payload.bookmarked === 'boolean') {
+        const finalSaved = payload.bookmarked
+          ? optimisticSaved
+          : optimisticSaved.filter((item) => item.id !== articleId);
+        setSavedArticles(finalSaved);
+      }
+      setReaderToast(payload.bookmarked ? (locale === 'es' ? 'Guardado' : 'Saved') : (locale === 'es' ? 'Eliminado de guardados' : 'Removed from saved'));
+      setTimeout(() => setReaderToast(''), 1400);
+    } catch {
+      setSavedArticles(previousSaved);
+      const rollback = (items: ExploreArticleRow[]) => items.map((item) => (item.id === articleId ? { ...item, is_bookmarked: currentlySaved } : item));
+      setNewForYouArticles(rollback);
+      setDeepDiveArticles(rollback);
+      setKeepReadingArticles(rollback);
+      setRecentlyReadArticles(rollback);
+      setComingNextArticles(rollback);
+      setOpenExploreArticle((prev) => (prev?.id === articleId ? { ...prev, is_bookmarked: currentlySaved } : prev));
+      setReaderToast(locale === 'es' ? 'No se pudo guardar' : 'Could not save');
+      setTimeout(() => setReaderToast(''), 1600);
+    }
+  };
+
+  const shareArticle = async (article: ExploreArticleRow) => {
+    const shareUrl = `${window.location.origin}/shared/article/${article.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: article.title, text: article.title, url: shareUrl });
+        setReaderToast(locale === 'es' ? 'Enlace compartido' : 'Shared');
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setReaderToast(locale === 'es' ? 'Enlace copiado' : 'Link copied');
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setReaderToast(locale === 'es' ? 'Enlace copiado' : 'Link copied');
+      } catch {
+        setReaderToast(locale === 'es' ? 'No se pudo compartir' : 'Could not share');
+      }
+    }
+    setTimeout(() => setReaderToast(''), 1500);
+  };
+
+  const openAllSavedInProfile = () => {
+    setActiveTab('profile');
+    setShowProfileBookmarks(true);
+    setPendingProfileBookmarksFocus(true);
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'profile' || !pendingProfileBookmarksFocus) return;
+    profileBookmarksRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    profileBookmarksRef.current?.focus();
+    setPendingProfileBookmarksFocus(false);
+  }, [activeTab, pendingProfileBookmarksFocus]);
 
   useEffect(() => {
     if (!openExploreArticle) return;
@@ -1146,6 +1260,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         childName={childName}
         childAgeLabel={childAgeLabel}
         locale={locale}
+        isBookmarked={Boolean(openExploreArticle.is_bookmarked)}
+        toastMessage={readerToast}
+        onToggleBookmark={() => void toggleArticleBookmark(openExploreArticle.id)}
+        onShare={() => void shareArticle(openExploreArticle)}
         onBack={() => setOpenExploreArticle(null)}
         onRegisterMoment={() => {
           setOpenExploreArticle(null);
@@ -1651,6 +1769,23 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
             ) : null}
 
+            {savedArticles.length > 0 ? (
+              <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F0EDE8', padding: '14px 14px 8px', marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>🔖 {locale === 'es' ? 'Guardados' : 'Saved'}</p>
+                  <button onClick={openAllSavedInProfile} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: '#D4766A' }}>
+                    {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
+                  </button>
+                </div>
+                {savedArticles.slice(0, 3).map((article) => (
+                  <button key={`saved-preview-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 12, padding: '9px 10px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                    <span style={{ marginLeft: 8, fontSize: 14 }}>🔖</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
             {exploreDailyTip ? (
             <div style={{ background: 'linear-gradient(135deg, #F8E8E0 0%, #FFF5EE 100%)', borderRadius: 20, padding: '22px', marginBottom: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(232,160,144,0.08)' }} />
@@ -2071,6 +2206,26 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       ) : profileInterests.map((interest) => (
                         <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
                       ))}
+                    </div>
+
+                    <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none' }}>
+                      <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal, cursor: 'pointer' }}>
+                        🔖 {locale === 'es' ? `Artículos guardados (${savedArticles.length})` : `Saved articles (${savedArticles.length})`} {showProfileBookmarks ? '▾' : '▸'}
+                      </button>
+                      {showProfileBookmarks ? (
+                        savedArticles.length === 0 ? (
+                          <p style={{ margin: '0 0 16px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no tienes artículos guardados.' : 'No saved articles yet.'}</p>
+                        ) : (
+                          <div style={{ marginBottom: 18 }}>
+                            {savedArticles.map((article) => (
+                              <button key={`profile-saved-${article.id}`} onClick={() => { setActiveTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                                <span style={{ fontSize: 14 }}>🔖</span>
+                              </button>
+                            ))}
+                          </div>
+                        )
+                      ) : null}
                     </div>
 
                     <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Momentos recientes' : 'Recent moments'}</h3>

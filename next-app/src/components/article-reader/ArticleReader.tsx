@@ -28,6 +28,10 @@ type Props = {
   childName: string;
   childAgeLabel: string;
   locale: 'es' | 'en';
+  isBookmarked?: boolean;
+  toastMessage?: string;
+  onToggleBookmark: () => void;
+  onShare: () => void;
   onBack: () => void;
   onRegisterMoment: () => void;
 };
@@ -250,9 +254,17 @@ function parseMarkdownToSections(body: string): ArticleSection[] {
   return sections;
 }
 
-export default function ArticleReader({ article, childName, childAgeLabel, locale, onBack, onRegisterMoment }: Props) {
+export default function ArticleReader({ article, childName, childAgeLabel, locale, isBookmarked = false, toastMessage = '', onToggleBookmark, onShare, onBack, onRegisterMoment }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress(scrollRef);
+  const [bookmarkPulse, setBookmarkPulse] = useState(false);
+
+  useEffect(() => {
+    if (!isBookmarked) return;
+    setBookmarkPulse(true);
+    const t = setTimeout(() => setBookmarkPulse(false), 260);
+    return () => clearTimeout(t);
+  }, [isBookmarked]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -275,7 +287,12 @@ export default function ArticleReader({ article, childName, childAgeLabel, local
     <div style={{ maxWidth: 390, margin: '0 auto', height: '100vh', background: theme.colors.bg, fontFamily: theme.fonts.body, position: 'relative', boxShadow: '0 0 40px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${theme.colors.border}`, background: theme.colors.bg, zIndex: 10, flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: theme.colors.white, border: `1px solid ${theme.colors.border}`, borderRadius: 24, padding: '7px 16px', fontFamily: theme.fonts.body, fontSize: 13, fontWeight: 600, color: theme.colors.textSec, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>← {locale === 'es' ? 'Volver' : 'Back'}</button>
-        <div style={{ display: 'flex', gap: 8 }}><button style={{ background: 'none', border: 'none', fontSize: 18, padding: 4 }}>🔖</button><button style={{ background: 'none', border: 'none', fontSize: 18, padding: 4 }}>↗️</button></div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onToggleBookmark} style={{ background: 'none', border: 'none', fontSize: 18, padding: 4, cursor: 'pointer', transform: bookmarkPulse ? 'scale(1.16)' : 'scale(1)', transition: 'transform 0.2s ease' }} aria-label={locale === 'es' ? 'Guardar artículo' : 'Save article'}>
+            {isBookmarked ? '🔖' : '📑'}
+          </button>
+          <button onClick={onShare} style={{ background: 'none', border: 'none', fontSize: 18, padding: 4, cursor: 'pointer' }} aria-label={locale === 'es' ? 'Compartir artículo' : 'Share article'}>↗️</button>
+        </div>
       </div>
       <div style={{ height: 3, background: theme.colors.border, flexShrink: 0 }}><div style={{ height: 3, background: `linear-gradient(90deg, ${theme.colors.rose}, ${theme.colors.roseDark})`, width: `${progress * 100}%`, borderRadius: '0 2px 2px 0', transition: 'width 0.1s ease' }} /></div>
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}><div style={{ padding: '24px 24px 60px' }}>
@@ -299,6 +316,11 @@ export default function ArticleReader({ article, childName, childAgeLabel, local
           <div style={{ marginTop: 28, background: theme.colors.white, borderRadius: 18, padding: '22px', border: `1px solid ${theme.colors.border}`, textAlign: 'center' }}><p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 600, color: theme.colors.text, margin: '0 0 4px' }}>{locale === 'es' ? '¿Algo de esto te resonó?' : 'Did this resonate?'}</p><p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.textSec, margin: '0 0 16px' }}>{locale === 'es' ? `Registra un momento que observes hoy con ${childName}` : `Capture something you notice with ${childName} today`}</p><button onClick={onRegisterMoment} style={{ background: `linear-gradient(135deg, ${theme.colors.rose} 0%, ${theme.colors.roseDark} 100%)`, border: 'none', borderRadius: 14, padding: '14px 28px', fontFamily: theme.fonts.body, fontSize: 15, fontWeight: 700, color: theme.colors.white, cursor: 'pointer', boxShadow: `0 4px 14px ${theme.colors.rose}66` }}>✨ {locale === 'es' ? 'Registrar un momento' : 'Capture a moment'}</button></div>
         </FadeIn>
       </div></div>
+      {toastMessage ? (
+        <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', background: 'rgba(45,43,50,0.92)', color: '#fff', borderRadius: 999, padding: '8px 14px', fontSize: 12, fontWeight: 600, zIndex: 20 }}>
+          {toastMessage}
+        </div>
+      ) : null}
     </div>
   );
 }
