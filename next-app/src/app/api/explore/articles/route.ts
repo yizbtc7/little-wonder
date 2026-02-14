@@ -116,8 +116,9 @@ export async function GET(request: NextRequest) {
   );
 
   const usedIds = new Set<string>();
-  const newForYouPick = pickUnreadSection(interleaveByType(unreadPool), usedIds, 3);
+  // Reserve research inventory first so Investigaciones always reaches its minimum when data exists.
   const deepDivesPick = pickUnreadSection(unreadPool, usedIds, 3, (a) => a.type === 'research');
+  const newForYouPick = pickUnreadSection(interleaveByType(unreadPool), usedIds, 3);
   const moreForAgePick = pickUnreadSection(unreadPool, usedIds, 3, (a) => a.type !== 'research');
 
   const newForYou = enrich(newForYouPick.items, readsMap);
