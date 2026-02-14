@@ -1402,8 +1402,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     <span
                       key={schema}
                       style={{
-                        background: theme.colors.blush,
-                        color: theme.colors.roseDark,
+                        background: '#FFFFFF',
+                        color: '#8A8690',
+                        border: '1px solid #F0EDE8',
                         fontFamily: theme.fonts.sans,
                         fontSize: 12,
                         fontWeight: 600,
