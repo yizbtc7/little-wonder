@@ -1062,6 +1062,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const dailyGoalTarget = Math.min(3, exploreStats.total_available);
   const dailyGoalProgress = Math.min(exploreStats.total_read, dailyGoalTarget);
   const dailyGoalCompleted = dailyGoalTarget > 0 && dailyGoalProgress >= dailyGoalTarget;
+  const weeklyActivitiesGoalTarget = 5;
+  const weeklyActivitiesProgress = Math.min(activitiesStats.completed, weeklyActivitiesGoalTarget);
+  const weeklyActivitiesGoalCompleted = weeklyActivitiesProgress >= weeklyActivitiesGoalTarget;
 
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
@@ -2224,12 +2227,18 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{t.activities.title}</h1>
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.lightText }}>{t.activities.subtitle(childName)}</p>
             {activitiesStats.total > 0 ? (
-              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: '#fff', border: `1px solid ${theme.colors.divider}` }}>
-                <span style={{ fontSize: 16 }}>✅</span>
-                <div style={{ flex: 1, height: 6, background: theme.colors.divider, borderRadius: 10 }}>
-                  <div style={{ width: `${Math.round((activitiesStats.completed / activitiesStats.total) * 100)}%`, height: 6, borderRadius: 10, background: `linear-gradient(90deg, ${theme.colors.sage}, ${theme.colors.sage})` }} />
+              <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 14, background: '#fff', border: `1px solid ${theme.colors.divider}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32' }}>✅ {locale === 'es' ? 'Actividades de la semana' : 'Activities of the week'}</p>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: weeklyActivitiesGoalCompleted ? '#2E7D32' : theme.colors.midText, fontWeight: 700 }}>
+                    {weeklyActivitiesGoalCompleted ? (locale === 'es' ? '✅ Meta de la semana completada' : '✅ Weekly goal completed') : `${weeklyActivitiesProgress}/${weeklyActivitiesGoalTarget}`}
+                  </span>
                 </div>
-                <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, fontWeight: 700 }}>{activitiesStats.completed}/{activitiesStats.total}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, height: 6, background: theme.colors.divider, borderRadius: 10 }}>
+                    <div style={{ width: `${Math.round((weeklyActivitiesProgress / weeklyActivitiesGoalTarget) * 100)}%`, height: 6, borderRadius: 10, background: weeklyActivitiesGoalCompleted ? '#7FB98A' : `linear-gradient(90deg, ${theme.colors.sage}, ${theme.colors.sage})` }} />
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
