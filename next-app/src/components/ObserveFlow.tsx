@@ -2239,7 +2239,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             </div>
             ) : null}
 
-            <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
+            <h2 style={{ margin: '28px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
             {brainSectionCards.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
@@ -2295,7 +2295,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
             {deepDiveSection.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
+                <h2 style={{ margin: '28px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
                 {deepDiveSection
                   .slice(0, 3)
@@ -2318,7 +2318,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
             {moreForAgeSection.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
+                <h2 style={{ margin: '28px 4px 10px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
                 {moreForAgeSection
                   .slice(0, 8)
                   .map((article) => (
