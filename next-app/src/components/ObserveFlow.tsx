@@ -456,6 +456,19 @@ function formatExploreTypeLabel(type: ExploreArticleRow['type'], locale: Languag
   return 'Article';
 }
 
+function getNewForYouAccent(type: ExploreArticleRow['type'], index: number): { strip: string; label: string } {
+  if (type === 'guide') return { strip: '#8FAE8B', label: '#5A9E6F' };
+  if (type === 'research') return { strip: '#C4B5D4', label: '#8B6CAE' };
+
+  const articlePalette = [
+    { strip: '#E8A090', label: '#D4766A' },
+    { strip: '#E5B8A0', label: '#C78668' },
+    { strip: '#D9A5B6', label: '#B56B86' },
+  ];
+
+  return articlePalette[index % articlePalette.length];
+}
+
 
 function estimateReadTime(text: string): string {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -2232,15 +2245,18 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingLeft: 4, paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
-                {newForYouSection.slice(0, 3).map((article) => (
+                {newForYouSection.slice(0, 3).map((article, index) => {
+                  const accent = getNewForYouAccent(article.type, index);
+                  return (
                   <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-                    <div style={{ height: 6, background: article.type === 'guide' ? '#8FAE8B' : article.type === 'research' ? '#C4B5D4' : '#E8A090' }} />
-                    <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: article.type === 'guide' ? '#5A9E6F' : article.type === 'research' ? '#8B6CAE' : '#D4766A' }}>{formatExploreTypeLabel(article.type, locale)}</div>
+                    <div style={{ height: 6, background: accent.strip }} />
+                    <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: accent.label }}>{formatExploreTypeLabel(article.type, locale)}</div>
                     <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
                     {article.is_read ? <span style={{ display: 'inline-flex', margin: '8px 16px 0', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                     <p style={{ margin: '10px 16px 16px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7} min</p>
                   </button>
-                ))}
+                );
+                })}
               </div>
             )}
 
