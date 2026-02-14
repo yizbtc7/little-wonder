@@ -2198,7 +2198,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             {exploreStats.total_available > 0 ? (
               <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
                   <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: dailyGoalCompleted ? '#2E7D32' : '#8A8690', fontWeight: dailyGoalCompleted ? 700 : 500, whiteSpace: 'nowrap' }}>{dailyGoalCompleted ? (locale === 'es' ? `${exploreStats.total_read} leídos hoy` : `${exploreStats.total_read} read today`) : (locale === 'es' ? `${dailyGoalProgress} de ${dailyGoalTarget} leídos` : `${dailyGoalProgress} of ${dailyGoalTarget} read`)}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -2212,7 +2212,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             {savedArticles.length > 0 ? (
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F0EDE8', padding: '14px 14px 8px', marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>🔖 {locale === 'es' ? 'Guardados' : 'Saved'}</p>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#2D2B32' }}>🔖 {locale === 'es' ? 'Guardados' : 'Saved'}</p>
                   <button onClick={() => openSavedArticlesView('explore')} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: '#D4766A' }}>
                     {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
                   </button>
