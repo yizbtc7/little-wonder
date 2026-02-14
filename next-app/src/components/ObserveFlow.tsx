@@ -473,7 +473,8 @@ function getBrainDomainAccent(domain: string | null | undefined, index: number):
   const key = (domain ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   if (key.includes('bienestar') || key.includes('emoc')) return { bg: '#FFF2E8', color: '#C27A5A' };
-  if (key.includes('autonomia') || key.includes('identidad')) return { bg: '#EDE5F5', color: '#8B6CAE' };
+  if (key.includes('autonomia')) return { bg: '#EDE5F5', color: '#8B6CAE' };
+  if (key.includes('identidad') || key.includes('seguridad')) return { bg: '#E8EFFA', color: '#5C79AA' };
   if (key.includes('social')) return { bg: '#E8F5EE', color: '#5A9E6F' };
   if (key.includes('leng')) return { bg: '#FFEFE8', color: '#D4766A' };
   if (key.includes('motor') || key.includes('cuerpo')) return { bg: '#E7F2FA', color: '#5A8AA0' };
