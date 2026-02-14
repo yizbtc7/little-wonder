@@ -2202,17 +2202,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 onChange={(event) => void uploadProfilePhoto(event)}
                 style={{ display: 'none' }}
               />
-              <div style={{ background: `linear-gradient(178deg, #FCEAE5 0%, #F8DFD7 45%, #F4D7CE 100%)`, padding: '14px 18px 18px', borderRadius: '0 0 34px 34px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', right: -48, top: 108, width: 142, height: 142, borderRadius: '50%', background: 'rgba(255,255,255,0.28)' }} />
-                <div style={{ position: 'absolute', left: -30, bottom: -28, width: 108, height: 108, borderRadius: '50%', background: 'rgba(255,255,255,0.22)' }} />
-                <div style={{ position: 'absolute', right: 32, bottom: 42, width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
+              <div style={{ background: 'linear-gradient(180deg, #FCE9E3 0%, #F8DDD4 54%, #F2CFC5 100%)', padding: '12px 16px 16px', borderRadius: '0 0 36px 36px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', right: -54, top: 96, width: 156, height: 156, borderRadius: '50%', background: 'rgba(255,255,255,0.27)' }} />
+                <div style={{ position: 'absolute', left: -34, bottom: -30, width: 112, height: 112, borderRadius: '50%', background: 'rgba(255,255,255,0.22)' }} />
+                <div style={{ position: 'absolute', right: 26, bottom: 36, width: 62, height: 62, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, position: 'relative', zIndex: 1 }}>
-                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, letterSpacing: 0.2, color: '#4A3E3A' }}>9:41</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, position: 'relative', zIndex: 1 }}>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, letterSpacing: 0, color: '#4B3B36' }}>9:41</span>
                   <button
                     onClick={() => setProfileTab('settings')}
                     aria-label={locale === 'es' ? 'Abrir configuración' : 'Open settings'}
-                    style={{ width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.62)', color: '#5B4A45', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(113,82,72,0.08)', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif" }}
+                    style={{ width: 34, height: 34, borderRadius: 999, border: '1px solid rgba(255,255,255,0.54)', background: 'rgba(255,255,255,0.66)', color: '#5C4A44', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(113,82,72,0.1)', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif" }}
                   >
                     ⚙️
                   </button>
@@ -2223,7 +2223,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     onClick={() => openProfilePhotoPicker()}
                     role='button'
                     aria-label={locale === 'es' ? 'Subir foto del niño' : 'Upload child photo'}
-                    style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', fontSize: 42, cursor: profilePhotoUploading ? 'default' : 'pointer', opacity: profilePhotoUploading ? 0.8 : 1 }}
+                    style={{ width: 96, height: 96, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', fontSize: 42, cursor: profilePhotoUploading ? 'default' : 'pointer', opacity: profilePhotoUploading ? 0.8 : 1 }}
                   >
                     <div style={{ width: '100%', height: '100%', borderRadius: 999, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
@@ -2235,14 +2235,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         openProfilePhotoPicker();
                       }}
                       aria-label={locale === 'es' ? 'Cambiar foto' : 'Change photo'}
-                      style={{ position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.16)', zIndex: 2, cursor: profilePhotoUploading ? 'default' : 'pointer' }}
+                      style={{ position: 'absolute', right: -8, bottom: -4, width: 30, height: 30, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.16)', zIndex: 2, cursor: profilePhotoUploading ? 'default' : 'pointer' }}
                       disabled={profilePhotoUploading}
                     >
                       📷
                     </button>
                   </div>
 
-                  <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.05, fontWeight: 700, color: '#3E302C' }}>{childName}</h1>
+                  <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.sans, fontSize: 31, lineHeight: 1.02, fontWeight: 800, color: '#3E302C' }}>{childName}</h1>
                   {profilePhotoUploading ? (
                     <p style={{ margin: '4px 0 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#6E5A55' }}>{locale === 'es' ? 'Subiendo foto…' : 'Uploading photo…'}</p>
                   ) : null}
@@ -2250,20 +2250,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     <p style={{ margin: '4px 0 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{profilePhotoError}</p>
                   ) : null}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#6E5A55', fontWeight: 500 }}>{childAgeLabel}</span>
-                    <span style={{ fontSize: 11, color: '#B05C52', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{`${STAGE_CONTENT.stageEmoji} ${STAGE_CONTENT.stage}`}</span>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#6E5A55', fontWeight: 600 }}>{childAgeLabel}</span>
+                    <span style={{ fontSize: 11, color: '#AF5A50', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700, lineHeight: 1.2 }}>{`${STAGE_CONTENT.stageEmoji} ${STAGE_CONTENT.stage}`}</span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 16, position: 'relative', zIndex: 1 }}>
                   {[
                     { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
                     { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
                     { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
-                    <div key={s.l} style={{ background: 'rgba(255,255,255,0.65)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.75)', padding: '10px 8px 9px', textAlign: 'center', boxShadow: '0 2px 8px rgba(93,70,63,0.06)' }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, lineHeight: 1.05, fontWeight: 700, color: '#43322E' }}>{s.n}</p>
-                      <p style={{ margin: '3px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, lineHeight: 1.15, color: '#755F59', fontWeight: 600 }}>{s.l}</p>
+                    <div key={s.l} style={{ aspectRatio: '1 / 1', background: 'rgba(255,255,255,0.66)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.76)', padding: '12px 6px 10px', textAlign: 'center', boxShadow: '0 2px 8px rgba(93,70,63,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 24, lineHeight: 1, fontWeight: 800, color: '#43322E' }}>{s.n}</p>
+                      <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, lineHeight: 1.1, color: '#755F59', fontWeight: 700 }}>{s.l}</p>
                     </div>
                   ))}
                 </div>
