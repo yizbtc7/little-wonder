@@ -2894,11 +2894,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                 <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
                                   {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
                                 </h3>
-                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: '#A65E52', background: '#FFE3DD', borderRadius: 999, padding: '5px 12px', lineHeight: 1, minWidth: 30, textAlign: 'center' }}>
                                   {savedArticles.length}
                                 </span>
                               </span>
-                              <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
                             </button>
                           </div>
 
