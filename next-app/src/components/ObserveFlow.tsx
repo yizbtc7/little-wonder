@@ -3126,10 +3126,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
         </div>
       ) : null}
 
-      <p style={{ margin: '10px 0 6px', textAlign: 'center', fontFamily: theme.fonts.sans, fontSize: 11, color: 'rgba(123,115,113,0.78)' }}>
+      <p style={{ margin: '10px 0 94px', textAlign: 'center', fontFamily: theme.fonts.sans, fontSize: 11, color: 'rgba(123,115,113,0.78)' }}>
         {locale === 'es' ? 'Hecho para acompañar tu mirada curiosa.' : 'Made to support your curious parenting eye.'}
       </p>
-      <nav style={{ background: 'rgba(255,251,247,0.9)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 30px' }}>
+      <nav style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 0, width: '100%', maxWidth: 390, zIndex: 90, background: 'rgba(255,251,247,0.96)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 calc(16px + env(safe-area-inset-bottom))' }}>
         {[
           { id: 'chat' as Tab, icon: '💬', label: t.tabs.chat },
           { id: 'explore' as Tab, icon: '🔭', label: t.tabs.learn },
