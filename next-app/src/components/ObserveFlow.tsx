@@ -704,7 +704,9 @@ function getAgeMonths(birthdate: string): number {
   if (!birthdate) return 22;
   const now = new Date();
   const b = new Date(birthdate);
-  return (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+  let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+  if (now.getDate() < b.getDate()) months -= 1;
+  return Math.max(months, 0);
 }
 
 function dedupeArticleTitleKey(title: string): string {
