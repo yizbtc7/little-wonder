@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import FadeUp from '@/components/ui/FadeUp';
 import SoftButton from '@/components/ui/SoftButton';
-import WonderCard from '@/components/ui/WonderCard';
 import { DAILY_INSIGHT } from '@/data/daily-insights';
 import { STAGE_CONTENT } from '@/data/stage-content';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
@@ -507,7 +506,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [typingMessageIndex, setTypingMessageIndex] = useState(0);
-  const [tipExpanded, setTipExpanded] = useState(false);
   const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
@@ -1502,11 +1500,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
       {activeTab === 'explore' ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
-          <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{t.learn.title}</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.lightText }}>{t.learn.subtitle(childName)}</p>
+          <div style={{ padding: '20px 24px 0' }}>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: '#2D2B32' }}>{t.learn.title}</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: '#8A8690' }}>{t.learn.subtitle(childName)}</p>
+            <div style={{ marginTop: 16, height: 1, background: '#F0EDE8' }} />
           </div>
-          <div style={{ padding: '20px 20px 0' }}>
+          <div style={{ padding: '12px 16px 0' }}>
             {exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip ? (
               <div style={{ textAlign: 'center', padding: '40px 24px', background: `linear-gradient(135deg, ${theme.colors.blushLight} 0%, ${theme.colors.cream} 100%)`, borderRadius: 20, border: `1px dashed ${theme.colors.divider}` }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
@@ -1516,48 +1515,48 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             ) : null}
             {!(exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip) ? (
             <>
-            {exploreDailyTip ? (
-            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, #F5DDD2 50%, ${theme.colors.blushLight} 100%)`, borderRadius: 20, padding: '22px 20px', marginTop: 8, marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
-              <div style={{ position: 'absolute', bottom: -30, left: -10, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
-              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.65, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
-              <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>{t.learn.whyThisMatters}</p>
-                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? '', childName)}</p> : null}
+            {exploreStats.total_available > 0 ? (
+              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 20 }}>📚</span>
+                <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#F0EDE8' }}>
+                  <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: 6, borderRadius: 3, background: '#E8A090' }} />
+                </div>
+                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{exploreStats.total_read} de {exploreStats.total_available} leídos</span>
               </div>
+            ) : null}
+
+            {exploreDailyTip ? (
+            <div style={{ background: 'linear-gradient(135deg, #F8E8E0 0%, #FFF5EE 100%)', borderRadius: 20, padding: '22px', marginBottom: 16, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(232,160,144,0.08)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#D4956A' }}>🌟 {t.learn.todaysTip}</p>
+              <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: '#2D2B32' }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
               </div>
             </div>
             ) : null}
 
-            {exploreStats.total_available > 0 ? <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 16px', marginBottom: 16 }}>
-              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.midText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
-              <div style={{ width: '100%', height: 4, borderRadius: 3, background: theme.colors.divider }}>
-                <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
-              </div>
-            </div> : null}
-
-            <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.insideBrain(childName)}</h2>
-            <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
-            {personalizedCards.map((card, idx) => {
-              const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
+            <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
+            <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
+            {personalizedCards.slice(0, 3).map((card, idx) => {
+              const d = card.domain?.toLowerCase() ?? '';
+              const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
+              const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
               return (
-                <WonderCard
-                  key={card.title}
-                  icon={card.icon}
-                  title={card.title}
-                  domain={card.domain}
-                  body={card.preview}
-                  delay={idx * 100}
-                  iconBackground={iconBackgrounds[idx % iconBackgrounds.length]}
-                  ctaLabel={locale === 'es' ? 'Leer más' : 'Read more'}
-                  onClick={() => setSelectedExploreCard(idx)}
-                />
+                <button key={card.title} onClick={() => setSelectedExploreCard(idx)} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
+                      <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain}</span>
+                    </div>
+                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{withChildName(card.preview, childName)}</p>
+                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>{locale === 'es' ? 'Leer más →' : 'Read more →'}</p>
+                  </div>
+                </button>
               );
             })}
 
-            <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.newForYou}</h2>
+            <h2 style={{ margin: '28px 4px 14px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🆕 {t.learn.newForYou}</h2>
             {newForYouArticles.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.allCaughtUp(childName)}</p>
@@ -1566,54 +1565,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 ) : null}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
-                {newForYouArticles.slice(0, 3).map((article, idx) => {
-                  const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
-                  return (
-                    <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ minWidth: 262, maxWidth: 280, background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 2px 12px rgba(45,43,50,0.06)' }}>
-                      <div style={{ height: 4, background: article.type === 'guide' ? `linear-gradient(90deg, ${theme.colors.sage}, #6B8E68)` : article.type === 'research' ? `linear-gradient(90deg, ${theme.colors.lavender}, #9B8BB5)` : `linear-gradient(90deg, ${theme.colors.rose}, ${theme.colors.roseDark})` }} />
-                      <div style={{ padding: '14px 14px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: theme.fonts.sans, color: article.type === 'guide' ? '#6B8E68' : article.type === 'research' ? '#7B6B8D' : theme.colors.roseDark, background: article.type === 'guide' ? '#E8F2E6' : article.type === 'research' ? '#F0EBF5' : theme.colors.blush, padding: '3px 10px', borderRadius: 20, letterSpacing: 0.3, textTransform: 'uppercase' }}>{formatExploreTypeLabel(article.type, locale)}</span>
-                          <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText, fontWeight: 600 }}>{article.read_time_minutes ? t.common.min(article.read_time_minutes) : estimateReadTime(article.body)}</span>
-                        </div>
-                        <div style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: iconBackgrounds[idx % iconBackgrounds.length], marginBottom: 8 }}>{article.emoji}</div>
-                        <p style={{ margin: '0 0 5px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, lineHeight: 1.35 }}>{article.title}</p>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.summary ?? ''}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {keepReadingArticles.length > 0 ? (
-              <>
-                <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.keepReading}</h2>
-                {keepReadingArticles.map((article) => (
-                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
-                    <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
-                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark }}>{t.learn.continueReading}</p>
+              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingLeft: 4, paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
+                {newForYouArticles.slice(0, 3).map((article) => (
+                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <div style={{ height: 6, background: article.type === 'guide' ? '#8FAE8B' : article.type === 'research' ? '#C4B5D4' : '#E8A090' }} />
+                    <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: article.type === 'guide' ? '#5A9E6F' : article.type === 'research' ? '#8B6CAE' : '#D4766A' }}>{formatExploreTypeLabel(article.type, locale)}</div>
+                    <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
+                    <p style={{ margin: '10px 16px 16px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7} min</p>
                   </button>
                 ))}
-              </>
-            ) : null}
-
-            <h2 style={{ margin: '16px 0 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.deepDives}</h2>
-            <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
-            {deepDiveArticles.map((article, idx) => {
-              const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
-              return (
-                <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', opacity: article.is_read ? 0.85 : 1, borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: iconBackgrounds[idx % iconBackgrounds.length] }}>{article.emoji}</span>
-                  <span style={{ flex: 1 }}>
-                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
-                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? t.learn.generalDomain} • {article.read_time_minutes ? t.common.minRead(article.read_time_minutes) : estimateReadTime(article.body)}</span>
-                  </span>
-                  {article.is_read ? <span style={{ color: theme.colors.sage, fontWeight: 700 }}>✓</span> : null}
-                </button>
-              );
-            })}
+              </div>
+            )}
 
             <button onClick={() => setShowReadArticles((v) => !v)} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', padding: '8px 0', cursor: 'pointer' }}>
               <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.articlesRead(recentlyReadArticles.length)} {showReadArticles ? '▾' : '▸'}</span>
