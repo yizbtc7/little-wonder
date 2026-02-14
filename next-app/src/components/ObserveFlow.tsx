@@ -415,7 +415,7 @@ function getAgeMonths(birthdate: string): number {
   return (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
 }
 
-function getQuickPrompts(ageMonths: number, childName: string): string[] {
+function getQuickPrompts(ageMonths: number, childName: string, locale: Language): string[] {
   if (ageMonths <= 4) {
     return [
       `🌀 ${childName} keeps staring at the ceiling fan`,
@@ -470,12 +470,19 @@ function getQuickPrompts(ageMonths: number, childName: string): string[] {
     ];
   }
 
-  return [
-    `📺 ${childName} only wants to watch YouTube lately`,
-    `📚 ${childName} is struggling with homework`,
-    `🎮 ${childName} is obsessed with one game`,
-    `🌌 ${childName} asked me a really deep question`,
-  ];
+  return locale === 'es'
+    ? [
+        `📺 ${childName} solo quiere ver YouTube últimamente`,
+        `📚 ${childName} está batallando con las tareas`,
+        `🎮 ${childName} está obsesionado/a con un juego`,
+        `🌌 ${childName} me hizo una pregunta súper profunda`,
+      ]
+    : [
+        `📺 ${childName} only wants to watch YouTube lately`,
+        `📚 ${childName} is struggling with homework`,
+        `🎮 ${childName} is obsessed with one game`,
+        `🌌 ${childName} asked me a really deep question`,
+      ];
 }
 
 export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, childId, initialLanguage = 'es' }: Props) {
@@ -520,7 +527,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createSupabaseBrowserClient();
 
-  const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName), [childBirthdate, childName]);
+  const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName, locale), [childBirthdate, childName, locale]);
 
   const loadingMessages = [
     `Analyzing what ${childName} is exploring...`,
@@ -1269,7 +1276,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <button onClick={() => setShowSidebar(true)} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: theme.colors.blushLight, cursor: 'pointer' }}>☰</button>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>Little Wonder</p>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{childName}&apos;s curiosity companion</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{locale === 'es' ? `compañero de curiosidad de ${childName}` : `${childName}'s curiosity companion`}</p>
               </div>
               {messages.length > 0 ? (
                 <button
