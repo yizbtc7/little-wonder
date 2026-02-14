@@ -76,11 +76,13 @@ type ExploreArticleRow = {
   title: string;
   emoji: string;
   type: 'article' | 'research' | 'guide';
+  summary?: string;
   body: string;
   age_min_months: number;
   age_max_months: number;
   domain: string | null;
   language: string;
+  read_time_minutes?: number;
   created_at: string;
 };
 
@@ -272,6 +274,12 @@ function formatExploreTypeLabel(type: ExploreArticleRow['type']): string {
   if (type === 'guide') return 'Guide';
   if (type === 'research') return 'Research';
   return 'Article';
+}
+
+function formatExploreSectionLabel(type: ExploreArticleRow['type']): string {
+  if (type === 'guide') return 'Guides';
+  if (type === 'research') return 'Research';
+  return 'Articles';
 }
 
 function estimateReadTime(text: string): string {
@@ -768,7 +776,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <span style={{ fontSize: 30 }}>{openExploreArticle.emoji}</span>
             <span style={{ fontSize: 10, color: accent, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{formatExploreTypeLabel(openExploreArticle.type)}</span>
             {openExploreArticle.domain ? <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.domain}</span> : null}
-            <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{estimateReadTime(openExploreArticle.body)}</span>
+            <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.read_time_minutes ? `${openExploreArticle.read_time_minutes} min read` : estimateReadTime(openExploreArticle.body)}</span>
           </div>
 
           <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openExploreArticle.title}</h1>
@@ -1290,7 +1298,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
               return (
                 <div key={type} style={{ marginBottom: 14 }}>
-                  <p style={{ margin: '4px 0 10px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: accentByType[type] }}>{formatExploreTypeLabel(type)}</p>
+                  <p style={{ margin: '4px 0 10px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: accentByType[type] }}>{formatExploreSectionLabel(type)}</p>
                   {articlesByType.map((article, index) => {
                     const accent = accentByType[article.type] ?? theme.colors.rose;
                     const bg = iconBackgrounds[index % iconBackgrounds.length];
@@ -1304,7 +1312,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: bg }}>{article.emoji}</span>
                         <span style={{ flex: 1 }}>
                           <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText }}>{article.title}</span>
-                          <span style={{ display: 'block', marginTop: 4, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {estimateReadTime(article.body)}</span>
+                          <span style={{ display: 'block', marginTop: 4, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</span>
                         </span>
                         <span style={{ fontSize: 10, color: accent, background: theme.colors.blushLight, padding: '3px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{formatExploreTypeLabel(article.type)}</span>
                       </button>

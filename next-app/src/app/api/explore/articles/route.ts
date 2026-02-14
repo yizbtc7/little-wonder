@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await db
     .from('explore_articles')
-    .select('id,title,emoji,type,body,age_min_months,age_max_months,domain,language,created_at')
+    .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
     .eq('language', lang)
     .lte('age_min_months', ageMonths)
     .gte('age_max_months', ageMonths)
