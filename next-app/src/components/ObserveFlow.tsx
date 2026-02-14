@@ -1553,7 +1553,11 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     setInviteLinkError('');
 
     try {
-      const response = await fetch(apiUrl('/api/invites/create'), { method: 'POST' });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(apiUrl('/api/invites/create'), { method: 'POST', signal: controller.signal });
+      clearTimeout(timeout);
+
       if (!response.ok) {
         setInviteLinkError(locale === 'es' ? 'No se pudo generar el enlace' : 'Could not generate invite link');
         return null;
@@ -1592,9 +1596,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
   useEffect(() => {
     if (profileTab !== 'settings') return;
-    if (inviteLink) return;
+    if (inviteLink || inviteLinkLoading || inviteLinkError) return;
     void ensureInviteLink();
-  }, [profileTab, inviteLink, ensureInviteLink]);
+  }, [profileTab, inviteLink, inviteLinkLoading, inviteLinkError, ensureInviteLink]);
 
   const openProfilePhotoPicker = () => {
     if (profilePhotoUploading) return;
