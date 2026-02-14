@@ -469,6 +469,16 @@ function getNewForYouAccent(type: ExploreArticleRow['type'], index: number): { s
   return articlePalette[index % articlePalette.length];
 }
 
+function formatBrainDomainLabel(domain: string | null | undefined, locale: Language): string {
+  const raw = (domain ?? '').trim();
+  if (!raw) return locale === 'es' ? 'General' : 'General';
+
+  const key = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (locale === 'es' && key.includes('seguridad') && key.includes('identidad')) return 'Identidad';
+
+  return raw;
+}
+
 function getBrainDomainAccent(domain: string | null | undefined, index: number): { bg: string; color: string } {
   const key = (domain ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -2246,7 +2256,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
-                        <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: accent.color, background: accent.bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
+                        <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: accent.color, background: accent.bg, padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', lineHeight: 1.1 }}>{formatBrainDomainLabel(card.domain, locale) || t.learn.generalDomain}</span>
                       </div>
                       <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
                       <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
