@@ -2109,7 +2109,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                               style={{ width: '100%', textAlign: 'left', border: `1.5px solid ${theme.colors.blushMid}`, borderRadius: 20, background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, padding: '18px 20px', cursor: 'pointer' }}
                             >
                               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.5 }}>✨ New Wonder</p>
-                              <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 700, color: theme.colors.charcoal }}>{msg.insight.wonder.title}</p>
+                              <p style={{ margin: '0 0 10px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: theme.colors.charcoal }}>{msg.insight.wonder.title}</p>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                   {(msg.insight.wonder.schemas_detected ?? []).map((schema) => (
