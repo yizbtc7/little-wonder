@@ -801,7 +801,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openArticleOriginTab, setOpenArticleOriginTab] = useState<'explore' | 'profile'>('explore');
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
-  const [showProfileBookmarks, setShowProfileBookmarks] = useState(true);
+  const [showProfileBookmarks, setShowProfileBookmarks] = useState(false);
   const [showAllRecentMoments, setShowAllRecentMoments] = useState(false);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
   const [readerToast, setReaderToast] = useState('');
@@ -2699,35 +2699,102 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                     {hasSavedArticles ? (
                       <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 32 }}>
-                        <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'}</h3>
-                        <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span>{locale === 'es' ? 'Colección guardada' : 'Saved collection'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
-                          <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                        <button
+                          type='button'
+                          onClick={() => setShowProfileBookmarks((v) => !v)}
+                          style={{
+                            width: '100%',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            padding: 0,
+                            margin: '0 0 10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                            <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
+                            <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                              {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
+                            </h3>
+                            <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
+                              {savedArticles.length}
+                            </span>
+                          </span>
+                          <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
                         </button>
-                        <div style={{ marginTop: 10 }}>
+
+                        <div style={{ marginTop: 2 }}>
                           {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
                             const badge = article.type === 'research'
-                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
+                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EFE7FA', color: '#7A5AA3' }
                               : article.type === 'guide'
-                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
-                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
+                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F4EC', color: '#4F8E65' }
+                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#C4685B' };
+                            const readTime = article.read_time_minutes ?? 6;
+                            const domainLabel = article.domain?.trim() || (locale === 'es' ? 'Crianza' : 'Parenting');
+
                             return (
-                              <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.4 }}>{article.title}</span>
-                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
-                                </div>
+                              <button
+                                key={`profile-saved-${article.id}`}
+                                onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }}
+                                style={{
+                                  width: '100%',
+                                  background: '#fff',
+                                  borderRadius: 16,
+                                  padding: '11px 12px',
+                                  marginBottom: 9,
+                                  border: '1px solid #ECE2DD',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 11,
+                                }}
+                              >
+                                <span style={{ width: 32, height: 32, borderRadius: 999, background: '#FFF4F0', border: '1px solid #F3DED7', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, lineHeight: 1 }}>
+                                  {article.emoji || '📚'}
+                                </span>
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: '#493A35', lineHeight: 1.28 }}>
+                                    {article.title}
+                                  </span>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
+                                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, lineHeight: 1 }}>
+                                      {badge.label}
+                                    </span>
+                                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 118 }}>
+                                      {domainLabel}
+                                    </span>
+                                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782', whiteSpace: 'nowrap' }}>
+                                      · ☕ {readTime} min
+                                    </span>
+                                  </span>
+                                </span>
+                                <span style={{ flexShrink: 0, fontSize: 18, color: '#B39A93' }}>›</span>
                               </button>
                             );
                           })}
+
                           {savedArticles.length > 2 ? (
                             showProfileBookmarks ? (
-                              <button onClick={() => setShowProfileBookmarks(false)} style={{ border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 999, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                              <button
+                                type='button'
+                                onClick={() => setShowProfileBookmarks(false)}
+                                style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 800 }}
+                              >
                                 {locale === 'es' ? 'Mostrar menos' : 'Show less'}
                               </button>
                             ) : (
-                              <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
-                                {locale === 'es' ? `Ver todos (${savedArticles.length})` : `Show all (${savedArticles.length})`}
+                              <button
+                                type='button'
+                                onClick={() => setShowProfileBookmarks(true)}
+                                style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 800 }}
+                              >
+                                {locale === 'es' ? `Ver ${savedArticles.length - 2} más →` : `View ${savedArticles.length - 2} more →`}
                               </button>
                             )
                           ) : null}
