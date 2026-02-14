@@ -46,7 +46,7 @@ export const translations = {
       showMe: 'Muéstrame ✨',
       settingThingsUp: 'Configurando todo...',
     },
-    tabs: { chat: 'Chat', learn: 'Aprender', activities: 'Actividades' },
+    tabs: { chat: 'Chat', learn: 'Aprende', activities: 'Actividades' },
     settings: {
       title: 'Ajustes',
       language: 'Idioma',
@@ -69,7 +69,7 @@ export const translations = {
       noWonders: 'Aún no hay asombros. Registra una observación en chat para generar el primero.',
     },
     learn: {
-      title: 'Aprender',
+      title: 'Aprende',
       subtitle: (childName: string) => `Descubre lo que está pasando en el mundo de ${childName}`,
       todaysTip: '🌻 Tip de hoy',
       whyThisMatters: '💡 Por qué importa',
