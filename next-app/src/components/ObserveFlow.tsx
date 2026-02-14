@@ -10,7 +10,7 @@ import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 import { translations, type Language } from '@/lib/translations';
 import { SCHEMA_INFO, normalizeSchemaKey, normalizeSchemaList, type SchemaKey } from '@/lib/schemas';
-import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
+import { getChildInterestOptions } from '@/lib/interest-options';
 import { PARENT_ROLES } from '@/lib/parent-roles';
 import ArticleReader from '@/components/article-reader/ArticleReader';
 
@@ -2825,7 +2825,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                       </button>
                       {showInterestPicker ? (
                         <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: 8, padding: '2px 2px 0' }}>
-                          {CHILD_INTEREST_OPTIONS.map((interestOption) => {
+                          {getChildInterestOptions(locale).map((interestOption) => {
                             const alreadyAdded = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(interestOption));
                             return (
                               <button

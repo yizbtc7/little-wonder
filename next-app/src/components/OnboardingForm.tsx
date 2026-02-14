@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import FadeIn from '@/components/ui/FadeIn';
 import ProgressDots from '@/components/ui/ProgressDots';
 import { translations, type Language } from '@/lib/translations';
-import { CHILD_INTEREST_OPTIONS } from '@/lib/interest-options';
+import { getChildInterestOptions } from '@/lib/interest-options';
 import { PARENT_ROLES } from '@/lib/parent-roles';
 
 type OnboardingFormProps = {
@@ -255,7 +255,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               {t.onboarding.optionalInterests}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {CHILD_INTEREST_OPTIONS.map((interest) => (
+              {getChildInterestOptions(language).map((interest) => (
                 <SelectChip
                   key={interest}
                   text={interest}
