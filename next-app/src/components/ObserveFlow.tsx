@@ -475,6 +475,17 @@ const schemaBadgeColors: Record<string, string> = {
   positioning: '#90D4C4',
 };
 
+const schemaGardenInfo: Record<string, { emoji: string; color: string; bg: string }> = {
+  trajectory: { emoji: '➰', color: '#E8A090', bg: '#FDF1EE' },
+  rotation: { emoji: '🌀', color: '#C4B5D4', bg: '#F5F1FA' },
+  enclosure: { emoji: '📦', color: '#8FAE8B', bg: '#EEF6ED' },
+  enveloping: { emoji: '🎁', color: '#E8C890', bg: '#FCF5E8' },
+  transporting: { emoji: '🧺', color: '#90B8E8', bg: '#EEF4FC' },
+  connecting: { emoji: '🔗', color: '#E89090', bg: '#FDEFEF' },
+  transforming: { emoji: '🧪', color: '#B890E8', bg: '#F4EEFC' },
+  positioning: { emoji: '📐', color: '#90D4C4', bg: '#ECF9F5' },
+};
+
 function schemaContextLine(schema: string, childName: string): string | null {
   const map: Record<string, string> = {
     trajectory: `Because ${childName} loves throwing and dropping things`,
@@ -680,8 +691,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [profilePhotoUploading, setProfilePhotoUploading] = useState(false);
   const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
-  const [profileTopSchema, setProfileTopSchema] = useState<ProfileSchemaStat | null>(null);
-  const [profileTopSchemas, setProfileTopSchemas] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<Language>(initialLanguage);
   const t = translations[locale];
 
@@ -812,6 +821,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       },
     }));
   }, [childName, exploreCards, locale]);
+
+  const schemaGardenSorted = useMemo(() => {
+    return [...profileSchemaStats].sort((a, b) => b.count - a.count);
+  }, [profileSchemaStats]);
+
+  const schemaGardenMax = useMemo(() => {
+    return schemaGardenSorted.reduce((max, item) => Math.max(max, item.count), 0);
+  }, [schemaGardenSorted]);
 
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
@@ -1105,8 +1122,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
         setProfileMomentsCount(payload.child?.moments_count ?? 0);
         setSavedArticles(payload.savedArticles ?? []);
-        setProfileTopSchema(payload.top_schema ?? null);
-        setProfileTopSchemas(payload.top_schemas ?? (payload.top_schema ? [payload.top_schema] : []));
       } catch {
         // ignore fetch errors in non-browser test environments
       }
@@ -2301,40 +2316,65 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       </p>
                     </div>
 
-                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema garden'}</h3>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-                      {profileSchemaStats.length === 0 ? (
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noSchemaData}</p>
+                    <div style={{ marginBottom: 18 }}>
+                      <h3 style={{ margin: '0 0 2px', fontFamily: "'Nunito', sans-serif", fontSize: 22, fontWeight: 800, color: '#3E302C' }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
+                      <p style={{ margin: '0 0 14px', fontFamily: "'Nunito', sans-serif", fontSize: 13, color: '#8A8690', lineHeight: 1.35 }}>
+                        {locale === 'es' ? `Los patrones que más explora ${childName}` : `${childName}'s strongest play patterns`}
+                      </p>
+
+                      {schemaGardenSorted.length === 0 ? (
+                        <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 13, color: theme.colors.lightText }}>{t.profile.noSchemaData}</p>
                       ) : (
-                        profileSchemaStats.map((schema, idx) => {
-                          const bg = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#E8F0E4'][idx % 4];
-                          return (
-                            <div key={schema.name} style={{ background: bg, borderRadius: 16, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.darkText }}>{formatSchemaLabel(schema.name)}</span>
-                              <span style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
-                            </div>
-                          );
-                        })
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, minHeight: 166, padding: '4px 2px 0', marginBottom: 14 }}>
+                            {schemaGardenSorted.map((schema) => {
+                              const info = schemaGardenInfo[schema.name] ?? { emoji: '✨', color: '#A08AA8', bg: '#F5F1F8' };
+                              const barHeight = schemaGardenMax > 0 ? 30 + (schema.count / schemaGardenMax) * 70 : 30;
+                              return (
+                                <div key={schema.name} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                  <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: info.color, lineHeight: 1, marginBottom: 6 }}>{schema.count}</span>
+                                  <div
+                                    style={{
+                                      width: '100%',
+                                      maxWidth: 60,
+                                      height: barHeight,
+                                      borderRadius: '22px 22px 8px 8px',
+                                      background: `linear-gradient(180deg, ${info.bg} 0%, ${info.color}30 100%)`,
+                                      border: `1px solid ${info.color}35`,
+                                      paddingTop: 6,
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                      alignItems: 'flex-start',
+                                    }}
+                                  >
+                                    <span style={{ fontSize: 16, lineHeight: 1 }}>{info.emoji}</span>
+                                  </div>
+                                  <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 11, fontWeight: 700, color: '#8A8690', marginTop: 6, textAlign: 'center', lineHeight: 1.1 }}>
+                                    {formatSchemaLabel(schema.name)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div style={{ display: 'grid', gap: 8 }}>
+                            {schemaGardenSorted.slice(0, 2).map((schema) => {
+                              const info = schemaGardenInfo[schema.name] ?? { emoji: '✨', color: '#A08AA8', bg: '#F5F1F8' };
+                              const contextLine = schemaContextLine(schema.name, childName);
+                              return (
+                                <div key={schema.name} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '12px 14px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                    <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{`${info.emoji} ${formatSchemaLabel(schema.name)}`}</p>
+                                    <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 11, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '3px 9px' }}>{schema.count}</span>
+                                  </div>
+                                  {contextLine ? <p style={{ margin: '4px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 12, color: '#8A8690' }}>{contextLine}</p> : null}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
                       )}
                     </div>
-
-                    {(profileTopSchemas.length > 0 || profileTopSchema) ? (
-                      <div style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
-                        {(profileTopSchemas.length > 0 ? profileTopSchemas : profileTopSchema ? [profileTopSchema] : []).slice(0, 3).map((schema, idx) => {
-                          const softBg = ['#FFF6F3', '#F4F2FF', '#EEF8F0'][idx % 3];
-                          const contextLine = schemaContextLine(schema.name, childName);
-                          return (
-                            <div key={schema.name} style={{ background: softBg, borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '12px 14px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                                <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 17, color: theme.colors.charcoal }}>{formatSchemaLabel(schema.name)}</p>
-                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, background: '#fff', borderRadius: 999, padding: '3px 8px' }}>{schema.count}</span>
-                              </div>
-                              {contextLine ? <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{contextLine}</p> : null}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : null}
 
                     <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
