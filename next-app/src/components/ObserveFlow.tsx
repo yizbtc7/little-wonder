@@ -364,6 +364,20 @@ function formatConversationDate(dateInput: string, locale: Language): string {
   });
 }
 
+function formatRelativeMomentDate(dateInput: string, locale: Language): string {
+  const date = new Date(dateInput);
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.max(0, Math.round((startOfToday.getTime() - startOfTarget.getTime()) / 86400000));
+
+  if (diffDays === 0) return locale === 'es' ? 'Hoy' : 'Today';
+  if (diffDays === 1) return locale === 'es' ? 'Ayer' : 'Yesterday';
+
+  return locale === 'es' ? `Hace ${diffDays} días` : `${diffDays} days ago`;
+}
+
 function formatSchemaLabel(value: string): string {
   const key = normalizeSchemaKey(value);
   return key ? SCHEMA_INFO[key].label : '';
@@ -2663,21 +2677,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                       ) : (showAllRecentMoments ? profileRecentMoments : profileRecentMoments.slice(0, 3)).map((moment) => {
                         const firstSchema = moment.schemas?.[0];
+                        const momentBody = moment.observation?.trim() || moment.title?.trim() || '';
                         return (
-                          <div key={moment.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '12px 13px 13px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
+                          <div key={moment.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '13px 14px 14px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#A99A96', lineHeight: 1.1 }}>
+                                <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
+                                {formatRelativeMomentDate(moment.created_at, locale)}
+                              </span>
                               {firstSchema ? (
-                                <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1 }}>
+                                <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
                                   {formatSchemaChipLabel(firstSchema)}
                                 </span>
                               ) : <span />}
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#A99A96' }}>
-                                <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
-                                {formatConversationDate(moment.created_at, locale)}
-                              </span>
                             </div>
-                            <p style={{ margin: '0 0 4px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, color: '#3A2D2A', lineHeight: 1.25 }}>{moment.title}</p>
-                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12.5, lineHeight: 1.45, color: '#7B6F6B' }}>{moment.observation}</p>
+                            <p style={{ margin: '10px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 15.5, fontWeight: 700, lineHeight: 1.4, color: '#4A3A36' }}>{momentBody}</p>
                           </div>
                         );
                       })}
