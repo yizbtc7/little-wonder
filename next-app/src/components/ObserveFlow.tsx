@@ -2592,7 +2592,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                 <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
                                 {formatRelativeMomentDate(moment.created_at, locale)}
                               </span>
-                              <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
+                              <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
                                 {formatSchemaChipLabel(schemaForChip)}
                               </span>
                             </div>
@@ -2785,7 +2785,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                       fontWeight: 800,
                                       color: schemaInfo?.color ?? '#8E7C77',
                                       background: schemaInfo?.bg ?? '#F7F0EE',
-                                      border: `1px solid ${schemaInfo?.color ?? '#D7C8C4'}33`,
                                       borderRadius: 999,
                                       padding: '4px 9px',
                                       lineHeight: 1,
