@@ -135,8 +135,8 @@ export async function GET() {
         .from('explore_articles')
         .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
         .eq('language', preferredLanguage)
-        .lte('age_min_months', ageMonths + 24)
-        .gte('age_max_months', Math.max(0, ageMonths - 24))
+        .lte('age_min_months', ageMonths)
+        .gte('age_max_months', ageMonths)
         .order('created_at', { ascending: false })
         .limit(60);
 
