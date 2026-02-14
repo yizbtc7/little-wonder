@@ -17,6 +17,14 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
   const { id } = await context.params;
   const db = dbClient();
 
+  await db.from('users').upsert(
+    {
+      id: user.id,
+      name: (user.user_metadata?.name as string | undefined) ?? (user.user_metadata?.full_name as string | undefined) ?? user.email ?? null,
+    },
+    { onConflict: 'id' },
+  );
+
   const { error } = await db.from('activity_saves').upsert({ user_id: user.id, activity_id: id }, { onConflict: 'user_id,activity_id' });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
