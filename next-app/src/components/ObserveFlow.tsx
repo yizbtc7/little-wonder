@@ -71,6 +71,19 @@ type ExploreDailyTipRow = {
   source?: string;
 };
 
+type ExploreArticleRow = {
+  id: string;
+  title: string;
+  emoji: string;
+  type: 'article' | 'research' | 'guide';
+  body: string;
+  age_min_months: number;
+  age_max_months: number;
+  domain: string | null;
+  language: string;
+  created_at: string;
+};
+
 type ProfileWonderTimelineEntry = {
   id: string;
   created_at: string;
@@ -334,6 +347,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
   const [exploreCards, setExploreCards] = useState<ExploreBrainCardRow[]>([]);
   const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
+  const [exploreArticles, setExploreArticles] = useState<ExploreArticleRow[]>([]);
+  const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<'en' | 'es'>('en');
@@ -457,16 +472,27 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   useEffect(() => {
     if (activeTab !== 'explore') return;
+    setOpenExploreArticle(null);
     void (async () => {
       try {
-        const response = await fetch(apiUrl('/api/explore'));
-        if (!response.ok) return;
-        const payload = (await response.json()) as {
-          brain_cards?: ExploreBrainCardRow[];
-          daily_tip?: ExploreDailyTipRow | null;
-        };
-        setExploreCards(payload.brain_cards ?? []);
-        setExploreDailyTip(payload.daily_tip ?? null);
+        const [exploreResponse, articlesResponse] = await Promise.all([
+          fetch(apiUrl('/api/explore')),
+          fetch(apiUrl('/api/explore/articles')),
+        ]);
+
+        if (exploreResponse.ok) {
+          const payload = (await exploreResponse.json()) as {
+            brain_cards?: ExploreBrainCardRow[];
+            daily_tip?: ExploreDailyTipRow | null;
+          };
+          setExploreCards(payload.brain_cards ?? []);
+          setExploreDailyTip(payload.daily_tip ?? null);
+        }
+
+        if (articlesResponse.ok) {
+          const payload = (await articlesResponse.json()) as { articles?: ExploreArticleRow[] };
+          setExploreArticles(payload.articles ?? []);
+        }
       } catch {
         // ignore fetch errors in non-browser test environments
       }
@@ -587,6 +613,37 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     }
     window.location.href = '/';
   };
+
+  if (activeTab === 'explore' && openExploreArticle) {
+    const accentByType: Record<ExploreArticleRow['type'], string> = {
+      article: theme.colors.rose,
+      research: theme.colors.lavender,
+      guide: theme.colors.sage,
+    };
+
+    const accent = accentByType[openExploreArticle.type] ?? theme.colors.rose;
+    const bodySections = openExploreArticle.body.split('\n\n').map((section) => section.trim()).filter(Boolean);
+
+    return (
+      <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
+        <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 40px' }}>
+          <button onClick={() => setOpenExploreArticle(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>
+            <span style={{ fontSize: 14 }}>←</span> Back to Explore
+          </button>
+          <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: accent }}>{openExploreArticle.emoji} {openExploreArticle.type}</p>
+          <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openExploreArticle.title}</h1>
+        </div>
+
+        <div style={{ padding: '0 24px 40px' }}>
+          {bodySections.map((section, index) => (
+            <p key={index} style={{ margin: index === 0 ? '0 0 16px' : '0 0 16px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText, whiteSpace: 'pre-wrap' }}>
+              {section}
+            </p>
+          ))}
+        </div>
+      </main>
+    );
+  }
 
   if (activeTab === 'explore' && selectedExploreCard !== null) {
     const card = personalizedCards[selectedExploreCard];
@@ -1071,6 +1128,29 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   iconBackground={iconBackgrounds[idx % iconBackgrounds.length]}
                   onClick={() => setSelectedExploreCard(idx)}
                 />
+              );
+            })}
+
+            <h2 style={{ margin: '18px 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>More to explore</h2>
+            {exploreArticles.map((article) => {
+              const accentByType: Record<ExploreArticleRow['type'], string> = {
+                article: theme.colors.rose,
+                research: theme.colors.lavender,
+                guide: theme.colors.sage,
+              };
+
+              const accent = accentByType[article.type] ?? theme.colors.rose;
+
+              return (
+                <button
+                  key={article.id}
+                  onClick={() => setOpenExploreArticle(article)}
+                  style={{ width: '100%', background: '#fff', borderRadius: 18, padding: '14px 16px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, textAlign: 'left' }}
+                >
+                  <span style={{ fontSize: 22 }}>{article.emoji}</span>
+                  <span style={{ flex: 1, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText }}>{article.title}</span>
+                  <span style={{ fontSize: 10, color: accent, background: theme.colors.blushLight, padding: '3px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{article.type}</span>
+                </button>
               );
             })}
           </div>
