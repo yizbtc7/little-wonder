@@ -876,6 +876,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [signOutError, setSignOutError] = useState('');
   const [settingsStatus, setSettingsStatus] = useState('');
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string>('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -1542,10 +1543,36 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     }
   };
 
-  const copyInviteLink = async () => {
-    const inviteUrl = `https://www.littlewonder.ai/join/${childId.slice(0, 8)}`;
+  const ensureInviteLink = useCallback(async (): Promise<string | null> => {
+    if (inviteLink) return inviteLink;
     try {
-      await navigator.clipboard.writeText(inviteUrl);
+      const response = await fetch(apiUrl('/api/invites/create'), { method: 'POST' });
+      if (!response.ok) return null;
+      const payload = (await response.json()) as { url?: string };
+      if (!payload.url) return null;
+      setInviteLink(payload.url);
+      return payload.url;
+    } catch {
+      return null;
+    }
+  }, [inviteLink]);
+
+
+  useEffect(() => {
+    if (profileTab !== 'settings') return;
+    if (inviteLink) return;
+    void ensureInviteLink();
+  }, [profileTab, inviteLink, ensureInviteLink]);
+
+  const copyInviteLink = async () => {
+    const resolvedLink = (await ensureInviteLink()) ?? inviteLink;
+    if (!resolvedLink) {
+      setCopiedInviteLink(false);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(resolvedLink);
       setCopiedInviteLink(true);
       setTimeout(() => setCopiedInviteLink(false), 1800);
     } catch {
@@ -2467,7 +2494,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <div style={{ flex: 1, padding: '10px 14px', borderRadius: 12, background: theme.colors.blushLight, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, border: `1px solid ${theme.colors.blushMid}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {`https://www.littlewonder.ai/join/${childId.slice(0, 8)}`}
+                    {inviteLink || (locale === 'es' ? 'Generando enlace…' : 'Generating invite link…')}
                   </div>
                   <button onClick={() => void copyInviteLink()} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: copiedInviteLink ? theme.colors.sageBg : theme.colors.charcoal, color: copiedInviteLink ? theme.colors.sage : '#fff', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                     {copiedInviteLink ? (locale === 'es' ? '✓ Copiado' : '✓ Copied') : (locale === 'es' ? 'Copiar' : 'Copy')}
