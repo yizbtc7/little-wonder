@@ -64,7 +64,7 @@ export const translations = {
       timeline: 'Línea de tiempo',
       schemasDetected: 'Esquemas detectados',
       interests: 'Intereses',
-      noSchemaData: 'Aún no hay datos de esquemas.',
+      noSchemaData: 'Aún no hay datos de esquemas. Empezarán a aparecer una vez interactúes con el chat.',
       noWonders: 'Aún no hay asombros. Registra una observación en chat para generar el primero.',
     },
     learn: {
@@ -175,7 +175,7 @@ export const translations = {
       timeline: 'Timeline',
       schemasDetected: 'Schemas detected',
       interests: 'Interests',
-      noSchemaData: 'No schema data yet.',
+      noSchemaData: 'No schema data yet. They will start appearing once you interact with chat.',
       noWonders: 'No wonders yet. Capture a chat observation to generate your first wonder.',
     },
     learn: {
