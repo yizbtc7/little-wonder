@@ -50,6 +50,18 @@ function canonicalTitleKey(title: string): string {
     .trim();
 }
 
+function canonicalSubtitleKey(subtitle: string): string {
+  return subtitle
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function looksEnglishTitle(title: string): boolean {
+  return /\b(connection|chain|game|helper|adventures|mud kitchen|water race|made for)\b/i.test(title);
+}
+
 function rankActivities(rows: ActivityRow[], schemaCounts: Map<string, number>): ActivityRow[] {
   return [...rows].sort((a, b) => {
     const aFeatured = a.is_featured ? 1 : 0;
@@ -145,10 +157,18 @@ export async function GET(request: Request) {
 
   const mergedRows: ActivityRow[] = [];
   const seenTitles = new Set<string>();
+  const seenSubtitlesBySchema = new Set<string>();
   for (const row of typedRows) {
-    const key = canonicalTitleKey(row.title);
-    if (seenTitles.has(key)) continue;
-    seenTitles.add(key);
+    if (preferredLanguage === 'es' && looksEnglishTitle(row.title)) continue;
+
+    const titleKey = canonicalTitleKey(row.title);
+    if (seenTitles.has(titleKey)) continue;
+
+    const subtitleSchemaKey = `${row.schema_target}|${canonicalSubtitleKey(row.subtitle ?? '')}`;
+    if (seenSubtitlesBySchema.has(subtitleSchemaKey)) continue;
+
+    seenTitles.add(titleKey);
+    seenSubtitlesBySchema.add(subtitleSchemaKey);
     mergedRows.push(row);
   }
 
