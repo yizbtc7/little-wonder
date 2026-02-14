@@ -2053,7 +2053,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               <button onClick={() => setShowSidebar(true)} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: theme.colors.blushLight, cursor: 'pointer' }}>☰</button>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 16, fontWeight: 600, color: theme.colors.charcoal }}>Little Wonder</p>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{locale === 'es' ? `compañero de curiosidad de ${childName}` : `${childName}'s curiosity companion`}</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{locale === 'es' ? 'Nutriendo al científico en cada niño' : 'Nurturing the scientist in every child'}</p>
               </div>
               {messages.length > 0 ? (
                 <button
