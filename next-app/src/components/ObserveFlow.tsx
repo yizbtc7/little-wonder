@@ -1239,6 +1239,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     const origin = savedArticlesViewOrigin;
     const scrollTop = savedArticlesReturnScrollRef.current;
     setSavedArticlesViewOrigin(null);
+    setReturnToSavedArticlesViewOnReaderBack(false);
     setActiveTab(origin);
     requestAnimationFrame(() => {
       const sourceRef = origin === 'explore' ? exploreScrollRef : profileScrollRef;
@@ -1613,6 +1614,89 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setTimeout(() => setSettingsStatus(''), 2000);
   };
 
+  if (savedArticlesViewOrigin) {
+    return (
+      <main style={{ minHeight: '100vh', background: theme.colors.cream, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '18px 20px 12px', borderBottom: `1px solid ${theme.colors.divider}`, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <button
+            type='button'
+            onClick={handleBackFromSavedArticlesView}
+            style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer' }}
+          >
+            {locale === 'es' ? '← Volver' : '← Back'}
+          </button>
+          <h1 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 22, fontWeight: 800, color: '#3E302C' }}>
+            {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
+          </h1>
+          <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '4px 9px', lineHeight: 1 }}>
+            {savedArticles.length}
+          </span>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 20px' }}>
+          {savedArticles.length === 0 ? (
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>
+              {locale === 'es' ? 'Aún no hay artículos guardados.' : 'No saved articles yet.'}
+            </p>
+          ) : savedArticles.map((article) => {
+            const badge = article.type === 'research'
+              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EFE7FA', color: '#7A5AA3' }
+              : article.type === 'guide'
+                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F4EC', color: '#4F8E65' }
+                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#C4685B' };
+            const readTime = article.read_time_minutes ?? 6;
+            const domainLabel = article.domain?.trim() || (locale === 'es' ? 'Crianza' : 'Parenting');
+
+            return (
+              <button
+                key={`saved-full-${article.id}`}
+                onClick={() => {
+                  setOpenArticleOriginTab(savedArticlesViewOrigin);
+                  setReturnToSavedArticlesViewOnReaderBack(true);
+                  setOpenExploreArticle(article);
+                }}
+                style={{
+                  width: '100%',
+                  background: '#fff',
+                  borderRadius: 16,
+                  padding: '11px 12px',
+                  marginBottom: 9,
+                  border: '1px solid #ECE2DD',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 11,
+                }}
+              >
+                <span style={{ width: 32, height: 32, borderRadius: 999, background: '#FFF4F0', border: '1px solid #F3DED7', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, lineHeight: 1 }}>
+                  {article.emoji || '📚'}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: '#493A35', lineHeight: 1.28 }}>
+                    {article.title}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, lineHeight: 1 }}>
+                      {badge.label}
+                    </span>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 118 }}>
+                      {domainLabel}
+                    </span>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782', whiteSpace: 'nowrap' }}>
+                      · ☕ {readTime} min
+                    </span>
+                  </span>
+                </span>
+                <span style={{ flexShrink: 0, fontSize: 18, color: '#B39A93' }}>›</span>
+              </button>
+            );
+          })}
+        </div>
+      </main>
+    );
+  }
+
   if ((activeTab === 'explore' || activeTab === 'profile') && openExploreArticle) {
     return (
       <ArticleReader
@@ -1626,10 +1710,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         onShare={() => void shareArticle(openExploreArticle)}
         onBack={() => {
           setOpenExploreArticle(null);
+          if (returnToSavedArticlesViewOnReaderBack && savedArticlesViewOrigin) {
+            setActiveTab(savedArticlesViewOrigin);
+            return;
+          }
           setActiveTab(openArticleOriginTab);
         }}
         onRegisterMoment={() => {
           setOpenExploreArticle(null);
+          setSavedArticlesViewOrigin(null);
+          setReturnToSavedArticlesViewOnReaderBack(false);
           setActiveTab('chat');
           setFocusChatComposerIntent(true);
         }}
@@ -2106,7 +2196,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       ) : null}
 
       {activeTab === 'explore' ? (
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
+        <div ref={exploreScrollRef} style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 24px 0' }}>
             <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: '#2D2B32' }}>{t.learn.title}</h1>
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: '#8A8690' }}>{t.learn.subtitle(childName)}</p>
@@ -2400,7 +2490,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       ) : null}
 
       {activeTab === 'profile' ? (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div ref={profileScrollRef} style={{ flex: 1, overflowY: 'auto' }}>
           {profileTab === 'settings' ? (
             <div style={{ padding: 20 }}>
               <button onClick={() => setProfileTab('overview')} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>{`← ${t.common.back}`}</button>
@@ -2782,33 +2872,42 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                     {hasSavedArticles ? (
                       <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 32 }}>
-                        <button
-                          type='button'
-                          onClick={() => setShowProfileBookmarks((v) => !v)}
-                          style={{
-                            width: '100%',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            padding: 0,
-                            margin: '0 0 10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 10,
-                          }}
-                        >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                            <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
-                            <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
-                              {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
-                            </h3>
-                            <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
-                              {savedArticles.length}
+                        <div style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                          <button
+                            type='button'
+                            onClick={() => setShowProfileBookmarks((v) => !v)}
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              padding: 0,
+                              margin: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                              minWidth: 0,
+                            }}
+                          >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                              <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
+                              <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                                {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
+                              </h3>
+                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, color: '#A65E52', background: '#FFEDEA', borderRadius: 999, padding: '3px 9px', lineHeight: 1 }}>
+                                {savedArticles.length}
+                              </span>
                             </span>
-                          </span>
-                          <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
-                        </button>
+                            <span style={{ display: 'inline-block', fontSize: 20, color: '#9A7E76', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                          </button>
+
+                          <button
+                            type='button'
+                            onClick={() => openSavedArticlesView('profile')}
+                            style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
+                          </button>
+                        </div>
 
                         <div style={{ marginTop: 2 }}>
                           {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
