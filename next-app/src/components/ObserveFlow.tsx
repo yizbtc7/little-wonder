@@ -84,6 +84,22 @@ type ExploreArticleRow = {
   created_at: string;
 };
 
+type ActivityItem = {
+  type?: 'project' | 'quick' | 'adventure' | 'seasonal';
+  icon: string;
+  title: string;
+  subtitle?: string;
+  duration?: string;
+  schemas?: string[];
+  schema?: string;
+  why?: string;
+  materials?: string[];
+  preview?: string;
+  desc?: string;
+  count?: number;
+  progress?: number;
+};
+
 type ProfileWonderTimelineEntry = {
   id: string;
   created_at: string;
@@ -349,6 +365,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
   const [exploreArticles, setExploreArticles] = useState<ExploreArticleRow[]>([]);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
+  const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<'en' | 'es'>('en');
@@ -374,6 +391,33 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   ];
 
   const quoteOfTheDay = dailyQuotes[Math.floor(Date.now() / 86400000) % 5];
+
+  const activitiesContent = useMemo(
+    () => ({
+      featured: {
+        type: 'project' as const,
+        icon: '🏗️',
+        title: 'The Ramp Laboratory',
+        subtitle: `Because ${childName} can\'t stop throwing things`,
+        duration: '20 min',
+        schemas: ['trajectory'],
+        why: `${childName} keeps testing motion and force. This project channels that curiosity into structured prediction + experiment loops.`,
+        materials: ['Cardboard or a book', 'A ball or toy car', 'Blocks or cups for targets'],
+        preview: 'Build ramps at different angles and test what changes when you modify height, weight, and surface.',
+      },
+      quickActivities: [
+        { icon: '🥄', title: 'The spoon drop symphony', duration: '5 min', schema: 'trajectory', desc: 'Use 3 spoons and 3 surfaces. Ask which sound repeats most.' },
+        { icon: '📦', title: 'What fits inside?', duration: '5 min', schema: 'enclosure', desc: `Give ${childName} containers and mixed objects. Observe sorting logic.` },
+        { icon: '🧊', title: 'Ice cube rescue', duration: '5 min', schema: 'transforming', desc: 'Freeze a small toy. Test warm water, salt, and tapping strategies.' },
+      ] as ActivityItem[],
+      adventures: [
+        { icon: '🌿', title: 'Texture Safari', duration: '3 days', desc: 'Collect 3 textures per day and build a touch museum.', progress: 0 },
+        { icon: '📐', title: 'Tower Week', duration: '5 days', desc: 'New stacking materials each day: cups, books, boxes, soft blocks.', progress: 0 },
+      ] as ActivityItem[],
+      seasonal: { icon: '🌧️', title: 'Rainy Day Lab', count: 6, desc: '6 indoor activities for high-energy curiosity days.' } as ActivityItem,
+    }),
+    [childName]
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1157,35 +1201,131 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </div>
       ) : null}
 
+      {activeTab === 'activities' && openActivityDetail ? (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ background: `linear-gradient(180deg, ${theme.colors.lavenderBg} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 36px' }}>
+            <button onClick={() => setOpenActivityDetail(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>
+              <span style={{ fontSize: 14 }}>←</span> Back
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              {openActivityDetail.duration ? <span style={{ fontSize: 11, color: theme.colors.midText, background: 'rgba(255,255,255,0.6)', padding: '4px 12px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>⏱ {openActivityDetail.duration}</span> : null}
+              {[...(openActivityDetail.schemas ?? []), ...(openActivityDetail.schema ? [openActivityDetail.schema] : [])].map((schema) => (
+                <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '4px 12px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(schema)}</span>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 48, marginBottom: 12 }}>{openActivityDetail.icon}</div>
+            <h1 style={{ fontFamily: theme.fonts.serif, fontSize: 28, color: theme.colors.charcoal, margin: '0 0 8px', fontWeight: 700, lineHeight: 1.15 }}>{openActivityDetail.title}</h1>
+            {openActivityDetail.subtitle ? <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.midText, margin: 0, fontStyle: 'italic' }}>{openActivityDetail.subtitle}</p> : null}
+          </div>
+
+          <div style={{ padding: '0 24px 40px', marginTop: -4 }}>
+            {openActivityDetail.why ? <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: '0 0 24px', lineHeight: 1.7 }}>{openActivityDetail.why}</p> : null}
+            {openActivityDetail.materials?.length ? (
+              <>
+                <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 0.8 }}>🏠 What you need</p>
+                <div style={{ background: '#fff', borderRadius: 18, padding: '16px 18px', marginBottom: 24, border: `1px solid ${theme.colors.divider}` }}>
+                  {openActivityDetail.materials.map((material, index) => (
+                    <div key={material} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: index < openActivityDetail.materials!.length - 1 ? 10 : 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: theme.colors.sage, flexShrink: 0 }} />
+                      <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, margin: 0 }}>{material}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
+            {openActivityDetail.preview ? <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: '0 0 24px', lineHeight: 1.7 }}>{openActivityDetail.preview}</p> : null}
+            {openActivityDetail.desc && !openActivityDetail.preview ? <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: '0 0 24px', lineHeight: 1.7 }}>{openActivityDetail.desc}</p> : null}
+
+            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush}90 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 32, padding: '24px 22px' }}>
+              <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>🧠 The science behind this</p>
+              <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.65 }}>
+                This activity targets {[...(openActivityDetail.schemas ?? []), ...(openActivityDetail.schema ? [openActivityDetail.schema] : [])].map(formatSchemaLabel).join(' and ') || 'early learning'} patterns. Each repetition strengthens prediction, planning, and flexible problem solving.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {activeTab === 'activities' ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
             <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Activities</h1>
             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Simple ways to support {childName}&apos;s growth today</p>
           </div>
-          <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              {
-                icon: '🧱',
-                title: 'Stack & crash lab',
-                body: `Build a short tower with ${childName}, then change one block and test what happens.`,
-              },
-              {
-                icon: '🗣️',
-                title: 'Point, name, pause',
-                body: `When ${childName} points, name the object and pause 3 seconds for a response.`,
-              },
-              {
-                icon: '🎭',
-                title: 'Pretend kitchen story',
-                body: `Follow ${childName}'s pretend play script and add one simple back-and-forth turn.`,
-              },
-            ].map((activity) => (
-              <div key={activity.title} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '14px 16px' }}>
-                <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal }}>{activity.icon} {activity.title}</p>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.55, color: theme.colors.midText }}>{activity.body}</p>
+          <div style={{ padding: '20px 20px 0' }}>
+            <div
+              onClick={() => setOpenActivityDetail(activitiesContent.featured)}
+              style={{ background: `linear-gradient(135deg, #E8E0F0 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 32, padding: '24px 22px', marginBottom: 20, cursor: 'pointer', border: '1.5px solid #D8D0E8' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.7)', padding: '4px 12px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>🎯 Made for {childName}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{activitiesContent.featured.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{activitiesContent.featured.title}</h3>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 10px', lineHeight: 1.4, fontStyle: 'italic' }}>{activitiesContent.featured.subtitle}</p>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: theme.colors.midText, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>⏱ {activitiesContent.featured.duration}</span>
+                    {(activitiesContent.featured.schemas ?? []).map((schema) => (
+                      <span key={schema} style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>{formatSchemaLabel(schema)}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '14px 0 0', lineHeight: 1.5 }}>{activitiesContent.featured.why}</p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: 0, fontWeight: 600 }}>Quick wins</h2>
+                <p style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText, margin: '2px 0 0' }}>5 minutes, zero prep</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6, marginBottom: 16 }}>
+              {activitiesContent.quickActivities.map((activity) => (
+                <div key={activity.title} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 24, padding: 16, minWidth: 200, maxWidth: 220, boxShadow: '0 2px 12px rgba(0,0,0,0.04)', cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 24 }}>{activity.icon}</span>
+                    <span style={{ fontSize: 10, color: theme.colors.midText, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 600 }}>{formatSchemaLabel(activity.schema ?? '')}</span>
+                  </div>
+                  <h4 style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText, margin: '0 0 6px', lineHeight: 1.3 }}>{activity.title}</h4>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: '0 0 8px', lineHeight: 1.4 }}>{activity.desc}</p>
+                  <span style={{ fontSize: 11, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>⏱ {activity.duration}</span>
+                </div>
+              ))}
+            </div>
+
+            <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: '0 0 12px', fontWeight: 600 }}>Adventures</h2>
+            {activitiesContent.adventures.map((activity) => (
+              <div key={activity.title} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 18, padding: '16px 18px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, display: 'flex', gap: 14, alignItems: 'center' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: theme.colors.sageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{activity.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: theme.colors.darkText, margin: '0 0 3px' }}>{activity.title}</h4>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: 0, lineHeight: 1.4 }}>{activity.desc}</p>
+                </div>
+                <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText, margin: '0 0 2px' }}>{activity.duration}</p>
+                  <div style={{ width: 36, height: 4, borderRadius: 2, background: theme.colors.blushMid }}>
+                    <div style={{ width: `${activity.progress ?? 0}%`, height: '100%', borderRadius: 2, background: theme.colors.sage, transition: 'width 0.3s ease' }} />
+                  </div>
+                </div>
               </div>
             ))}
+
+            <div onClick={() => setOpenActivityDetail(activitiesContent.seasonal)} style={{ background: `linear-gradient(135deg, ${theme.colors.sageBg} 0%, #E8F0E4 100%)`, borderRadius: 24, padding: '20px 22px', marginTop: 10, marginBottom: 10, cursor: 'pointer', border: '1.5px solid #D0E0CC' }}>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <span style={{ fontSize: 32 }}>{activitiesContent.seasonal.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontFamily: theme.fonts.serif, fontSize: 17, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px' }}>{activitiesContent.seasonal.title}</h3>
+                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: 0, lineHeight: 1.4 }}>{activitiesContent.seasonal.desc}</p>
+                </div>
+                <span style={{ fontSize: 13, color: theme.colors.sage, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{activitiesContent.seasonal.count} →</span>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
