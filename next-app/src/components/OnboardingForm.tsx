@@ -16,6 +16,21 @@ type OnboardingFormProps = {
 };
 
 const parentRoles = [...PARENT_ROLES];
+const parentRoleLabels: Record<Language, Record<(typeof PARENT_ROLES)[number], string>> = {
+  es: {
+    Mom: 'Mamá',
+    Dad: 'Papá',
+    Caregiver: 'Cuidador/a',
+    Other: 'Otro',
+  },
+  en: {
+    Mom: 'Mom',
+    Dad: 'Dad',
+    Caregiver: 'Caregiver',
+    Other: 'Other',
+  },
+};
+
 const parentGoals = [
   'Understanding my child better',
   'Activity ideas',
@@ -23,7 +38,26 @@ const parentGoals = [
   'Tracking development',
   'Being more present',
   'Less screen time',
-];
+] as const;
+
+const parentGoalLabels: Record<Language, Record<(typeof parentGoals)[number], string>> = {
+  es: {
+    'Understanding my child better': 'Entender mejor a mi hijo/a',
+    'Activity ideas': 'Ideas de actividades',
+    'Confidence in parenting': 'Más confianza al criar',
+    'Tracking development': 'Seguimiento del desarrollo',
+    'Being more present': 'Estar más presente',
+    'Less screen time': 'Menos tiempo en pantalla',
+  },
+  en: {
+    'Understanding my child better': 'Understanding my child better',
+    'Activity ideas': 'Activity ideas',
+    'Confidence in parenting': 'Confidence in parenting',
+    'Tracking development': 'Tracking development',
+    'Being more present': 'Being more present',
+    'Less screen time': 'Less screen time',
+  },
+};
 
 function toggleSelection(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -189,7 +223,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
             <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 8 }}>{t.onboarding.iAmA}</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
               {parentRoles.map((role) => (
-                <SelectChip key={role} text={role} selected={parentRole === role} onClick={() => setParentRole(role)} />
+                <SelectChip key={role} text={parentRoleLabels[language][role]} selected={parentRole === role} onClick={() => setParentRole(role)} />
               ))}
             </div>
           </FadeIn>
@@ -201,7 +235,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
               {parentGoals.map((goal) => (
                 <SelectChip
                   key={goal}
-                  text={goal}
+                  text={parentGoalLabels[language][goal]}
                   selected={selectedGoals.includes(goal)}
                   onClick={() => setSelectedGoals((prev) => toggleSelection(prev, goal))}
                 />
