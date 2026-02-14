@@ -19,11 +19,11 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: 'Little Wonder — Curiosity Companion',
-  description: 'See the extraordinary things your child is already doing.',
+  description: 'Curiosity companion for your child',
   manifest: '/manifest.webmanifest',
   openGraph: {
     title: 'Little Wonder',
-    description: 'See the extraordinary things your child is already doing.',
+    description: 'Curiosity companion for your child',
     url: 'https://littlewonder.ai',
     images: ['https://littlewonder.ai/social-share.png'],
   },
