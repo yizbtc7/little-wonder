@@ -1040,7 +1040,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <div
                 style={{
                   width: 44,
-                  height: 44,
+                  height: 64,
                   borderRadius: 14,
                   background: 'rgba(255,255,255,0.6)',
                   backdropFilter: 'blur(8px)',
@@ -1457,8 +1457,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       {activeTab === 'explore' ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.learn.title}</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.subtitle(childName)}</p>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{t.learn.title}</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.lightText }}>{t.learn.subtitle(childName)}</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
             {exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip ? (
@@ -1471,19 +1471,23 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {!(exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip) ? (
             <>
             {exploreDailyTip ? (
-            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
-              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
-              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
+            <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, #F5DDD2 50%, ${theme.colors.blushLight} 100%)`, borderRadius: 20, padding: '22px 20px', marginTop: 8, marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
+              <div style={{ position: 'absolute', bottom: -30, left: -10, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
+              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 500, lineHeight: 1.65, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>{t.learn.whyThisMatters}</p>
                 {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? '', childName)}</p> : null}
               </div>
+              </div>
             </div>
             ) : null}
 
-            {exploreStats.total_available > 0 ? <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
-              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
-              <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
+            {exploreStats.total_available > 0 ? <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 16px', marginBottom: 16 }}>
+              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.midText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
+              <div style={{ width: '100%', height: 4, borderRadius: 3, background: theme.colors.divider }}>
                 <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
               </div>
             </div> : null}
@@ -1816,7 +1820,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </div>
       ) : null}
 
-      <nav style={{ background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
+      <nav style={{ background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
         {[
           { id: 'chat' as Tab, icon: '💬', label: t.tabs.chat },
           { id: 'explore' as Tab, icon: '🔭', label: t.tabs.learn },
