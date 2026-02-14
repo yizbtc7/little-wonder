@@ -523,7 +523,7 @@ function SchemaBarChart({ schemaStats, maxCount }: { schemaStats: SchemaStat[]; 
                   background: `linear-gradient(180deg, ${info.bg} 0%, ${info.color}30 100%)`,
                   border: `1px solid ${info.color}33`,
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.65)',
-                  paddingTop: 16,
+                  paddingTop: 20,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'flex-start',
