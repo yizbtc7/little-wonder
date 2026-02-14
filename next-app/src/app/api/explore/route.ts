@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
   );
 
   const usedIds = new Set<string>();
-  const brainSection = pickUnreadSection(unreadPool, usedIds, 3);
+  const brainSection = pickUnreadSection(unreadPool, usedIds, 3, (a) => a.type !== 'research');
   const brainCards = brainSection.items.map((card) => ({ ...card, title: cleanArticleTitle(card.title), is_read: false }));
 
   const dailyTip = ((tipRes.data ?? [])[0] as DailyTipRow | undefined) ?? null;

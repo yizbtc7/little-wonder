@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
   const usedIds = new Set<string>();
   const newForYouPick = pickUnreadSection(interleaveByType(unreadPool), usedIds, 3);
   const deepDivesPick = pickUnreadSection(unreadPool, usedIds, 3, (a) => a.type === 'research');
-  const moreForAgePick = pickUnreadSection(unreadPool, usedIds, 3);
+  const moreForAgePick = pickUnreadSection(unreadPool, usedIds, 3, (a) => a.type !== 'research');
 
   const newForYou = enrich(newForYouPick.items, readsMap);
   const deepDives = enrich(deepDivesPick.items, readsMap);
