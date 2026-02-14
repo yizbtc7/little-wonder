@@ -49,6 +49,7 @@ export default async function HomePage() {
       childName={child.name}
       childAgeLabel={ageLabel}
       childBirthdate={child.birthdate}
+      childId={child.id}
       initialDailyContent={(dailyContentRow?.content as Record<string, unknown> | null) ?? null}
     />
   );
