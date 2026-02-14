@@ -17,6 +17,7 @@ type ExploreArticleRow = {
   language: 'en' | 'es';
   read_time_minutes: number | null;
   created_at: string;
+  is_read?: boolean;
 };
 
 type LegacyBrainCardRow = {
@@ -67,6 +68,7 @@ export async function GET() {
   let brainCards: ExploreArticleRow[] = [];
   let dailyTip: DailyTipRow | null = null;
   let brainCardsSource: 'explore_articles' | 'legacy_brain_cards_fallback_temporary' | 'none' = 'none';
+  let hadLongArticleRows = false;
 
   for (const language of languagePriority(preferredLanguage)) {
     const [articlesRes, tipRes] = await Promise.all([
@@ -97,14 +99,39 @@ export async function GET() {
 
     if (hasLongArticles || hasDailyTip) {
       brainCards = (articlesRes.data ?? []) as ExploreArticleRow[];
+      hadLongArticleRows = hasLongArticles;
       dailyTip = ((tipRes.data ?? [])[0] as DailyTipRow | undefined) ?? null;
       brainCardsSource = hasLongArticles ? 'explore_articles' : 'none';
       break;
     }
   }
 
+  // Mark read status and hide already-read items from "Dentro del cerebro".
+  if (brainCards.length > 0) {
+    const ids = brainCards.map((card) => card.id);
+    const { data: reads, error: readsError } = await db
+      .from('article_reads')
+      .select('article_id,read_completed')
+      .eq('user_id', user.id)
+      .in('article_id', ids);
+
+    if (readsError) {
+      return NextResponse.json({ error: readsError.message }, { status: 500 });
+    }
+
+    const readSet = new Set(
+      (reads ?? [])
+        .filter((row) => row.read_completed)
+        .map((row) => row.article_id)
+    );
+
+    brainCards = brainCards
+      .map((card) => ({ ...card, is_read: readSet.has(card.id) }))
+      .filter((card) => !card.is_read);
+  }
+
   // Temporary explicit fallback only when no long-form article rows exist for this age/language set.
-  if (brainCards.length === 0) {
+  if (!hadLongArticleRows && brainCards.length === 0) {
     for (const language of languagePriority(preferredLanguage)) {
       const fallbackRes = await db
         .from('explore_brain_cards')
