@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCEEE8"/>
+      <stop offset="1" stop-color="#F8E8E0"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#bg)"/>
+  <text x="256" y="250" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-size="150" font-weight="800" fill="#D4766A">LW</text>
+  <text x="256" y="330" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-size="64" font-weight="700" fill="#E8A090">✨</text>
+</svg>
