@@ -1975,7 +1975,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </div>
                 <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openWonder.title}</h1>
               </div>
-              <div style={{ padding: '0 24px 40px' }}>
+              <div style={{ padding: '0 24px calc(124px + env(safe-area-inset-bottom))' }}>
                 <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
                 {(openWonder.article.signs ?? []).filter((sign) => String(sign ?? '').trim()).length > 0 ? (
                   <>
