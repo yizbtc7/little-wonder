@@ -32,7 +32,7 @@ export const translations = {
       optionalInterests: 'Opcional — ayuda a personalizar desde el día uno',
       howItWorks: 'Así funciona Little Wonder',
       visionTitle: 'Todo niño nace científico',
-      visionBody1: 'Tiran, mezclan, preguntan y prueban — no para molestarte, sino porque su curiosidad está trabajando al máximo.',
+      visionBody1: 'Lanzan cosas, mezclan, preguntan y prueban — no para molestarte, sino porque su curiosidad está trabajando al máximo.',
       visionBody2: 'La diferencia entre apagar o nutrir esa curiosidad suele ser una sola cosa: un adulto que logra verla a tiempo.',
       visionCloser: 'Eso es exactamente lo que haremos juntos.',
       youNotice: 'Tú observas',
