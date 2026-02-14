@@ -122,11 +122,58 @@ function parseInsightPayload(raw: string): InsightPayload {
     }
   };
 
+  const decode = (value: string): string => value.replaceAll('\\n', '\n').replaceAll('\\"', '"').trim();
+
+  const salvageFromStructuredText = (input: string): InsightPayload | null => {
+    const text = cleanJsonText(input);
+
+    const replyMatch = text.match(/"reply"\s*:\s*"([\s\S]*?)"\s*,\s*"wonder"/);
+    const titleMatch = text.match(/"title"\s*:\s*"([\s\S]*?)"/);
+    const leadMatch = text.match(/"lead"\s*:\s*"([\s\S]*?)"\s*,\s*"pull_quote"/);
+    const pullQuoteMatch = text.match(/"pull_quote"\s*:\s*"([\s\S]*?)"\s*,\s*"signs"/);
+    const howToMatch = text.match(/"how_to_be_present"\s*:\s*"([\s\S]*?)"(?:\s*,\s*"curiosity_closer"|\s*\})/);
+    const curiosityMatch = text.match(/"curiosity_closer"\s*:\s*"([\s\S]*?)"\s*(?:\}|,)/);
+
+    const signsBlockMatch = text.match(/"signs"\s*:\s*\[([\s\S]*?)\]/);
+    const signs = signsBlockMatch
+      ? Array.from(signsBlockMatch[1].matchAll(/"([^"]+)"/g)).map((m) => decode(m[1]))
+      : [];
+
+    const schemasBlockMatch = text.match(/"schemas_detected"\s*:\s*\[([\s\S]*?)\]/);
+    const schemas = schemasBlockMatch
+      ? Array.from(schemasBlockMatch[1].matchAll(/"([^"]+)"/g)).map((m) => decode(m[1]))
+      : [];
+
+    const reply = replyMatch ? decode(replyMatch[1]) : '';
+    const title = titleMatch ? decode(titleMatch[1]) : '';
+
+    if (!reply && !title) return null;
+
+    return {
+      reply: reply || fallback.reply,
+      wonder: title
+        ? {
+            title,
+            article: {
+              lead: leadMatch ? decode(leadMatch[1]) : '',
+              pull_quote: pullQuoteMatch ? decode(pullQuoteMatch[1]) : '',
+              signs,
+              how_to_be_present: howToMatch ? decode(howToMatch[1]) : '',
+              curiosity_closer: curiosityMatch ? decode(curiosityMatch[1]) : '',
+            },
+            schemas_detected: schemas,
+          }
+        : null,
+    };
+  };
+
   let parsed =
     parseCandidate(raw) ??
     parseCandidate(raw.replaceAll('\\"', '"').replaceAll('\\n', '\n').replaceAll('\\t', '\t'));
 
-  if (!parsed) return fallback;
+  if (!parsed) {
+    return salvageFromStructuredText(raw) ?? fallback;
+  }
 
   let parsedPayload: Partial<InsightPayload> = parsed;
 
@@ -135,6 +182,13 @@ function parseInsightPayload(raw: string): InsightPayload {
     const nested = parseCandidate(parsedPayload.reply) ?? parseCandidate(parsedPayload.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
     if (!nested) break;
     parsedPayload = { ...parsedPayload, ...nested };
+  }
+
+  if (!parsedPayload.wonder && typeof parsedPayload.reply === 'string') {
+    const salvaged = salvageFromStructuredText(parsedPayload.reply);
+    if (salvaged?.wonder) {
+      return salvaged;
+    }
   }
 
   const replyText = (parsedPayload.reply ?? '').toString().trim();
