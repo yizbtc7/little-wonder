@@ -1920,6 +1920,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
         article={openExploreArticle}
         childName={childName}
         childAgeLabel={childAgeLabel}
+        childPhotoUrl={profilePhotoUrl}
         locale={locale}
         isBookmarked={Boolean(openExploreArticle.is_bookmarked)}
         toastMessage={readerToast}

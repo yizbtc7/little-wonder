@@ -27,6 +27,7 @@ type Props = {
   article: ExploreArticle;
   childName: string;
   childAgeLabel: string;
+  childPhotoUrl?: string | null;
   locale: 'es' | 'en';
   isBookmarked?: boolean;
   toastMessage?: string;
@@ -255,7 +256,7 @@ function parseMarkdownToSections(body: string): ArticleSection[] {
   return sections;
 }
 
-export default function ArticleReader({ article, childName, childAgeLabel, locale, isBookmarked = false, toastMessage = '', onProgressChange, onToggleBookmark, onShare, onBack, onRegisterMoment }: Props) {
+export default function ArticleReader({ article, childName, childAgeLabel, childPhotoUrl = null, locale, isBookmarked = false, toastMessage = '', onProgressChange, onToggleBookmark, onShare, onBack, onRegisterMoment }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress(scrollRef);
   const [bookmarkPulse, setBookmarkPulse] = useState(false);
@@ -303,7 +304,7 @@ export default function ArticleReader({ article, childName, childAgeLabel, local
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}><div style={{ padding: '24px 24px 60px' }}>
         <FadeIn delay={100}><div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}><span style={{ fontSize: 28 }}>{article.emoji}</span><TypeBadge type={article.type} locale={locale} />{article.domain ? <DomainBadge domain={article.domain} /> : null}<span style={{ fontFamily: theme.fonts.body, fontSize: 11, color: theme.colors.textTer, fontWeight: 600 }}>☕ {article.read_time_minutes ?? 5} min</span></div></FadeIn>
         <FadeIn delay={200}><h1 style={{ fontFamily: theme.fonts.display, fontSize: 28, fontWeight: 700, color: theme.colors.text, lineHeight: 1.2, margin: '0 0 20px', letterSpacing: -0.5 }}>{title}</h1></FadeIn>
-        <FadeIn delay={300}><div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, #FFF2EC 100%)`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}><div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.colors.rose} 40%, ${theme.colors.lavender} 50%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{childName.charAt(0).toUpperCase()}</div><p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.textBody, margin: 0, lineHeight: 1.45 }}>Para <strong>{childName}</strong> ({childAgeLabel}), esto es especialmente relevante ahora. Úsalo como lente para observar un momento concreto hoy.</p></div></FadeIn>
+        <FadeIn delay={300}><div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, #FFF2EC 100%)`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}><div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.colors.rose} 40%, ${theme.colors.lavender} 50%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, overflow: 'hidden' }}>{childPhotoUrl ? <img src={childPhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span>🧒</span>}</div><p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.textBody, margin: 0, lineHeight: 1.45 }}>Para <strong>{childName}</strong> ({childAgeLabel}), esto es especialmente relevante ahora. Úsalo como lente para observar un momento concreto hoy.</p></div></FadeIn>
         <FadeIn delay={400}>
           {content.map((section, index) => {
             if (section.type === 'body') return <BodyText key={index} html={htmlSafe(section.text)} />;
