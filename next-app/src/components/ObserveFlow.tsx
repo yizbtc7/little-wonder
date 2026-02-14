@@ -233,10 +233,64 @@ function parseInsightPayload(raw: string): InsightPayload {
     parsedPayload = { ...parsedPayload, ...nested };
   }
 
+  const salvageLegacyNarrativeWonder = (input: string): InsightPayload | null => {
+    const text = input.trim();
+    const signsHeaderMatch = text.match(/(?:✨\s*)?(Lo reconocerás cuando|You'll recognize it when)\s*…?/i);
+    const presenceHeaderMatch = text.match(/(?:🤲\s*)?(Cómo estar presente|How to be present)/i);
+
+    if (!signsHeaderMatch && !presenceHeaderMatch) return null;
+
+    const signsIndex = signsHeaderMatch?.index ?? -1;
+    const presenceIndex = presenceHeaderMatch?.index ?? -1;
+    const firstSectionIndex = [signsIndex, presenceIndex].filter((idx) => idx >= 0).sort((a, b) => a - b)[0] ?? text.length;
+
+    const lead = text.slice(0, firstSectionIndex).trim();
+
+    const signsBlock = signsHeaderMatch
+      ? text
+          .slice(signsIndex + signsHeaderMatch[0].length, presenceIndex > signsIndex ? presenceIndex : undefined)
+          .trim()
+      : '';
+
+    const signs = Array.from(signsBlock.matchAll(/(?:^|\n)\s*\d+[\).\s-]+([\s\S]+?)(?=\n\s*\d+[\).\s-]+|$)/gm))
+      .map((m) => m[1].replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+
+    const howTo = presenceHeaderMatch
+      ? text.slice(presenceIndex + presenceHeaderMatch[0].length).trim().split(/\n{2,}/)[0]?.trim() ?? ''
+      : '';
+
+    const firstSentence = lead.replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/)[0] ?? '';
+    const titleBase = firstSentence.length >= 18 ? firstSentence : lead;
+    const title = (titleBase || 'Wonder').slice(0, 90).trim();
+
+    if (!lead && signs.length === 0 && !howTo) return null;
+
+    return {
+      reply: lead ? lead.slice(0, 220) : fallback.reply,
+      wonder: {
+        title,
+        article: {
+          lead,
+          pull_quote: '',
+          signs,
+          how_to_be_present: howTo,
+          curiosity_closer: '',
+        },
+        schemas_detected: [],
+      },
+    };
+  };
+
   if (!parsedPayload.wonder && typeof parsedPayload.reply === 'string') {
     const salvaged = salvageFromStructuredText(parsedPayload.reply);
     if (salvaged?.wonder) {
       return salvaged;
+    }
+
+    const legacyNarrative = salvageLegacyNarrativeWonder(parsedPayload.reply);
+    if (legacyNarrative?.wonder) {
+      return legacyNarrative;
     }
   }
 
