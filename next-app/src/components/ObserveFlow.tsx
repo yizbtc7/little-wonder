@@ -2204,7 +2204,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#F0EDE8' }}>
-                    <div style={{ width: `${dailyGoalTarget > 0 ? Math.round((dailyGoalProgress / dailyGoalTarget) * 100) : 0}%`, height: 8, borderRadius: 999, background: dailyGoalCompleted ? '#7FB98A' : '#E8A090' }} />
+                    <div style={{ width: `${dailyGoalTarget > 0 ? Math.round((dailyGoalProgress / dailyGoalTarget) * 100) : 0}%`, height: 8, borderRadius: 999, background: dailyGoalCompleted ? theme.colors.sageDark : theme.colors.sage }} />
                   </div>
                 </div>
               </div>
