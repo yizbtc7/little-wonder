@@ -2511,26 +2511,29 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       </p>
                     </div>
 
-                    <SchemaGardenSection
-                      locale={locale}
-                      childName={childName}
-                      schemaStats={schemaGardenSorted}
-                      maxCount={schemaGardenMax}
-                      emptyMessage={t.profile.noSchemaData}
-                    />
+                    <div style={{ marginBottom: 30 }}>
+                      <SchemaGardenSection
+                        locale={locale}
+                        childName={childName}
+                        schemaStats={schemaGardenSorted}
+                        maxCount={schemaGardenMax}
+                        emptyMessage={t.profile.noSchemaData}
+                      />
+                    </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
-                      <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                      {profileInterests.length === 0 ? (
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
-                      ) : profileInterests.map((interest) => (
-                        <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{ensureInterestEmoji(interest)}</span>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
+                    <div style={{ marginBottom: 30 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                        <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
+                        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                        {profileInterests.length === 0 ? (
+                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
+                        ) : profileInterests.map((interest) => (
+                          <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{ensureInterestEmoji(interest)}</span>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <input
                         value={newInterestInput}
                         onChange={(event) => {
@@ -2615,9 +2618,11 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         </div>
                       ) : null}
                       {interestError ? <p style={{ margin: 0, width: '100%', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{interestError}</p> : null}
+                      </div>
                     </div>
 
-                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
+                    <div style={{ marginBottom: 30 }}>
+                      <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
                     {profileRecentMoments.length === 0 ? (
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                     ) : profileRecentMoments.map((moment) => {
@@ -2633,12 +2638,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         </div>
                       );
                     })}
-
+                    </div>
 
                     {savedArticles.length > 0 ? (
-                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
+                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginBottom: 18 }}>
+                        <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'}</h3>
                         <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
+                          <span>{locale === 'es' ? 'Colección guardada' : 'Saved collection'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
                           <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
                         </button>
                         <div style={{ marginTop: 10 }}>
