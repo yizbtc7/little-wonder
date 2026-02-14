@@ -64,7 +64,7 @@ export default async function HomePage() {
           marginTop: 8,
         }}
       >
-        CURIOSITY COMPANION
+NURTURING THE SCIENTIST IN EVERY CHILD
       </p>
 
       <div className="lw-auth-enter" style={{ animationDelay: '1200ms', marginTop: 44, width: '100%', maxWidth: 280 }}>
