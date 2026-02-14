@@ -1593,7 +1593,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {(deepDiveArticles.length > 0 || keepReadingArticles.length > 0 || comingNextArticles.length > 0) ? (
               <>
                 <h3 style={{ margin: '10px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h3>
-                {[...deepDiveArticles, ...keepReadingArticles, ...comingNextArticles].slice(0, 8).map((article) => (
+                {[...deepDiveArticles, ...keepReadingArticles, ...comingNextArticles]
+                  .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
+                  .slice(0, 8)
+                  .map((article) => (
                   <button key={`more-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                     <span style={{ marginLeft: 10, fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7}m</span>
