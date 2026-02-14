@@ -128,6 +128,44 @@ export async function GET() {
     brainCards = brainCards
       .map((card) => ({ ...card, is_read: readSet.has(card.id) }))
       .filter((card) => !card.is_read);
+
+    // Top up with nearby-age unread long-form articles so this section stays populated.
+    if (brainCards.length < 3) {
+      const { data: nearbyRows, error: nearbyError } = await db
+        .from('explore_articles')
+        .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
+        .eq('language', preferredLanguage)
+        .lte('age_min_months', ageMonths + 24)
+        .gte('age_max_months', Math.max(0, ageMonths - 24))
+        .order('created_at', { ascending: false })
+        .limit(60);
+
+      if (nearbyError) {
+        return NextResponse.json({ error: nearbyError.message }, { status: 500 });
+      }
+
+      if ((nearbyRows?.length ?? 0) > 0) {
+        const candidateIds = (nearbyRows ?? []).map((row) => row.id);
+        const { data: nearbyReads, error: nearbyReadsError } = await db
+          .from('article_reads')
+          .select('article_id,read_completed')
+          .eq('user_id', user.id)
+          .in('article_id', candidateIds);
+
+        if (nearbyReadsError) {
+          return NextResponse.json({ error: nearbyReadsError.message }, { status: 500 });
+        }
+
+        const nearbyReadSet = new Set((nearbyReads ?? []).filter((row) => row.read_completed).map((row) => row.article_id));
+        const existingIds = new Set(brainCards.map((card) => card.id));
+        const topUp = ((nearbyRows ?? []) as ExploreArticleRow[])
+          .filter((row) => !existingIds.has(row.id) && !nearbyReadSet.has(row.id))
+          .slice(0, 3 - brainCards.length)
+          .map((row) => ({ ...row, is_read: false }));
+
+        brainCards = [...brainCards, ...topUp];
+      }
+    }
   }
 
   // Temporary explicit fallback only when no long-form article rows exist for this age/language set.

@@ -122,8 +122,8 @@ export async function GET() {
     readsMap.set(r.article_id, r);
   }
 
-  const unreadNeverOpened = allArticles.filter((a) => !readsMap.has(a.id));
-  const newForYou = enrich(interleaveByType(unreadNeverOpened).slice(0, 3), readsMap);
+  const unreadPool = allArticles.filter((a) => !readsMap.get(a.id)?.read_completed);
+  const newForYou = enrich(interleaveByType(unreadPool).slice(0, 3), readsMap);
 
   const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
   const keepReadingBase = allArticles
