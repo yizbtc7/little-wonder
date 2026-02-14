@@ -108,6 +108,7 @@ export const translations = {
       readMoreSigns: '✨ Lo reconocerás cuando…',
       howToBePresent: '🤲 Cómo estar presente',
       researchCredit: 'Basado en investigación del desarrollo de Gopnik, Athey y Harvard CCHD',
+      quoteLine: 'Detrás de cada comportamiento "molesto" hay un experimento brillante.',
     },
   },
   en: {
@@ -215,6 +216,7 @@ export const translations = {
       readMoreSigns: "✨ You'll recognize it when…",
       howToBePresent: '🤲 How to be present',
       researchCredit: 'Based on developmental research from Gopnik, Athey & Harvard CCHD',
+      quoteLine: 'Behind every "annoying" behavior is a brilliant experiment.',
     },
   },
 } as const;

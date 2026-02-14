@@ -538,15 +538,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     'Preparing your insight...',
   ];
 
-  const dailyQuotes = [
-    'What you notice today becomes who they are tomorrow.',
-    "You don't need to teach them to be curious. You just need to not accidentally stop it.",
-    'The moments that drive you crazy are often the ones that matter most.',
-    'Behind every \"annoying\" behavior is a brilliant experiment.',
-    'Your attention is the most powerful developmental tool ever invented.',
-  ];
-
-  const quoteOfTheDay = dailyQuotes[Math.floor(Date.now() / 86400000) % 5];
+  const quoteOfTheDay = t.chat.quoteLine;
 
 
   const DAILY_INSIGHT_ES = {
