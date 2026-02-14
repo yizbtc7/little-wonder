@@ -2058,25 +2058,33 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
-            {brainSectionCards.slice(0, 3).map((card) => {
-              const d = card.domain?.toLowerCase() ?? '';
-              const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
-              const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
-              return (
-                <button key={card.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(card); }} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
-                      <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
+            {brainSectionCards.length === 0 ? (
+              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>
+                  {locale === 'es' ? `✨ ¡Estás al día! Aparecerán nuevos artículos mientras ${childName} crece.` : `✨ You're all caught up! New articles will appear as ${childName} grows.`}
+                </p>
+              </div>
+            ) : (
+              brainSectionCards.slice(0, 3).map((card) => {
+                const d = card.domain?.toLowerCase() ?? '';
+                const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
+                const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
+                return (
+                  <button key={card.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(card); }} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
+                        <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
+                      </div>
+                      <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
+                      <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
+                      {card.is_read ? <span style={{ display: 'inline-flex', marginTop: 8, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                     </div>
-                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
-                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
-                    {card.is_read ? <span style={{ display: 'inline-flex', marginTop: 8, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })
+            )}
 
             <h2 style={{ margin: '28px 4px 14px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🆕 {t.learn.newForYou}</h2>
             {newForYouSection.length === 0 ? (
