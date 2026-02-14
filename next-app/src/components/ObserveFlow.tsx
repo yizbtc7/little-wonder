@@ -823,6 +823,26 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openWonder.title}</h1>
               </div>
               <div style={{ padding: '0 24px 40px' }}>
+                {(openWonder.schemas_detected ?? []).length > 0 ? (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '0 0 16px' }}>
+                    {(openWonder.schemas_detected ?? []).map((schema) => (
+                      <span
+                        key={schema}
+                        style={{
+                          background: theme.colors.blush,
+                          color: theme.colors.roseDark,
+                          fontFamily: theme.fonts.sans,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: '4px 12px',
+                          borderRadius: 20,
+                        }}
+                      >
+                        {formatSchemaLabel(schema)}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
                 <div style={{ margin: '0 0 24px', padding: '22px 0', borderTop: `2px solid ${theme.colors.rose}55`, borderBottom: `2px solid ${theme.colors.rose}55` }}>
                   <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontStyle: 'italic', textAlign: 'center', fontSize: 19, color: theme.colors.charcoal }}>{openWonder.article.pull_quote}</p>
