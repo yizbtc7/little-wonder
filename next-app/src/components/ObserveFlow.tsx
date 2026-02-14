@@ -1592,7 +1592,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             {deepDiveArticles.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🔬 {t.learn.deepDives}</h2>
+                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
                 {deepDiveArticles
                   .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
