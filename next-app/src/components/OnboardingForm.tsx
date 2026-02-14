@@ -70,7 +70,7 @@ function SelectChip({
 }
 
 export default function OnboardingForm({ userId }: OnboardingFormProps) {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [parentName, setParentName] = useState('');
   const [parentRole, setParentRole] = useState('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
