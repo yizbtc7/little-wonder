@@ -11,7 +11,8 @@
     "articles:generate": "node scripts/generate-articles.js",
     "articles:refill": "node scripts/refill-explore-shortages.js",
     "articles:prune-similar": "node scripts/prune-similar-articles.js",
-    "activities:generate": "node scripts/generate-activities.js"
+    "activities:generate": "node scripts/generate-activities.js",
+    "activities:refill": "node scripts/refill-activities-shortages.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

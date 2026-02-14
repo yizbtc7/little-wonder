@@ -23,6 +23,8 @@ type ActivityRow = {
   created_at: string;
 };
 
+const MIN_AVAILABLE_TO_DO = 6;
+
 function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
@@ -33,6 +35,19 @@ function toCountMap(schemas: string[]): Map<string, number> {
     map.set(schema, (map.get(schema) ?? 0) + 1);
   }
   return map;
+}
+
+function canonicalTitleKey(title: string): string {
+  return title
+    .replace(/\s*[·•]\s*refill-[^\n]+$/i, '')
+    .replace(/\s*[·•]\s*v\d+$/i, '')
+    .replace(/\s*[·•]\s*b\d+(?:-[\w-]+)?$/i, '')
+    .replace(/\s+\d{10,}$/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function rankActivities(rows: ActivityRow[], schemaCounts: Map<string, number>): ActivityRow[] {
@@ -72,7 +87,23 @@ export async function GET(request: Request) {
   const { data: child } = await childQuery.maybeSingle();
 
   if (!child?.id || !child.birthdate) {
-    return NextResponse.json({ featured: null, activities: [], saved: [], completed: [], stats: { total: 0, completed: 0 }, child_schemas: [] });
+    return NextResponse.json({
+      featured: null,
+      activities: [],
+      saved: [],
+      completed: [],
+      stats: { total: 0, completed: 0 },
+      child_schemas: [],
+      shortages: {
+        available_to_do: {
+          required: MIN_AVAILABLE_TO_DO,
+          available_uncompleted: 0,
+          returned: 0,
+          shortage: MIN_AVAILABLE_TO_DO,
+        },
+      },
+      inventory: { languages_checked: languagePriority(preferredLanguage), sources_used: [] },
+    });
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
@@ -85,8 +116,7 @@ export async function GET(request: Request) {
     .limit(50);
 
   const schemaList = normalizeSchemaList(
-    (wonderRows ?? [])
-      .flatMap((row) => ((row as { schemas_detected?: string[] | null }).schemas_detected ?? []))
+    (wonderRows ?? []).flatMap((row) => ((row as { schemas_detected?: string[] | null }).schemas_detected ?? []))
   );
 
   const schemaCounts = toCountMap(schemaList);
@@ -95,10 +125,12 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map(([schema]) => schema);
 
-  let rows: ActivityRow[] = [];
-  let selectedLanguage = preferredLanguage;
+  const prioritizedLanguages = languagePriority(preferredLanguage);
+  const rowsByLanguage = new Map<string, ActivityRow[]>();
+  const mergedRows: ActivityRow[] = [];
+  const seenTitles = new Set<string>();
 
-  for (const language of languagePriority(preferredLanguage)) {
+  for (const language of prioritizedLanguages) {
     const { data: languageRows, error: languageError } = await db
       .from('activities')
       .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,is_featured,created_at')
@@ -111,18 +143,39 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: languageError.message }, { status: 500 });
     }
 
-    if ((languageRows?.length ?? 0) > 0) {
-      rows = (languageRows ?? []) as ActivityRow[];
-      selectedLanguage = language;
-      break;
+    const typedRows = (languageRows ?? []) as ActivityRow[];
+    rowsByLanguage.set(language, typedRows);
+
+    for (const row of typedRows) {
+      const key = canonicalTitleKey(row.title);
+      if (seenTitles.has(key)) continue;
+      seenTitles.add(key);
+      mergedRows.push(row);
     }
   }
 
-  if (rows.length === 0) {
-    return NextResponse.json({ featured: null, activities: [], saved: [], completed: [], stats: { total: 0, completed: 0 }, child_schemas: topSchemas });
+  if (mergedRows.length === 0) {
+    return NextResponse.json({
+      featured: null,
+      activities: [],
+      saved: [],
+      completed: [],
+      stats: { total: 0, completed: 0 },
+      child_schemas: topSchemas,
+      language: preferredLanguage,
+      shortages: {
+        available_to_do: {
+          required: MIN_AVAILABLE_TO_DO,
+          available_uncompleted: 0,
+          returned: 0,
+          shortage: MIN_AVAILABLE_TO_DO,
+        },
+      },
+      inventory: { languages_checked: prioritizedLanguages, sources_used: [] },
+    });
   }
 
-  const activityIds = rows.map((r) => r.id);
+  const activityIds = mergedRows.map((r) => r.id);
 
   const [{ data: savesRows }, { data: completionRows }] = await Promise.all([
     db.from('activity_saves').select('activity_id,saved_at').eq('user_id', user.id).in('activity_id', activityIds),
@@ -132,7 +185,7 @@ export async function GET(request: Request) {
   const saveMap = new Map((savesRows ?? []).map((r) => [r.activity_id as string, r]));
   const completionMap = new Map((completionRows ?? []).map((r) => [r.activity_id as string, r]));
 
-  const decorated = rankActivities(rows, schemaCounts).map((row) => ({
+  const decorated = rankActivities(mergedRows, schemaCounts).map((row) => ({
     ...row,
     is_saved: saveMap.has(row.id),
     saved_at: (saveMap.get(row.id) as { saved_at?: string } | undefined)?.saved_at ?? null,
@@ -142,11 +195,15 @@ export async function GET(request: Request) {
     note: (completionMap.get(row.id) as { note?: string | null } | undefined)?.note ?? null,
   }));
 
-  const featured = decorated.find((a) => a.is_featured) ?? decorated[0] ?? null;
+  const nonCompleted = decorated.filter((a) => !a.is_completed);
+  const featured = nonCompleted.find((a) => a.is_featured) ?? nonCompleted[0] ?? decorated.find((a) => a.is_featured) ?? decorated[0] ?? null;
   const nonFeatured = decorated.filter((a) => !featured || a.id !== featured.id);
   const moreToTry = nonFeatured.filter((a) => !a.is_completed);
   const saved = decorated.filter((a) => a.is_saved && !a.is_completed);
   const completed = decorated.filter((a) => a.is_completed);
+
+  const returnedAvailable = (featured && !featured.is_completed ? 1 : 0) + moreToTry.length;
+  const availableUncompleted = nonCompleted.length;
 
   return NextResponse.json({
     featured,
@@ -158,6 +215,23 @@ export async function GET(request: Request) {
       completed: completed.length,
     },
     child_schemas: topSchemas,
-    language: selectedLanguage,
+    language: preferredLanguage,
+    inventory: {
+      min_available_to_do: MIN_AVAILABLE_TO_DO,
+      languages_checked: prioritizedLanguages,
+      sources_used: prioritizedLanguages.filter((lang) => (rowsByLanguage.get(lang)?.length ?? 0) > 0),
+      by_language: prioritizedLanguages.map((lang) => ({
+        language: lang,
+        total: rowsByLanguage.get(lang)?.length ?? 0,
+      })),
+    },
+    shortages: {
+      available_to_do: {
+        required: MIN_AVAILABLE_TO_DO,
+        available_uncompleted: availableUncompleted,
+        returned: returnedAvailable,
+        shortage: Math.max(0, MIN_AVAILABLE_TO_DO - availableUncompleted),
+      },
+    },
   });
 }
