@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
+import { getUserLanguage, languagePriority } from '@/lib/language';
 
 type Article = {
   id: string;
@@ -106,18 +107,28 @@ export async function GET() {
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
+  const preferredLanguage = await getUserLanguage(user.id, 'es');
 
-  const { data: allRows, error } = await db
-    .from('explore_articles')
-    .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
-    .eq('language', 'en')
-    .lte('age_min_months', ageMonths)
-    .gte('age_max_months', ageMonths)
-    .order('created_at', { ascending: false });
+  let allArticles: Article[] = [];
+  let chosenLanguage: 'en' | 'es' = preferredLanguage;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  for (const language of languagePriority(preferredLanguage)) {
+    const { data: allRows, error } = await db
+      .from('explore_articles')
+      .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
+      .eq('language', language)
+      .lte('age_min_months', ageMonths)
+      .gte('age_max_months', ageMonths)
+      .order('created_at', { ascending: false });
 
-  const allArticles = (allRows ?? []) as Article[];
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    if ((allRows?.length ?? 0) > 0) {
+      allArticles = (allRows ?? []) as Article[];
+      chosenLanguage = language;
+      break;
+    }
+  }
 
   const { data: reads } = await db
     .from('article_reads')
@@ -165,7 +176,7 @@ export async function GET() {
   const { data: upcomingRows } = await db
     .from('explore_articles')
     .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
-    .eq('language', 'en')
+    .eq('language', chosenLanguage)
     .gte('age_min_months', ageMonths + 1)
     .lte('age_min_months', ageMonths + 3)
     .order('age_min_months', { ascending: true })

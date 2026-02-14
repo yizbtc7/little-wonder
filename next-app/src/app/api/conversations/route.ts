@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { getUserLanguage } from '@/lib/language';
 
 type CreateConversationBody = {
   child_id?: string;
@@ -131,13 +132,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No child found for this user' }, { status: 400 });
   }
 
+  const preferredLanguage = await getUserLanguage(user.id, 'es');
+
   const { data, error } = await db
     .from('conversations')
     .insert({
       child_id: childId,
       user_id: user.id,
       preview: body.preview?.slice(0, 100) ?? null,
-      language: body.language ?? 'en',
+      language: body.language ?? preferredLanguage,
       started_at: new Date().toISOString(),
       last_message_at: new Date().toISOString(),
     })

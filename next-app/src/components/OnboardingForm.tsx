@@ -7,6 +7,7 @@ import { theme } from '@/styles/theme';
 import Button from '@/components/ui/Button';
 import FadeIn from '@/components/ui/FadeIn';
 import ProgressDots from '@/components/ui/ProgressDots';
+import { translations, type Language } from '@/lib/translations';
 
 type OnboardingFormProps = {
   userId: string;
@@ -78,13 +79,21 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [language] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'es';
+    const saved = (localStorage.getItem('language') || '').toLowerCase();
+    return saved === 'en' ? 'en' : 'es';
+  });
+  const t = translations[language];
 
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
   const submit = async () => {
     setIsSaving(true);
-    setStatus('Setting things up...');
+    setStatus(t.onboarding.settingThingsUp);
+
+    await supabase.from('users').upsert({ id: userId, language: 'es' });
 
     const profileResult = await supabase.from('profiles').upsert({
       user_id: userId,
@@ -139,16 +148,16 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           </FadeIn>
           <FadeIn delay={400}>
             <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.midText, lineHeight: 1.6, marginBottom: 48, maxWidth: 280 }}>
-              See the extraordinary science inside your child's everyday moments.
+              {t.onboarding.heroSubtitle}
             </p>
           </FadeIn>
           <FadeIn delay={550}>
             <Button onClick={() => setStep(1)} size="lg" style={{ width: 280 }}>
-              Get Started →
+              {t.onboarding.getStarted}
             </Button>
           </FadeIn>
           <FadeIn delay={700}>
-            <p style={{ marginTop: 20, fontSize: 12, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>Less than 2 minutes</p>
+            <p style={{ marginTop: 20, fontSize: 12, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>{t.onboarding.lessThanTwoMinutes}</p>
           </FadeIn>
         </section>
       ) : null}
@@ -157,20 +166,20 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
         <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 24px', background: theme.colors.cream }}>
           <ProgressDots total={3} current={0} />
           <FadeIn delay={100}>
-            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>About you</h2>
+            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>{t.onboarding.aboutYou}</h2>
             <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText, marginBottom: 32 }}>
-              Just the basics to personalize.
+              {t.onboarding.basics}
             </p>
           </FadeIn>
 
           <FadeIn delay={200}>
             <label style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, display: 'block', marginBottom: 8 }}>
-              Your name
+              {t.onboarding.yourName}
             </label>
             <input
               value={parentName}
               onChange={(event) => setParentName(event.target.value)}
-              placeholder="First name"
+              placeholder={t.onboarding.firstName}
               style={{
                 width: '100%',
                 borderRadius: theme.radius.md,
@@ -185,7 +194,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           </FadeIn>
 
           <FadeIn delay={300}>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 8 }}>I am a...</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, marginBottom: 8 }}>{t.onboarding.iAmA}</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
               {parentRoles.map((role) => (
                 <SelectChip key={role} text={role} selected={parentRole === role} onClick={() => setParentRole(role)} />
@@ -194,8 +203,8 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           </FadeIn>
 
           <FadeIn delay={400}>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark }}>What matters most to you?</p>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 4, marginBottom: 8 }}>Pick as many as you like</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark }}>{t.onboarding.whatMatters}</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 4, marginBottom: 8 }}>{t.onboarding.pickMany}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {parentGoals.map((goal) => (
                 <SelectChip
@@ -210,7 +219,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
 
           <div style={{ marginTop: 'auto', paddingTop: 24 }}>
             <Button onClick={() => setStep(2)} size="lg" style={{ width: '100%' }} disabled={!parentName.trim() || !parentRole}>
-              Continue
+              {t.onboarding.continue}
             </Button>
           </div>
         </section>
@@ -220,25 +229,25 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
         <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 24px', background: theme.colors.cream }}>
           <ProgressDots total={3} current={1} />
           <FadeIn delay={100}>
-            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>Your little one</h2>
+            <h2 style={{ fontSize: 28, color: theme.colors.charcoal, margin: '0 0 6px', fontFamily: theme.fonts.serif, fontWeight: 600 }}>{t.onboarding.yourLittleOne}</h2>
             <p style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText, marginBottom: 32, lineHeight: 1.5 }}>
-              This helps us show you what&apos;s amazing about what they&apos;re doing.
+              {t.onboarding.littleOneSubtitle}
             </p>
           </FadeIn>
 
           <FadeIn delay={200}>
             <label style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, display: 'block', marginBottom: 8 }}>
-              Child&apos;s name
+              {t.onboarding.childName}
             </label>
             <input
               value={childName}
               onChange={(event) => setChildName(event.target.value)}
-              placeholder="First name or nickname"
+              placeholder={t.onboarding.childNamePlaceholder}
               style={{ width: '100%', borderRadius: theme.radius.md, border: `1.5px solid ${theme.colors.blushMid}`, padding: '14px 16px', background: theme.colors.white, marginBottom: 20, fontFamily: theme.fonts.sans, fontSize: 16 }}
             />
 
             <label style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark, display: 'block', marginBottom: 8 }}>
-              Date of birth
+              {t.onboarding.birthdate}
             </label>
             <input
               type="date"
@@ -249,9 +258,9 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           </FadeIn>
 
           <FadeIn delay={300}>
-            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark }}>What are they into right now?</p>
+            <p style={{ fontFamily: theme.fonts.body, fontSize: 14, fontWeight: 700, color: theme.colors.dark }}>{t.onboarding.interestsNow}</p>
             <p style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.grayLight, marginTop: 4, marginBottom: 8 }}>
-              Optional — helps us personalize from day one
+              {t.onboarding.optionalInterests}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {childInterests.map((interest) => (
@@ -267,7 +276,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
 
           <div style={{ marginTop: 'auto', paddingTop: 24 }}>
             <Button onClick={() => setStep(3)} size="lg" style={{ width: '100%' }} disabled={!childName.trim() || !birthdate}>
-              Continue
+              {t.onboarding.continue}
             </Button>
           </div>
         </section>
@@ -279,16 +288,16 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           <FadeIn delay={100}>
             <div style={{ textAlign: 'center', margin: '40px 0 28px' }}>
               <span style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>🔭</span>
-              <h2 style={{ fontSize: 38, color: theme.colors.dark, lineHeight: 1.25 }}>Here&apos;s how Little Wonder works</h2>
+              <h2 style={{ fontSize: 38, color: theme.colors.dark, lineHeight: 1.25 }}>{t.onboarding.howItWorks}</h2>
             </div>
           </FadeIn>
 
           <FadeIn delay={250}>
             <div style={{ display: 'grid', gap: 18, marginBottom: 22 }}>
               {[
-                { icon: '👁️', title: 'You notice', desc: `Tell us what ${childName || 'your child'} is doing — even small, everyday moments. A quick sentence is all it takes.` },
-                { icon: '💡', title: 'We illuminate', desc: 'We’ll show you the science and wonder behind what you observed. What looks like “just playing” is often extraordinary learning.' },
-                { icon: '🌱', title: 'Together, you grow', desc: 'Get personalized ideas to nurture exactly what your child is naturally curious about right now.' },
+                { icon: '👁️', title: t.onboarding.youNotice, desc: `Tell us what ${childName || 'your child'} is doing — even small, everyday moments. A quick sentence is all it takes.` },
+                { icon: '💡', title: t.onboarding.weIlluminate, desc: 'We’ll show you the science and wonder behind what you observed. What looks like “just playing” is often extraordinary learning.' },
+                { icon: '🌱', title: t.onboarding.growTogether, desc: 'Get personalized ideas to nurture exactly what your child is naturally curious about right now.' },
               ].map((item) => (
                 <div key={item.title} style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: theme.radius.md, background: theme.colors.brandLight, display: 'grid', placeItems: 'center', fontSize: 22 }}>{item.icon}</div>
@@ -311,7 +320,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
 
           <div style={{ marginTop: 'auto' }}>
             <Button onClick={submit} size="lg" style={{ width: '100%' }} disabled={isSaving}>
-              {isSaving ? 'Preparing...' : 'Show me ✨'}
+              {isSaving ? t.onboarding.preparing : t.onboarding.showMe}
             </Button>
             {status ? <p style={{ marginTop: 12, fontSize: 14, color: theme.colors.gray }}>{status}</p> : null}
           </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
+import { getUserLanguage, languagePriority } from '@/lib/language';
 
 type ActivityRow = {
   id: string;
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
   const db = dbClient();
   const search = new URL(request.url).searchParams;
   const requestedChildId = search.get('child_id');
-  const language = 'en';
+  const preferredLanguage = await getUserLanguage(user.id, 'es');
 
   let childQuery = db.from('children').select('id,birthdate').eq('user_id', user.id).order('created_at', { ascending: true }).limit(1);
   if (requestedChildId) {
@@ -86,19 +87,26 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map(([schema]) => schema);
 
-  const activitiesQuery = db
-    .from('activities')
-    .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,created_at')
-    .eq('language', language)
-    .lte('age_min_months', ageMonths)
-    .gte('age_max_months', ageMonths);
+  let rows: ActivityRow[] = [];
 
-  const { data: languageRows, error: languageError } = await activitiesQuery.order('created_at', { ascending: false });
-  if (languageError) {
-    return NextResponse.json({ error: languageError.message }, { status: 500 });
+  for (const language of languagePriority(preferredLanguage)) {
+    const { data: languageRows, error: languageError } = await db
+      .from('activities')
+      .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,created_at')
+      .eq('language', language)
+      .lte('age_min_months', ageMonths)
+      .gte('age_max_months', ageMonths)
+      .order('created_at', { ascending: false });
+
+    if (languageError) {
+      return NextResponse.json({ error: languageError.message }, { status: 500 });
+    }
+
+    if ((languageRows?.length ?? 0) > 0) {
+      rows = (languageRows ?? []) as ActivityRow[];
+      break;
+    }
   }
-
-  let rows = (languageRows ?? []) as ActivityRow[];
 
   if (rows.length === 0) {
     return NextResponse.json({ featured: null, activities: [], child_schemas: topSchemas });

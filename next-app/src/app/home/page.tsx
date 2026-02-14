@@ -23,9 +23,10 @@ export default async function HomePage() {
     redirect('/');
   }
 
-  const [profile, child] = await Promise.all([
+  const [profile, child, userRow] = await Promise.all([
     getParentProfile(supabase, user.id),
     getFirstChildProfile(supabase, user.id),
+    supabase.from('users').select('language').eq('id', user.id).maybeSingle<{ language?: 'en' | 'es' | null }>(),
   ]);
 
   if (!profile || !child || !child.birthdate) {
@@ -43,6 +44,8 @@ export default async function HomePage() {
   const ageInMonths = getAgeInMonths(child.birthdate);
   const ageLabel = formatAgeLabel(ageInMonths);
 
+  const initialLanguage = userRow.data?.language === 'en' ? 'en' : 'es';
+
   return (
     <ObserveFlow
       parentName={profile.parent_name}
@@ -50,6 +53,7 @@ export default async function HomePage() {
       childAgeLabel={ageLabel}
       childBirthdate={child.birthdate}
       childId={child.id}
+      initialLanguage={initialLanguage}
       initialDailyContent={(dailyContentRow?.content as Record<string, unknown> | null) ?? null}
     />
   );

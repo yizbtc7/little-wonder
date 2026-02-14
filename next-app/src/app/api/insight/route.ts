@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { formatAgeLabel, getAgeInMonths } from '@/lib/childAge';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { getUserLanguage } from '@/lib/language';
 
 type InsightRequestBody = {
   observation?: string;
@@ -73,6 +74,7 @@ function buildPromptContext(params: {
   recentObservations: string[];
   detectedSchemas: string[];
   sessionCount: number;
+  responseLanguage: 'en' | 'es';
 }): string {
   const {
     promptTemplate,
@@ -85,6 +87,7 @@ function buildPromptContext(params: {
     recentObservations,
     detectedSchemas,
     sessionCount,
+    responseLanguage,
   } = params;
 
   return promptTemplate
@@ -97,7 +100,8 @@ function buildPromptContext(params: {
     .replaceAll('{{recent_observations}}', recentObservations.join('\n- '))
     .replaceAll('{{detected_schemas}}', detectedSchemas.join(', '))
     .replaceAll('{{session_count}}', `${sessionCount}`)
-    .replaceAll('{{output_format}}', 'json');
+    .replaceAll('{{output_format}}', 'json')
+    .concat(`\n\nRespond in ${responseLanguage === 'es' ? 'Spanish' : 'English'} only.`);
 }
 
 function parseInsightPayload(raw: string): InsightPayload {
@@ -252,6 +256,7 @@ export async function POST(request: Request) {
 
     const childAgeMonths = getAgeInMonths(child.birthdate);
     const childAgeLabel = formatAgeLabel(childAgeMonths);
+    const preferredLanguage = await getUserLanguage(user.id, 'es');
 
     const promptTemplate = await getSystemPrompt();
     const systemPrompt = buildPromptContext({
@@ -265,6 +270,7 @@ export async function POST(request: Request) {
       recentObservations,
       detectedSchemas,
       sessionCount: recentObservations.length + 1,
+      responseLanguage: preferredLanguage,
     });
 
     const userPrompt = [
@@ -290,6 +296,7 @@ export async function POST(request: Request) {
       'Do NOT return top-level keys like title, revelation, brain_science_gem, activity, observe_next, or schemas_detected.',
       'Always include both reply and wonder.',
       'Use the child\'s name naturally and keep the tone warm and specific.',
+      preferredLanguage === 'es' ? 'Write every value in Spanish.' : 'Write every value in English.',
     ].join('\n');
 
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
@@ -345,7 +352,7 @@ export async function POST(request: Request) {
               title: parsedPayload.wonder.title,
               article: parsedPayload.wonder.article,
               schemas_detected: parsedPayload.wonder.schemas_detected ?? [],
-              language: 'en',
+              language: preferredLanguage,
             });
 
             if (wonderError) {

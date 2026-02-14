@@ -6,14 +6,16 @@ vi.mock('@/lib/supabaseClient', () => ({
   createSupabaseBrowserClient: () => ({
     auth: {
       signOut: vi.fn().mockResolvedValue({ error: null }),
+      getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
     },
+    from: vi.fn().mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: null }) }),
   }),
 }));
 
 describe('ObserveFlow v3 learn behavior', () => {
   it('shows Today\'s tip before Inside child brain in Learn tab', () => {
     render(
-      <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' />
+      <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' childId='child-1' initialLanguage='en' />
     );
 
     fireEvent.click(screen.getByText('Learn'));
@@ -26,7 +28,7 @@ describe('ObserveFlow v3 learn behavior', () => {
 
   it('renders full editorial wonder detail content', () => {
     render(
-      <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' />
+      <ObserveFlow parentName='Sarah' childName='Leo' childAgeLabel='2 years old' childBirthdate='2024-01-01' childId='child-1' initialLanguage='en' />
     );
 
     fireEvent.click(screen.getByText('Learn'));

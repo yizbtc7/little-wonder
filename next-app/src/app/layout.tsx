@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nunito, Playfair_Display } from 'next/font/google';
 import './globals.css';
+import AppProviders from '@/components/AppProviders';
 
 const nunito = Nunito({
   variable: '--font-body',
@@ -44,8 +45,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${nunito.variable} ${playfairDisplay.variable}`}>{children}</body>
+    <html lang="es">
+      <body className={`${nunito.variable} ${playfairDisplay.variable}`}>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

@@ -9,6 +9,7 @@ import { STAGE_CONTENT } from '@/data/stage-content';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
+import { translations, type Language } from '@/lib/translations';
 
 type WonderPayload = {
   title: string;
@@ -128,6 +129,7 @@ type Props = {
   childAgeLabel: string;
   childBirthdate: string;
   childId: string;
+  initialLanguage?: Language;
   initialDailyContent?: unknown;
 };
 
@@ -252,7 +254,7 @@ function apiUrl(path: string): string {
   return path;
 }
 
-function formatConversationDate(dateInput: string, locale: 'en' | 'es'): string {
+function formatConversationDate(dateInput: string, locale: Language): string {
   const date = new Date(dateInput);
   const now = new Date();
 
@@ -476,7 +478,7 @@ function getQuickPrompts(ageMonths: number, childName: string): string[] {
   ];
 }
 
-export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, childId }: Props) {
+export default function ObserveFlow({ parentName, childName, childAgeLabel, childBirthdate, childId, initialLanguage = 'es' }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [profileTab, setProfileTab] = useState<ProfileTab>('overview');
 
@@ -488,6 +490,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
+  const [settingsStatus, setSettingsStatus] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -510,7 +513,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [activitiesLoaded, setActivitiesLoaded] = useState(false);
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
-  const [locale, setLocale] = useState<'en' | 'es'>('en');
+  const [locale, setLocale] = useState<Language>(initialLanguage);
+  const t = translations[locale];
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -537,12 +541,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = (localStorage.getItem('locale') || localStorage.getItem('language') || '').toLowerCase();
-    if (saved.startsWith('es')) {
-      setLocale('es');
-      return;
+    if (saved === 'en' || saved === 'es') {
+      setLocale(saved);
     }
-    const navLang = window.navigator.language?.toLowerCase() ?? 'en';
-    setLocale(navLang.startsWith('es') ? 'es' : 'en');
   }, []);
 
   useEffect(() => {
@@ -872,6 +873,23 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       return;
     }
     window.location.href = '/';
+  };
+
+  const saveLanguage = async (nextLanguage: Language) => {
+    setLocale(nextLanguage);
+    localStorage.setItem('language', nextLanguage);
+    localStorage.setItem('locale', nextLanguage);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from('users').upsert({ id: user.id, language: nextLanguage });
+    if (error) {
+      setSettingsStatus(error.message);
+      return;
+    }
+    setSettingsStatus(t.settings.saved);
+    setTimeout(() => setSettingsStatus(''), 2000);
   };
 
   if (activeTab === 'explore' && openExploreArticle) {
@@ -1238,7 +1256,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                           <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: theme.colors.roseDark }}>✨ {conversation.wonder_count}</span>
                         ) : null}
                       </div>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText, lineHeight: 1.4 }}>{conversation.preview || 'New conversation'}</p>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText, lineHeight: 1.4 }}>{conversation.preview || t.chat.newConversation}</p>
                     </button>
                   ))}
                 </div>
@@ -1271,9 +1289,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {messages.length === 0 ? (
               <div style={{ textAlign: 'center', paddingTop: 48 }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>✨</div>
-                <h2 style={{ margin: '0 0 8px', fontFamily: theme.fonts.serif, fontSize: 24, fontWeight: 600, color: theme.colors.charcoal }}>Hi {parentName} 👋</h2>
-                <p style={{ margin: '0 0 36px', fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.midText, lineHeight: 1.5 }}>Tell me what {childName} is up to. I&apos;ll show you the science behind it.</p>
-                <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>Try one of these</p>
+                <h2 style={{ margin: '0 0 8px', fontFamily: theme.fonts.serif, fontSize: 24, fontWeight: 600, color: theme.colors.charcoal }}>{t.chat.hi(parentName)}</h2>
+                <p style={{ margin: '0 0 36px', fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.midText, lineHeight: 1.5 }}>{t.chat.intro(childName)}</p>
+                <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.lightText, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t.chat.tryOne}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {prompts.map((prompt) => (
                     <button key={prompt} onClick={() => sendMessage(prompt.replace(/^\S+\s+/, ''))} style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 18, padding: '12px 16px', textAlign: 'left', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.darkText, cursor: 'pointer' }}>
@@ -1366,7 +1384,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     void sendMessage();
                   }
                 }}
-                placeholder={`What is ${childName} doing?`}
+                placeholder={t.chat.inputPlaceholder(childName)}
                 rows={1}
                 style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.45, maxHeight: 140, minHeight: 24, padding: '4px 0', background: 'transparent', overflowY: 'hidden' }}
               />
@@ -1379,21 +1397,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       {activeTab === 'explore' ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Learn</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Discover what&apos;s happening in {childName}&apos;s world</p>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.learn.title}</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.subtitle(childName)}</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
-              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>🌻 Today&apos;s tip</p>
+              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
               <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? DAILY_INSIGHT.tip, childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>💡 Why this matters</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>{t.learn.whyThisMatters}</p>
                 {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? DAILY_INSIGHT.why, childName)}</p> : null}
               </div>
             </div>
 
-            <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>Inside {childName}&apos;s brain</h2>
-            <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
+            <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.insideBrain(childName)}</h2>
+            <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
             {personalizedCards.map((card, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (
@@ -1527,8 +1545,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       {activeTab === 'activities' && !openActivityDetail ? (
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
-            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Activities</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Simple ways to support {childName}&apos;s growth today</p>
+            <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.activities.title}</h1>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.activities.subtitle(childName)}</p>
           </div>
 
           <div style={{ padding: '20px 20px 0' }}>
@@ -1576,19 +1594,25 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {profileTab === 'settings' ? (
             <div style={{ padding: 20 }}>
-              <button onClick={() => setProfileTab('overview')} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>← Back</button>
-              <h1 style={{ margin: '0 0 24px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Settings</h1>
-              {[
-                { label: 'Your name', value: parentName },
-                { label: 'Role', value: 'Dad' },
-                { label: 'Language', value: 'English' },
-              ].map((field) => (
-                <div key={field.label} style={{ marginBottom: 16 }}>
-                  <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{field.label}</label>
-                  <input defaultValue={field.value} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
-                </div>
-              ))}
-              <SoftButton variant='soft' full onClick={() => void handleSignOut()} style={{ color: theme.colors.roseDark }}>Sign Out</SoftButton>
+              <button onClick={() => setProfileTab('overview')} style={{ background: 'none', border: 'none', fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.rose, cursor: 'pointer', padding: '0 0 20px', fontWeight: 600 }}>{`← ${t.common.back}`}</button>
+              <h1 style={{ margin: '0 0 24px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>{t.settings.title}</h1>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.yourName}</label>
+                <input defaultValue={parentName} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.role}</label>
+                <input defaultValue={'Dad'} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.language}</label>
+                <select value={locale} onChange={(e) => void saveLanguage(e.target.value as Language)} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }}>
+                  <option value='es'>{t.settings.spanish}</option>
+                  <option value='en'>{t.settings.english}</option>
+                </select>
+              </div>
+              <SoftButton variant='soft' full onClick={() => void handleSignOut()} style={{ color: theme.colors.roseDark }}>{t.settings.signOut}</SoftButton>
+              {settingsStatus ? <p style={{ marginTop: 10, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sage }}>{settingsStatus}</p> : null}
               {signOutError ? <p style={{ marginTop: 10, fontFamily: theme.fonts.sans, fontSize: 12, color: 'crimson' }}>{signOutError}</p> : null}
             </div>
           ) : (
@@ -1607,9 +1631,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
                   {[
-                    { n: profileTimeline.length, l: 'Wonders' },
-                    { n: profileSchemaStats.length, l: 'Schemas' },
-                    { n: new Set(profileTimeline.map((entry) => new Date(entry.created_at).toDateString())).size, l: 'Days' },
+                    { n: profileTimeline.length, l: t.profile.wonders },
+                    { n: profileSchemaStats.length, l: t.profile.schemas },
+                    { n: new Set(profileTimeline.map((entry) => new Date(entry.created_at).toDateString())).size, l: t.profile.days },
                   ].map((s) => (
                     <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.5)', borderRadius: 18, padding: 12, textAlign: 'center' }}>
                       <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
@@ -1621,17 +1645,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
               <div style={{ display: 'flex', padding: '0 20px', marginTop: 20, borderBottom: `1px solid ${theme.colors.divider}` }}>
                 {(['overview', 'timeline'] as const).map((tab) => (
-                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab}</button>
+                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab === 'overview' ? t.profile.overview : t.profile.timeline}</button>
                 ))}
               </div>
 
               <div style={{ padding: 20 }}>
                 {profileTab === 'overview' ? (
                   <>
-                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Schemas detected</h3>
+                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.schemasDetected}</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
                       {profileSchemaStats.length === 0 ? (
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>No schema data yet.</p>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noSchemaData}</p>
                       ) : (
                         profileSchemaStats.map((schema, idx) => {
                           const bg = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#E8F0E4'][idx % 4];
@@ -1644,7 +1668,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         })
                       )}
                     </div>
-                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>Interests</h3>
+                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books'].map((interest) => (
                         <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
@@ -1656,7 +1680,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 {profileTab === 'timeline' ? (
                   <>
                     {profileTimeline.length === 0 ? (
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>No wonders yet. Capture a chat observation to generate your first wonder.</p>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                     ) : (
                       profileTimeline.map((entry, i) => {
                         const dayLabel = formatConversationDate(entry.created_at, locale);
@@ -1687,9 +1711,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
       <nav style={{ background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(20px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
         {[
-          { id: 'chat' as Tab, icon: '💬', label: 'Chat' },
-          { id: 'explore' as Tab, icon: '🔭', label: 'Learn' },
-          { id: 'activities' as Tab, icon: '🎯', label: 'Activities' },
+          { id: 'chat' as Tab, icon: '💬', label: t.tabs.chat },
+          { id: 'explore' as Tab, icon: '🔭', label: t.tabs.learn },
+          { id: 'activities' as Tab, icon: '🎯', label: t.tabs.activities },
           { id: 'profile' as Tab, icon: '🧒', label: childName },
         ].map((tab) => (
           <div key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ textAlign: 'center', cursor: 'pointer', opacity: activeTab === tab.id ? 1 : 0.35 }}>

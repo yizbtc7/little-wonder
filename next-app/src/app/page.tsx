@@ -41,7 +41,7 @@ export default async function HomePage() {
       </FadeIn>
       <FadeIn delay={400}>
         <p style={{ color: theme.colors.midText, fontFamily: theme.fonts.sans, fontSize: 16, maxWidth: 280, lineHeight: 1.6, marginBottom: 48 }}>
-          See the extraordinary science inside your child&apos;s everyday moments.
+          Descubre la ciencia extraordinaria dentro de los momentos cotidianos de tu hijo.
         </p>
       </FadeIn>
       <FadeIn delay={550}>
