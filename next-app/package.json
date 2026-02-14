@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "articles:generate": "node scripts/generate-articles.js",
+    "articles:refill": "node scripts/refill-explore-shortages.js",
     "activities:generate": "node scripts/generate-activities.js"
   },
   "dependencies": {

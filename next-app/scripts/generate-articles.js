@@ -17,18 +17,26 @@ const supabase = !pool
 const SYSTEM_PROMPT = `You are the editorial voice of Little Wonder, a curiosity companion app for parents.
 Write warm, science-grounded long-form content (800-1200 words) with practical guidance.
 
-Rules:
+CRITICAL FORMAT (markdown required because app renders styled cards from these markers):
 - Use markdown headings with ##
-- Use {child_name} placeholder naturally
+- Use {child_name} placeholder naturally (exact snake_case)
+- Include these blocks exactly in this order at least once:
+  1) Hook paragraphs
+  2) ## Science section(s)
+  3) > 💡 Pull quote sentence
+  4) > 🔬 **Short science title** science explanation paragraph
+  5) ---
+  6) ## Practical response section
+  7) 1. **Title** — explanation
+  8) 2. **Title** — explanation
+  9) 3. **Title** — explanation
+  10) > 🌱 Practical home action paragraph
+  11) ---
+  12) > 💛 Warm emotional closing paragraph
 - Include specific researchers/findings in plain language
 - Never use pathologizing language or child comparisons
 - Never suggest expensive products
-- Include sections:
-  1) Hook
-  2) Science explained with 3-4 sections
-  3) What you can do (household items)
-  4) What you don't need
-  5) Memorable closing
+- Keep all output as markdown only (no JSON, no code fences)
 Return ONLY article body text.`;
 
 function pickEmoji(domain) {
@@ -172,9 +180,23 @@ async function main() {
   const limitArg = process.argv.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? Number(limitArg.split('=')[1]) : ARTICLE_DEFINITIONS.length;
   const targetArg = process.argv.find((a) => a.startsWith('--target-count='));
-  const targetCount = targetArg ? Number(targetArg.split('=')[1]) : Math.min(limit, ARTICLE_DEFINITIONS.length) * 2;
   const batchLabelArg = process.argv.find((a) => a.startsWith('--batch-label='));
   const batchLabel = batchLabelArg ? batchLabelArg.split('=')[1] : '';
+  const ageMinArg = process.argv.find((a) => a.startsWith('--age-min='));
+  const ageMaxArg = process.argv.find((a) => a.startsWith('--age-max='));
+  const langArg = process.argv.find((a) => a.startsWith('--lang='));
+  const typeArg = process.argv.find((a) => a.startsWith('--type='));
+
+  const filteredDefs = ARTICLE_DEFINITIONS.filter((def) => {
+    if (ageMinArg && def.age_min !== Number(ageMinArg.split('=')[1])) return false;
+    if (ageMaxArg && def.age_max !== Number(ageMaxArg.split('=')[1])) return false;
+    if (typeArg && def.type !== typeArg.split('=')[1]) return false;
+    return true;
+  });
+
+  if (filteredDefs.length === 0) throw new Error('No article definitions match provided filters');
+
+  const targetCount = targetArg ? Number(targetArg.split('=')[1]) : Math.min(limit, filteredDefs.length) * (langArg ? 1 : 2);
 
   if (shouldDeleteShort && pool) {
     await pool.query('delete from explore_articles where length(body) < 2000');
@@ -186,10 +208,14 @@ async function main() {
   let errors = 0;
 
   for (let i = 0; success < targetCount; i += 1) {
-    const def = ARTICLE_DEFINITIONS[i % Math.min(limit, ARTICLE_DEFINITIONS.length)];
-    const lang = i % 2 === 0 ? 'es' : 'en';
+    const capped = Math.min(limit, filteredDefs.length);
+    const langSequence = langArg ? [langArg.split('=')[1]] : ['es', 'en'];
+    const langCount = langSequence.length;
+    const defIndex = Math.floor(i / langCount) % capped;
+    const def = filteredDefs[defIndex];
+    const lang = langSequence[i % langCount];
     const title = lang === 'es' ? def.topic_es : def.topic;
-    const variantIndex = Math.floor(i / (Math.min(limit, ARTICLE_DEFINITIONS.length) * 2)) + 1;
+    const variantIndex = Math.floor(i / (Math.min(limit, filteredDefs.length) * langCount)) + 1;
     const variantLabel = batchLabel ? `· ${batchLabel}-${variantIndex}` : variantIndex > 1 ? `· v${variantIndex}` : '';
 
     try {
