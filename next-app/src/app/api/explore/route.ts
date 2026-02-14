@@ -4,6 +4,21 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage, languagePriority } from '@/lib/language';
 
+type BrainCardRow = {
+  id: string;
+  emoji: string;
+  title: string;
+  body: string;
+  domain: string;
+  language: 'en' | 'es';
+};
+
+type DailyTipRow = {
+  id: string;
+  body: string;
+  language: 'en' | 'es';
+};
+
 function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
@@ -34,45 +49,64 @@ export async function GET() {
   const ageMonths = getAgeInMonths(child.birthdate);
   const preferredLanguage = await getUserLanguage(user.id, 'es');
 
-  const loadBrainCards = async (language: 'en' | 'es') =>
-    db
-      .from('explore_content')
-      .select('id,icon,title,domain,preview,article,language')
-      .eq('type', 'brain_card')
-      .eq('language', language)
-      .lte('age_range_start', ageMonths)
-      .gte('age_range_end', ageMonths)
-      .order('created_at', { ascending: false })
-      .limit(3);
-
-  const loadDailyTip = async (language: 'en' | 'es') =>
-    db
-      .from('explore_content')
-      .select('id,article,source,language')
-      .eq('type', 'daily_tip')
-      .eq('language', language)
-      .lte('age_range_start', ageMonths)
-      .gte('age_range_end', ageMonths)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-  let brainCards: unknown[] = [];
-  let dailyTipRows: unknown[] = [];
+  let brainCards: BrainCardRow[] = [];
+  let dailyTip: DailyTipRow | null = null;
 
   for (const language of languagePriority(preferredLanguage)) {
-    const [brainRes, tipRes] = await Promise.all([loadBrainCards(language), loadDailyTip(language)]);
+    const [brainRes, tipRes] = await Promise.all([
+      db
+        .from('explore_brain_cards')
+        .select('id,emoji,title,body,domain,language')
+        .eq('language', language)
+        .lte('age_min_months', ageMonths)
+        .gte('age_max_months', ageMonths)
+        .order('created_at', { ascending: false })
+        .limit(3),
+      db
+        .from('daily_tips')
+        .select('id,body,language')
+        .eq('language', language)
+        .lte('age_min_months', ageMonths)
+        .gte('age_max_months', ageMonths)
+        .order('created_at', { ascending: false })
+        .limit(1),
+    ]);
+
     if (brainRes.error || tipRes.error) {
       return NextResponse.json({ error: brainRes.error?.message ?? tipRes.error?.message }, { status: 500 });
     }
+
     if ((brainRes.data?.length ?? 0) > 0 || (tipRes.data?.length ?? 0) > 0) {
-      brainCards = brainRes.data ?? [];
-      dailyTipRows = tipRes.data ?? [];
+      brainCards = (brainRes.data ?? []) as BrainCardRow[];
+      dailyTip = ((tipRes.data ?? [])[0] as DailyTipRow | undefined) ?? null;
       break;
     }
   }
 
   return NextResponse.json({
-    brain_cards: brainCards,
-    daily_tip: dailyTipRows?.[0] ?? null,
+    brain_cards: brainCards.map((row) => ({
+      id: row.id,
+      icon: row.emoji,
+      title: row.title,
+      domain: row.domain,
+      preview: row.body,
+      language: row.language,
+      article: {
+        whats_happening: row.body,
+        youll_see_it_when: [],
+        fascinating_part: '',
+        how_to_be_present: '',
+      },
+    })),
+    daily_tip: dailyTip
+      ? {
+          id: dailyTip.id,
+          language: dailyTip.language,
+          article: {
+            tip: dailyTip.body,
+            why: '',
+          },
+        }
+      : null,
   });
 }
