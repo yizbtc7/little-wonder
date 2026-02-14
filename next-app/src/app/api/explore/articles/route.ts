@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage } from '@/lib/language';
 import { canonicalTitleKey, cleanArticleTitle, dedupeByTitleKey, normalizeLanguage, pickUnreadSection, type ExploreArticle } from '@/lib/exploreGuarantees';
+import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type ReadRow = {
   article_id: string;
@@ -63,13 +64,7 @@ export async function GET(request: NextRequest) {
 
   const db = dbClient();
 
-  const { data: child } = await db
-    .from('children')
-    .select('id,birthdate')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const child = await resolveAccessibleChild(db, user.id);
 
   if (!child?.birthdate) {
     return NextResponse.json({

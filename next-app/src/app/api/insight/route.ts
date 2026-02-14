@@ -7,6 +7,7 @@ import { formatAgeLabel, getAgeInMonths } from '@/lib/childAge';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getUserLanguage } from '@/lib/language';
 import { VALID_SCHEMA_KEYS, normalizeSchemaList } from '@/lib/schemas';
+import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type InsightRequestBody = {
   observation?: string;
@@ -195,15 +196,9 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const [{ data: profile }, { data: child }] = await Promise.all([
+    const [{ data: profile }, child] = await Promise.all([
       db.from('profiles').select('user_id,parent_name,parent_role').eq('user_id', user.id).maybeSingle<ProfileRow>(),
-      db
-        .from('children')
-        .select('id,user_id,name,birthdate,interests,curiosity_quote_updated_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle<ChildRow>(),
+      resolveAccessibleChild(db, user.id) as Promise<ChildRow | null>,
     ]);
 
     if (!profile || !child) {

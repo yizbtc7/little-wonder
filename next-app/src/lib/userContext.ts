@@ -36,7 +36,7 @@ export async function getFirstChildProfile(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   userId: string
 ) {
-  const { data } = await supabase
+  const { data: owned } = await supabase
     .from('children')
     .select('id,user_id,name,birthdate')
     .eq('user_id', userId)
@@ -44,5 +44,23 @@ export async function getFirstChildProfile(
     .limit(1)
     .maybeSingle<ChildProfile>();
 
-  return data;
+  if (owned) return owned;
+
+  const { data: caregivingLink } = await supabase
+    .from('child_caregivers')
+    .select('child_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle<{ child_id: string }>();
+
+  if (!caregivingLink?.child_id) return null;
+
+  const { data: child } = await supabase
+    .from('children')
+    .select('id,user_id,name,birthdate')
+    .eq('id', caregivingLink.child_id)
+    .maybeSingle<ChildProfile>();
+
+  return child ?? null;
 }

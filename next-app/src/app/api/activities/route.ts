@@ -5,6 +5,7 @@ import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage } from '@/lib/language';
 import { normalizeLanguage } from '@/lib/exploreGuarantees';
 import { normalizeSchemaList } from '@/lib/schemas';
+import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type ActivityRow = {
   id: string;
@@ -93,12 +94,7 @@ export async function GET(request: Request) {
   const preferredLanguage = await getUserLanguage(user.id, 'es');
   const selectedLanguage = normalizeLanguage(search.get('language'), preferredLanguage);
 
-  let childQuery = db.from('children').select('id,birthdate').eq('user_id', user.id).order('created_at', { ascending: true }).limit(1);
-  if (requestedChildId) {
-    childQuery = db.from('children').select('id,birthdate').eq('user_id', user.id).eq('id', requestedChildId).limit(1);
-  }
-
-  const { data: child } = await childQuery.maybeSingle();
+  const child = await resolveAccessibleChild(db, user.id, requestedChildId);
 
   if (!child?.id || !child.birthdate) {
     return NextResponse.json({

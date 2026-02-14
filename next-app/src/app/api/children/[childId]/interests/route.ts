@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { userCanAccessChild } from '@/lib/childAccess';
 
 type Body = {
   interests?: string[];
@@ -34,8 +35,8 @@ function dedupeInterests(values: string[]): string[] {
 
 async function getAuthorizedChildId(childId: string, userId: string): Promise<string | null> {
   const db = dbClient();
-  const { data: child } = await db.from('children').select('id').eq('id', childId).eq('user_id', userId).maybeSingle();
-  return child?.id ?? null;
+  const allowed = await userCanAccessChild(db, userId, childId);
+  return allowed ? childId : null;
 }
 
 async function readChildInterests(childId: string): Promise<string[]> {
@@ -44,9 +45,9 @@ async function readChildInterests(childId: string): Promise<string[]> {
   return (data ?? []).map((row) => row.interest).filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
 }
 
-async function syncChildrenInterests(childId: string, userId: string, interests: string[]) {
+async function syncChildrenInterests(childId: string, _userId: string, interests: string[]) {
   const db = dbClient();
-  await db.from('children').update({ interests }).eq('id', childId).eq('user_id', userId);
+  await db.from('children').update({ interests }).eq('id', childId);
 }
 
 async function getAuthenticatedUser() {

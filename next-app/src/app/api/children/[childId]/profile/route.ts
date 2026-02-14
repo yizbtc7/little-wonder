@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { normalizeSchemaList } from '@/lib/schemas';
+import { userCanAccessChild } from '@/lib/childAccess';
 
 function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -50,16 +51,15 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
     .from('children')
     .select('id,name,birthdate,photo_url,curiosity_quote,curiosity_quote_updated_at,created_at')
     .eq('id', childId)
-    .eq('user_id', user.id)
     .maybeSingle();
 
   if (childError) return NextResponse.json({ error: childError.message }, { status: 500 });
-  if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!child || !(await userCanAccessChild(db, user.id, childId))) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const [{ data: interests }, { data: timeline }, observationCountResult, { data: savedArticlesRows }] = await Promise.all([
     db.from('child_interests').select('interest').eq('child_id', childId).order('interest', { ascending: true }),
     db.from('wonders').select('id,created_at,title,observation_text,schemas_detected').eq('child_id', childId).order('created_at', { ascending: false }).limit(50),
-    db.from('observations').select('id', { count: 'exact', head: true }).eq('child_id', childId).eq('user_id', user.id),
+    db.from('observations').select('id', { count: 'exact', head: true }).eq('child_id', childId),
     db
       .from('article_bookmarks')
       .select('created_at, explore_articles(id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at)')

@@ -1558,12 +1558,6 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   }, [inviteLink]);
 
 
-  useEffect(() => {
-    if (profileTab !== 'settings') return;
-    if (inviteLink) return;
-    void ensureInviteLink();
-  }, [profileTab, inviteLink, ensureInviteLink]);
-
   const copyInviteLink = async () => {
     const resolvedLink = (await ensureInviteLink()) ?? inviteLink;
     if (!resolvedLink) {
@@ -1579,6 +1573,12 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
       setCopiedInviteLink(false);
     }
   };
+
+  useEffect(() => {
+    if (profileTab !== 'settings') return;
+    if (inviteLink) return;
+    void ensureInviteLink();
+  }, [profileTab, inviteLink, ensureInviteLink]);
 
   const openProfilePhotoPicker = () => {
     if (profilePhotoUploading) return;

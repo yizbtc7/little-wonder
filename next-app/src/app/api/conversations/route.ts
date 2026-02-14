@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getUserLanguage } from '@/lib/language';
+import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type CreateConversationBody = {
   child_id?: string;
@@ -29,18 +30,8 @@ export async function GET(request: Request) {
 
   const db = dbClient();
 
-  let childId = childIdParam;
-  if (!childId) {
-    const { data: childRow } = await db
-      .from('children')
-      .select('id')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    childId = childRow?.id ?? null;
-  }
+  const child = await resolveAccessibleChild(db, user.id, childIdParam);
+  const childId = child?.id ?? null;
 
   if (!childId) {
     return NextResponse.json({ conversations: [] });
@@ -115,21 +106,11 @@ export async function POST(request: Request) {
 
   const db = dbClient();
 
-  let childId = body.child_id;
-  if (!childId) {
-    const { data: childRow } = await db
-      .from('children')
-      .select('id')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    childId = childRow?.id ?? undefined;
-  }
+  const child = await resolveAccessibleChild(db, user.id, body.child_id);
+  const childId = child?.id;
 
   if (!childId) {
-    return NextResponse.json({ error: 'No child found for this user' }, { status: 400 });
+    return NextResponse.json({ error: 'No accessible child found for this user' }, { status: 400 });
   }
 
   const preferredLanguage = await getUserLanguage(user.id, 'es');

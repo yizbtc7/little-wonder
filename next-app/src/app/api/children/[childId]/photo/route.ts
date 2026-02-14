@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { userCanAccessChild } from '@/lib/childAccess';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -46,8 +47,8 @@ export async function POST(request: Request, context: { params: Promise<{ childI
     const { childId } = await context.params;
     const db = dbClient();
 
-    const { data: child } = await db.from('children').select('id,photo_url').eq('id', childId).eq('user_id', user.id).maybeSingle();
-    if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const { data: child } = await db.from('children').select('id,photo_url').eq('id', childId).maybeSingle();
+    if (!child || !(await userCanAccessChild(db, user.id, childId))) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const form = await request.formData();
     const file = form.get('photo');
@@ -89,7 +90,7 @@ export async function POST(request: Request, context: { params: Promise<{ childI
     const { data: publicUrlData } = db.storage.from(PHOTO_BUCKET).getPublicUrl(objectPath);
     const photoUrl = publicUrlData.publicUrl;
 
-    const { error: updateError } = await db.from('children').update({ photo_url: photoUrl }).eq('id', childId).eq('user_id', user.id);
+    const { error: updateError } = await db.from('children').update({ photo_url: photoUrl }).eq('id', childId);
 
     if (updateError) {
       await db.storage.from(PHOTO_BUCKET).remove([objectPath]);
