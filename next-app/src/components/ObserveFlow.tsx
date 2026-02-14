@@ -369,6 +369,11 @@ function formatSchemaLabel(value: string): string {
   return key ? SCHEMA_INFO[key].label : '';
 }
 
+function formatSchemaChipLabel(value: string): string {
+  const key = normalizeSchemaKey(value);
+  return key ? `${SCHEMA_INFO[key].emoji} ${SCHEMA_INFO[key].label}` : '';
+}
+
 function formatExploreTypeLabel(type: ExploreArticleRow['type'], locale: Language): string {
   if (locale === 'es') {
     if (type === 'guide') return 'Guía práctica';
@@ -783,6 +788,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
   const [showProfileBookmarks, setShowProfileBookmarks] = useState(true);
+  const [showAllRecentMoments, setShowAllRecentMoments] = useState(false);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
   const [readerToast, setReaderToast] = useState('');
   const [pendingProfileBookmarksFocus, setPendingProfileBookmarksFocus] = useState(false);
@@ -2624,22 +2630,57 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </div>
 
                     <div style={{ marginBottom: 32 }}>
-                      <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
-                    {profileRecentMoments.length === 0 ? (
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
-                    ) : profileRecentMoments.map((moment) => {
-                      const firstSchema = moment.schemas?.[0];
-                      return (
-                        <div key={moment.id} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: 12, marginBottom: 8 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                            <span style={{ width: 7, height: 7, borderRadius: 999, background: theme.colors.rose, display: 'inline-block' }} />
-                            {firstSchema ? <span style={{ fontSize: 10, color: theme.colors.roseDark, background: '#FFF0ED', padding: '2px 8px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(firstSchema)}</span> : null}
-                          </div>
-                          <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>{moment.title}</p>
-                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{moment.observation}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 24, lineHeight: 1 }}>📝</span>
+                          <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                            {locale === 'es' ? 'Últimos momentos' : 'Latest moments'}
+                          </h3>
                         </div>
-                      );
-                    })}
+                        {profileRecentMoments.length > 3 ? (
+                          <button
+                            type='button'
+                            onClick={() => setShowAllRecentMoments((prev) => !prev)}
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              padding: '2px 0',
+                              fontFamily: theme.fonts.sans,
+                              fontSize: 13,
+                              fontWeight: 800,
+                              color: theme.colors.roseDark,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {showAllRecentMoments
+                              ? (locale === 'es' ? 'Ver menos →' : 'Show less →')
+                              : (locale === 'es' ? 'Ver todos →' : 'View all →')}
+                          </button>
+                        ) : null}
+                      </div>
+                      {profileRecentMoments.length === 0 ? (
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
+                      ) : (showAllRecentMoments ? profileRecentMoments : profileRecentMoments.slice(0, 3)).map((moment) => {
+                        const firstSchema = moment.schemas?.[0];
+                        return (
+                          <div key={moment.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '12px 13px 13px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
+                              {firstSchema ? (
+                                <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', border: '1px solid #F1D7D2', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1 }}>
+                                  {formatSchemaChipLabel(firstSchema)}
+                                </span>
+                              ) : <span />}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#A99A96' }}>
+                                <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
+                                {formatConversationDate(moment.created_at, locale)}
+                              </span>
+                            </div>
+                            <p style={{ margin: '0 0 4px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, color: '#3A2D2A', lineHeight: 1.25 }}>{moment.title}</p>
+                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12.5, lineHeight: 1.45, color: '#7B6F6B' }}>{moment.observation}</p>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {hasSavedArticles ? (
@@ -2698,7 +2739,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: theme.colors.midText }}>{entry.observation}</p>
                               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                 {entry.schemas.map((schema) => (
-                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{formatSchemaLabel(schema)}</span>
+                                  <span key={schema} style={{ fontSize: 10, color: theme.colors.roseDark, background: theme.colors.blushLight, padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, letterSpacing: 0.1 }}>{formatSchemaChipLabel(schema)}</span>
                                 ))}
                               </div>
                             </div>
