@@ -2689,7 +2689,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
                     <div key={s.l} style={{ aspectRatio: '1 / 1', background: 'rgba(255,255,255,0.66)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.76)', padding: '12px 6px 10px', textAlign: 'center', boxShadow: '0 2px 8px rgba(93,70,63,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 24, lineHeight: 1, fontWeight: 800, color: '#43322E' }}>{s.n}</p>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 24, lineHeight: 1, fontWeight: 400, color: '#43322E' }}>{s.n}</p>
                       <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, lineHeight: 1.1, color: '#755F59', fontWeight: 700 }}>{s.l}</p>
                     </div>
                   ))}
