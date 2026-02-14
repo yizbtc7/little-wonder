@@ -300,7 +300,11 @@ function formatInlineMarkdown(text: string): string {
 }
 
 function markdownToHtml(markdown: string): string {
-  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const normalized = markdown
+    .replaceAll('\\n', '\n')
+    .replaceAll('\\t', ' ')
+    .replace(/\r\n/g, '\n');
+  const lines = normalized.split('\n');
   const html: string[] = [];
   let inUl = false;
   let inOl = false;
@@ -764,6 +768,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     };
 
     const accent = accentByType[openExploreArticle.type] ?? theme.colors.rose;
+    const personalizedTitle = withChildName(openExploreArticle.title, childName);
+    const personalizedBody = withChildName(openExploreArticle.body, childName);
+    const personalizedIntro = `For ${childName} (${childAgeLabel}), this is especially relevant right now. Use it as a lens to observe one concrete moment today and respond in a way that supports their current developmental pattern.`;
 
     return (
       <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
@@ -779,13 +786,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.read_time_minutes ? `${openExploreArticle.read_time_minutes} min read` : estimateReadTime(openExploreArticle.body)}</span>
           </div>
 
-          <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{openExploreArticle.title}</h1>
+          <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{personalizedTitle}</h1>
         </div>
 
         <div style={{ padding: '0 24px 40px' }}>
+          <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 16, padding: '12px 14px', marginBottom: 16 }}>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.55, color: theme.colors.midText }}>{personalizedIntro}</p>
+          </div>
           <div
             style={{ fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}
-            dangerouslySetInnerHTML={{ __html: markdownToHtml(openExploreArticle.body) }}
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(personalizedBody) }}
           />
           <style>{`
             h2 { font-family: ${theme.fonts.serif}; font-size: 22px; margin: 24px 0 8px; color: ${theme.colors.charcoal}; }
