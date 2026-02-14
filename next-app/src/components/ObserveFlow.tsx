@@ -2016,7 +2016,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
-            {personalizedCards.slice(0, 3).map((card) => {
+            {personalizedCards.filter((card) => !card.is_read).slice(0, 3).map((card) => {
               const d = card.domain?.toLowerCase() ?? '';
               const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
               const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
