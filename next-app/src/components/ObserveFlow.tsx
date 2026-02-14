@@ -2133,40 +2133,68 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             </div>
           ) : (
             <>
-              <div style={{ background: `linear-gradient(160deg, ${theme.colors.blush} 0%, ${theme.colors.blushMid} 48%, rgba(232,160,144,0.2) 100%)`, padding: '20px 20px 24px', borderRadius: '0 0 32px 32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 18, background: 'rgba(255,255,255,0.65)', border: `1px solid ${theme.colors.blushMid}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 26 }}>
-                      {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
-                    </div>
-                    <div>
-                      <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{childName}</h1>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText }}>{childAgeLabel}</span>
-                        <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button onClick={() => setProfileTab('settings')} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>⚙️</button>
+              <div style={{ background: `linear-gradient(178deg, #FCEAE5 0%, #F8DFD7 45%, #F4D7CE 100%)`, padding: '14px 18px 18px', borderRadius: '0 0 34px 34px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', right: -48, top: 108, width: 142, height: 142, borderRadius: '50%', background: 'rgba(255,255,255,0.28)' }} />
+                <div style={{ position: 'absolute', left: -30, bottom: -28, width: 108, height: 108, borderRadius: '50%', background: 'rgba(255,255,255,0.22)' }} />
+                <div style={{ position: 'absolute', right: 32, bottom: 42, width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, position: 'relative', zIndex: 1 }}>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, letterSpacing: 0.2, color: '#4A3E3A' }}>9:41</span>
+                  <button
+                    onClick={() => setProfileTab('settings')}
+                    aria-label={locale === 'es' ? 'Abrir configuración' : 'Open settings'}
+                    style={{ width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.62)', color: '#5B4A45', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(113,82,72,0.08)' }}
+                  >
+                    ⚙
+                  </button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+                  <div style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', fontSize: 42 }}>
+                    {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
+                    <div style={{ position: 'absolute', right: -1, bottom: -1, width: 28, height: 28, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.12)' }}>📷</div>
+                  </div>
+
+                  <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.05, fontWeight: 700, color: '#3E302C' }}>{childName}</h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#6E5A55', fontWeight: 500 }}>{childAgeLabel}</span>
+                    <span style={{ fontSize: 11, color: '#B05C52', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
                   {[
                     { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
                     { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
                     { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
-                    <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.6)', borderRadius: 16, padding: 10, textAlign: 'center' }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 21, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
-                      <p style={{ margin: '2px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.midText }}>{s.l}</p>
+                    <div key={s.l} style={{ background: 'rgba(255,255,255,0.65)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.75)', padding: '10px 8px 9px', textAlign: 'center', boxShadow: '0 2px 8px rgba(93,70,63,0.06)' }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, lineHeight: 1.05, fontWeight: 700, color: '#43322E' }}>{s.n}</p>
+                      <p style={{ margin: '3px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, lineHeight: 1.15, color: '#755F59', fontWeight: 600 }}>{s.l}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', padding: '0 20px', marginTop: 18, borderBottom: `1px solid ${theme.colors.divider}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '0 20px', marginTop: 14, borderBottom: `1px solid #F1DFDA` }}>
                 {(['overview', 'timeline'] as const).map((tab) => (
-                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab === 'overview' ? (locale === 'es' ? 'Resumen' : 'Overview') : (locale === 'es' ? 'Línea de Tiempo' : 'Timeline')}</button>
+                  <button
+                    key={tab}
+                    onClick={() => setProfileTab(tab)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '10px 0 13px',
+                      fontFamily: theme.fonts.sans,
+                      fontSize: 15,
+                      fontWeight: profileTab === tab ? 800 : 600,
+                      color: profileTab === tab ? '#3F322E' : '#B49891',
+                      borderBottom: profileTab === tab ? '2.5px solid #D16F61' : '2.5px solid transparent',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tab === 'overview' ? (locale === 'es' ? 'Resumen' : 'Overview') : (locale === 'es' ? 'Línea De Tiempo' : 'Timeline')}
+                  </button>
                 ))}
               </div>
 
