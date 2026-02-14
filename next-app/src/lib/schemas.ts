@@ -12,14 +12,14 @@ export const VALID_SCHEMA_KEYS = [
 export type SchemaKey = (typeof VALID_SCHEMA_KEYS)[number];
 
 export const SCHEMA_INFO: Record<SchemaKey, { label: string; emoji: string; color: string; bg: string }> = {
-  trajectory: { label: 'Trayectoria', emoji: '➰', color: '#E8A090', bg: '#FDF1EE' },
-  rotation: { label: 'Rotación', emoji: '🌀', color: '#C4B5D4', bg: '#F5F1FA' },
-  enclosure: { label: 'Envolvimiento espacial', emoji: '📦', color: '#8FAE8B', bg: '#EEF6ED' },
-  enveloping: { label: 'Envoltura', emoji: '🎁', color: '#E8C890', bg: '#FCF5E8' },
-  transporting: { label: 'Transporte', emoji: '🧺', color: '#90B8E8', bg: '#EEF4FC' },
-  connecting: { label: 'Conexión', emoji: '🔗', color: '#E89090', bg: '#FDEFEF' },
-  transforming: { label: 'Transformación', emoji: '🧪', color: '#B890E8', bg: '#F4EEFC' },
-  positioning: { label: 'Posicionamiento', emoji: '📐', color: '#90D4C4', bg: '#ECF9F5' },
+  trajectory: { label: 'Trayectoria', emoji: '🚀', color: '#D4766A', bg: '#FFF0ED' },
+  rotation: { label: 'Rotación', emoji: '🌀', color: '#8B6CAE', bg: '#EDE5F5' },
+  enclosure: { label: 'Encerrar', emoji: '🏠', color: '#5A9E6F', bg: '#E8F5EE' },
+  enveloping: { label: 'Envolver', emoji: '🎁', color: '#D4A574', bg: '#FFF8E0' },
+  transporting: { label: 'Transportar', emoji: '🧺', color: '#A0895A', bg: '#FFF5E5' },
+  connecting: { label: 'Conectar', emoji: '🔗', color: '#5A8AA0', bg: '#E5F0F8' },
+  transforming: { label: 'Transformar', emoji: '🧪', color: '#8B6CAE', bg: '#EDE5F5' },
+  positioning: { label: 'Posicionar', emoji: '📐', color: '#5A9E6F', bg: '#E8F5EE' },
 };
 
 const LEGACY_SCHEMA_MAP: Record<string, SchemaKey> = {
