@@ -625,22 +625,19 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
 
   const personalizedCards = useMemo(() => {
-    const sourceCards =
-      exploreCards.length > 0
-        ? exploreCards.map((card) => ({
-            icon: card.icon,
-            title: card.title,
-            domain: card.domain,
-            color: theme.colors.lavenderBg,
-            preview: card.preview,
-            full: {
-              whats_happening: card.article.whats_happening,
-              youll_see_it_when: card.article.youll_see_it_when,
-              fascinating_part: card.article.fascinating_part,
-              how_to_be_present: card.article.how_to_be_present,
-            },
-          }))
-        : (locale === 'es' ? STAGE_CONTENT_ES.cards : STAGE_CONTENT.cards);
+    const sourceCards = exploreCards.map((card) => ({
+      icon: card.icon,
+      title: card.title,
+      domain: card.domain,
+      color: theme.colors.lavenderBg,
+      preview: card.preview,
+      full: {
+        whats_happening: card.article.whats_happening,
+        youll_see_it_when: card.article.youll_see_it_when,
+        fascinating_part: card.article.fascinating_part,
+        how_to_be_present: card.article.how_to_be_present,
+      },
+    }));
 
     return sourceCards.map((card) => ({
       ...card,
@@ -1469,15 +1466,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
-              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(locale === 'es' && exploreDailyTip?.language !== 'es' ? DAILY_INSIGHT_ES.tip : (exploreDailyTip?.article?.tip ?? DAILY_INSIGHT.tip), childName)}</p>
+              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>{t.learn.whyThisMatters}</p>
-                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(locale === 'es' && exploreDailyTip?.language !== 'es' ? DAILY_INSIGHT_ES.why : (exploreDailyTip?.article?.why ?? DAILY_INSIGHT.why), childName)}</p> : null}
+                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? '', childName)}</p> : null}
               </div>
             </div>
 
             <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
+            {personalizedCards.length === 0 ? (
+              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '14px 16px', marginBottom: 12 }}>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>We're building content for this age — check back soon!</p>
+              </div>
+            ) : null}
             {personalizedCards.map((card, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (
