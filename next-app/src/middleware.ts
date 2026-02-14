@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const CANONICAL_HOST = 'www.littlewonder.ai';
+const CANONICAL_HOST = 'littlewonder.ai';
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') ?? '';
