@@ -1,14 +1,10 @@
 import type { Language } from '@/lib/translations';
 
-const MILESTONES = new Set([1, 5, 10, 20, 50]);
-
 export function shouldRefreshCuriosityQuote(params: {
-  streak: number;
   previousUpdatedAt?: string | null;
 }): boolean {
-  const { streak, previousUpdatedAt } = params;
+  const { previousUpdatedAt } = params;
 
-  if (MILESTONES.has(streak)) return true;
   if (!previousUpdatedAt) return true;
 
   const last = new Date(previousUpdatedAt);
@@ -20,13 +16,12 @@ export function shouldRefreshCuriosityQuote(params: {
 
 export function buildCuriosityQuote(params: {
   childName: string;
-  streak: number;
   locale: Language;
 }): string {
-  const { childName, streak, locale } = params;
+  const { childName, locale } = params;
   if (locale === 'es') {
-    return `Día ${streak}: la curiosidad de ${childName} crece en cada momento pequeño que observas.`;
+    return `La curiosidad de ${childName} crece en cada momento pequeño que observas.`;
   }
 
-  return `Day ${streak}: ${childName}'s curiosity grows through each small moment you notice.`;
+  return `${childName}'s curiosity grows through each small moment you notice.`;
 }

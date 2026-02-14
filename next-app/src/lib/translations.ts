@@ -60,7 +60,6 @@ export const translations = {
     profile: {
       wonders: 'Asombros',
       schemas: 'Esquemas',
-      days: 'Días',
       overview: 'Resumen',
       timeline: 'Línea de tiempo',
       schemasDetected: 'Esquemas detectados',
@@ -172,7 +171,6 @@ export const translations = {
     profile: {
       wonders: 'Wonders',
       schemas: 'Schemas',
-      days: 'Days',
       overview: 'Overview',
       timeline: 'Timeline',
       schemasDetected: 'Schemas detected',

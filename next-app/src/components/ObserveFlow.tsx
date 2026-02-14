@@ -142,7 +142,6 @@ type ChildProfilePayload = {
     photo_url: string | null;
     curiosity_quote: string | null;
     curiosity_quote_updated_at: string | null;
-    current_streak: number;
     moments_count: number;
   };
   interests?: string[];
@@ -150,6 +149,7 @@ type ChildProfilePayload = {
   top_schema?: ProfileSchemaStat | null;
   timeline?: ProfileWonderTimelineEntry[];
   recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string }>;
+  savedArticles?: ExploreArticleRow[];
 };
 
 type Props = {
@@ -652,6 +652,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [comingNextArticles, setComingNextArticles] = useState<ExploreArticleRow[]>([]);
   const [savedArticles, setSavedArticles] = useState<ExploreArticleRow[]>([]);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
+  const [openArticleOriginTab, setOpenArticleOriginTab] = useState<'explore' | 'profile'>('explore');
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0, reading_streak_days: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
   const [showProfileBookmarks, setShowProfileBookmarks] = useState(true);
@@ -675,7 +676,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
-  const [profileStreak, setProfileStreak] = useState(0);
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
   const [profileTopSchema, setProfileTopSchema] = useState<ProfileSchemaStat | null>(null);
   const [locale, setLocale] = useState<Language>(initialLanguage);
@@ -1099,8 +1099,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileRecentMoments(payload.recent_moments ?? []);
         setProfilePhotoUrl(payload.child?.photo_url ?? null);
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
-        setProfileStreak(payload.child?.current_streak ?? 0);
         setProfileMomentsCount(payload.child?.moments_count ?? 0);
+        setSavedArticles(payload.savedArticles ?? []);
         setProfileTopSchema(payload.top_schema ?? null);
       } catch {
         // ignore fetch errors in non-browser test environments
@@ -1253,7 +1253,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setTimeout(() => setSettingsStatus(''), 2000);
   };
 
-  if (activeTab === 'explore' && openExploreArticle) {
+  if ((activeTab === 'explore' || activeTab === 'profile') && openExploreArticle) {
     return (
       <ArticleReader
         article={openExploreArticle}
@@ -1264,7 +1264,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         toastMessage={readerToast}
         onToggleBookmark={() => void toggleArticleBookmark(openExploreArticle.id)}
         onShare={() => void shareArticle(openExploreArticle)}
-        onBack={() => setOpenExploreArticle(null)}
+        onBack={() => {
+          setOpenExploreArticle(null);
+          setActiveTab(openArticleOriginTab);
+        }}
         onRegisterMoment={() => {
           setOpenExploreArticle(null);
           setActiveTab('chat');
@@ -1778,7 +1781,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   </button>
                 </div>
                 {savedArticles.slice(0, 3).map((article) => (
-                  <button key={`saved-preview-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 12, padding: '9px 10px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button key={`saved-preview-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 12, padding: '9px 10px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                     <span style={{ marginLeft: 8, fontSize: 14 }}>🔖</span>
                   </button>
@@ -1828,7 +1831,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             ) : (
               <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingLeft: 4, paddingBottom: 6, marginRight: -20, paddingRight: 20, marginBottom: 12, scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const }}>
                 {newForYouArticles.slice(0, 3).map((article) => (
-                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                  <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                     <div style={{ height: 6, background: article.type === 'guide' ? '#8FAE8B' : article.type === 'research' ? '#C4B5D4' : '#E8A090' }} />
                     <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: article.type === 'guide' ? '#5A9E6F' : article.type === 'research' ? '#8B6CAE' : '#D4766A' }}>{formatExploreTypeLabel(article.type, locale)}</div>
                     <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
@@ -1847,7 +1850,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
                   .slice(0, 3)
                   .map((article) => (
-                  <button key={`deep-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <button key={`deep-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
                     <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#EDE5F5' }}>{article.emoji}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
@@ -1869,7 +1872,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   .filter((article, index, all) => all.findIndex((candidate) => dedupeArticleTitleKey(candidate.title) === dedupeArticleTitleKey(article.title)) === index)
                   .slice(0, 8)
                   .map((article) => (
-                  <button key={`more-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button key={`more-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                     <span style={{ marginLeft: 10, fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7}m</span>
                   </button>
@@ -1883,7 +1886,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {showReadArticles ? (
               <div>
                 {recentlyReadArticles.map((article) => (
-                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', opacity: 0.85, borderRadius: 16, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                  <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', opacity: 0.85, borderRadius: 16, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
                   </button>
                 ))}
@@ -2148,7 +2151,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   {[
                     { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
-                    { n: profileStreak, l: locale === 'es' ? 'Racha' : 'Streak' },
+                    { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
                     { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
                     <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.6)', borderRadius: 16, padding: 10, textAlign: 'center' }}>
@@ -2208,27 +2211,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       ))}
                     </div>
 
-                    <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none' }}>
-                      <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal, cursor: 'pointer' }}>
-                        🔖 {locale === 'es' ? `Artículos guardados (${savedArticles.length})` : `Saved articles (${savedArticles.length})`} {showProfileBookmarks ? '▾' : '▸'}
-                      </button>
-                      {showProfileBookmarks ? (
-                        savedArticles.length === 0 ? (
-                          <p style={{ margin: '0 0 16px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no tienes artículos guardados.' : 'No saved articles yet.'}</p>
-                        ) : (
-                          <div style={{ marginBottom: 18 }}>
-                            {savedArticles.map((article) => (
-                              <button key={`profile-saved-${article.id}`} onClick={() => { setActiveTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
-                                <span style={{ fontSize: 14 }}>🔖</span>
-                              </button>
-                            ))}
-                          </div>
-                        )
-                      ) : null}
-                    </div>
-
-                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Momentos recientes' : 'Recent moments'}</h3>
+                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
                     {profileRecentMoments.length === 0 ? (
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
                     ) : profileRecentMoments.map((moment) => (
@@ -2237,6 +2220,42 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{moment.observation}</p>
                       </div>
                     ))}
+
+
+                    {savedArticles.length > 0 ? (
+                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
+                        <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
+                          <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                        </button>
+                        <div style={{ marginTop: 10 }}>
+                          {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
+                            const badge = article.type === 'research'
+                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
+                              : article.type === 'guide'
+                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
+                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
+                            return (
+                              <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                          {showProfileBookmarks ? (
+                            <button onClick={() => setShowProfileBookmarks(false)} style={{ border: 'none', background: 'none', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                              {locale === 'es' ? 'Mostrar menos' : 'Show less'}
+                            </button>
+                          ) : savedArticles.length > 2 ? (
+                            <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'none', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                              {locale === 'es' ? `Ver ${savedArticles.length - 2} más →` : `View ${savedArticles.length - 2} more →`}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
 

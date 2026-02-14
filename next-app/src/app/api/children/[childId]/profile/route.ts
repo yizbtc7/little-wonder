@@ -14,6 +14,26 @@ type TimelineRow = {
   schemas_detected: string[] | null;
 };
 
+type SavedArticle = {
+  id: string;
+  title: string;
+  emoji: string;
+  type: 'article' | 'research' | 'guide';
+  summary: string | null;
+  body: string;
+  age_min_months: number;
+  age_max_months: number;
+  domain: string | null;
+  language: string;
+  read_time_minutes: number | null;
+  created_at: string;
+};
+
+type SavedArticleRow = {
+  created_at: string;
+  explore_articles: SavedArticle[] | SavedArticle | null;
+};
+
 export async function GET(_: Request, context: { params: Promise<{ childId: string }> }) {
   const supabaseAuth = await createSupabaseServerClient();
   const {
@@ -27,7 +47,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
 
   const { data: child, error: childError } = await db
     .from('children')
-    .select('id,name,birthdate,photo_url,curiosity_quote,curiosity_quote_updated_at,current_streak,last_moment_date,created_at')
+    .select('id,name,birthdate,photo_url,curiosity_quote,curiosity_quote_updated_at,created_at')
     .eq('id', childId)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -35,10 +55,15 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
   if (childError) return NextResponse.json({ error: childError.message }, { status: 500 });
   if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [{ data: interests }, { data: timeline }, observationCountResult] = await Promise.all([
+  const [{ data: interests }, { data: timeline }, observationCountResult, { data: savedArticlesRows }] = await Promise.all([
     db.from('child_interests').select('interest').eq('child_id', childId).order('interest', { ascending: true }),
     db.from('wonders').select('id,created_at,title,observation_text,schemas_detected').eq('child_id', childId).order('created_at', { ascending: false }).limit(50),
     db.from('observations').select('id', { count: 'exact', head: true }).eq('child_id', childId).eq('user_id', user.id),
+    db
+      .from('article_bookmarks')
+      .select('created_at, explore_articles(id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
   ]);
 
   const timelineRows = (timeline ?? []) as TimelineRow[];
@@ -56,6 +81,18 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
   const top_schema = schema_stats[0] ?? null;
+
+  const savedArticles = ((savedArticlesRows ?? []) as unknown as SavedArticleRow[])
+    .map((row) => {
+      const linked = Array.isArray(row.explore_articles) ? row.explore_articles[0] : row.explore_articles;
+      if (!linked) return null;
+      return {
+        ...linked,
+        bookmarked_at: row.created_at,
+        is_bookmarked: true,
+      };
+    })
+    .filter((row): row is SavedArticle & { bookmarked_at: string; is_bookmarked: boolean } => Boolean(row));
 
   return NextResponse.json({
     child: {
@@ -78,5 +115,6 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
       observation: row.observation_text,
       created_at: row.created_at,
     })),
+    savedArticles,
   });
 }

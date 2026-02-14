@@ -6,7 +6,6 @@ import path from 'node:path';
 import { formatAgeLabel, getAgeInMonths } from '@/lib/childAge';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getUserLanguage } from '@/lib/language';
-import { buildCuriosityQuote, shouldRefreshCuriosityQuote } from '@/lib/childProfile';
 
 type InsightRequestBody = {
   observation?: string;
@@ -19,7 +18,6 @@ type ChildRow = {
   birthdate: string;
   interests?: string[] | null;
   curiosity_quote_updated_at?: string | null;
-  current_streak?: number | null;
 };
 
 type ProfileRow = {
@@ -202,7 +200,7 @@ export async function POST(request: Request) {
       db.from('profiles').select('user_id,parent_name,parent_role').eq('user_id', user.id).maybeSingle<ProfileRow>(),
       db
         .from('children')
-        .select('id,user_id,name,birthdate,interests,curiosity_quote_updated_at,current_streak')
+        .select('id,user_id,name,birthdate,interests,curiosity_quote_updated_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true })
         .limit(1)
@@ -360,35 +358,6 @@ export async function POST(request: Request) {
 
             if (wonderError) {
               controller.error(new Error(`Error saving wonder: ${wonderError.message}`));
-              return;
-            }
-          }
-
-          const { data: streakValue, error: streakError } = await db.rpc('update_streak', { p_child_id: child.id });
-          if (streakError) {
-            controller.error(new Error(`Error updating streak: ${streakError.message}`));
-            return;
-          }
-
-          const nextStreak = typeof streakValue === 'number' ? streakValue : Math.max(1, (child.current_streak ?? 0) + 1);
-          const shouldRefreshQuote = shouldRefreshCuriosityQuote({
-            streak: nextStreak,
-            previousUpdatedAt: child.curiosity_quote_updated_at ?? null,
-          });
-
-          if (shouldRefreshQuote) {
-            const quote = buildCuriosityQuote({ childName: child.name, streak: nextStreak, locale: preferredLanguage });
-            const { error: quoteError } = await db
-              .from('children')
-              .update({
-                curiosity_quote: quote,
-                curiosity_quote_updated_at: new Date().toISOString(),
-              })
-              .eq('id', child.id)
-              .eq('user_id', user.id);
-
-            if (quoteError) {
-              controller.error(new Error(`Error updating curiosity quote: ${quoteError.message}`));
               return;
             }
           }

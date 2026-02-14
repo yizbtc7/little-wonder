@@ -21,17 +21,16 @@ export async function POST(_: Request, context: { params: Promise<{ childId: str
 
   const { data: child } = await db
     .from('children')
-    .select('id,name,current_streak')
+    .select('id,name')
     .eq('id', childId)
     .eq('user_id', user.id)
-    .maybeSingle<{ id: string; name: string; current_streak: number | null }>();
+    .maybeSingle<{ id: string; name: string }>();
 
   if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const locale = await getUserLanguage(user.id, 'es');
   const quote = buildCuriosityQuote({
     childName: child.name,
-    streak: Math.max(1, child.current_streak ?? 1),
     locale,
   });
 
