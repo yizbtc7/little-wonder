@@ -2150,15 +2150,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                  <div style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', fontSize: 42 }}>
-                    {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
-                    <div style={{ position: 'absolute', right: -1, bottom: -1, width: 28, height: 28, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.12)' }}>📷</div>
+                  <div style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', fontSize: 42 }}>
+                    <div style={{ width: '100%', height: '100%', borderRadius: 999, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
+                    </div>
+                    <div style={{ position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.16)', zIndex: 2 }}>📷</div>
                   </div>
 
                   <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.05, fontWeight: 700, color: '#3E302C' }}>{childName}</h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#6E5A55', fontWeight: 500 }}>{childAgeLabel}</span>
-                    <span style={{ fontSize: 11, color: '#B05C52', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
+                    <span style={{ fontSize: 11, color: '#B05C52', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{`${STAGE_CONTENT.stageEmoji} ${STAGE_CONTENT.stage}`}</span>
                   </div>
                 </div>
 
@@ -2271,45 +2273,42 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     })}
 
 
-                    <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
-                      <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
-                        <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
-                      </button>
-                      <div style={{ marginTop: 10 }}>
-                        {savedArticles.length === 0 ? (
-                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>
-                            {locale === 'es' ? 'Aún no hay artículos guardados.' : 'No saved articles yet.'}
-                          </p>
-                        ) : null}
-                        {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
-                          const badge = article.type === 'research'
-                            ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
-                            : article.type === 'guide'
-                              ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
-                              : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
-                          return (
-                            <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.4 }}>{article.title}</span>
-                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                        {savedArticles.length > 2 ? (
-                          showProfileBookmarks ? (
-                            <button onClick={() => setShowProfileBookmarks(false)} style={{ border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 999, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
-                              {locale === 'es' ? 'Mostrar menos' : 'Show less'}
-                            </button>
-                          ) : (
-                            <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
-                              {locale === 'es' ? `Ver todos (${savedArticles.length})` : `Show all (${savedArticles.length})`}
-                            </button>
-                          )
-                        ) : null}
+                    {savedArticles.length > 0 ? (
+                      <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
+                        <button onClick={() => setShowProfileBookmarks((v) => !v)} style={{ width: '100%', textAlign: 'left', border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 14, padding: '10px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.charcoal, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
+                          <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
+                        </button>
+                        <div style={{ marginTop: 10 }}>
+                          {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
+                            const badge = article.type === 'research'
+                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
+                              : article.type === 'guide'
+                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
+                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
+                            return (
+                              <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.4 }}>{article.title}</span>
+                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                          {savedArticles.length > 2 ? (
+                            showProfileBookmarks ? (
+                              <button onClick={() => setShowProfileBookmarks(false)} style={{ border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 999, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                                {locale === 'es' ? 'Mostrar menos' : 'Show less'}
+                              </button>
+                            ) : (
+                              <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                                {locale === 'es' ? `Ver todos (${savedArticles.length})` : `Show all (${savedArticles.length})`}
+                              </button>
+                            )
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
+                    ) : null}
                   </>
                 ) : null}
 

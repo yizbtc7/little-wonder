@@ -12,8 +12,9 @@ export type StageCard = {
   };
 };
 
-export const STAGE_CONTENT: { stage: string; cards: StageCard[] } = {
+export const STAGE_CONTENT: { stage: string; stageEmoji: string; cards: StageCard[] } = {
   stage: 'World Builder',
+  stageEmoji: '🌍',
   cards: [
     {
       icon: '🎭',
