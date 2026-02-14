@@ -944,9 +944,6 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [typing, setTyping] = useState(false);
   const [typingMessageIndex, setTypingMessageIndex] = useState(0);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
-  const [isTranscribingVoice, setIsTranscribingVoice] = useState(false);
-  const [voiceTranscriptDraft, setVoiceTranscriptDraft] = useState('');
-  const [voicePreviewUrl, setVoicePreviewUrl] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState('');
   const [speechRecognitionAvailable, setSpeechRecognitionAvailable] = useState(false);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
@@ -1034,10 +1031,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     setSpeechRecognitionAvailable(hasSpeechApi);
 
     return () => {
-      if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
       speechRecognitionRef.current?.stop();
     };
-  }, [voicePreviewUrl]);
+  }, []);
 
   const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName, locale), [childBirthdate, childName, locale]);
 
@@ -1782,15 +1778,6 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden';
   };
 
-  const clearVoiceDraft = () => {
-    setVoiceTranscriptDraft('');
-    setVoiceError('');
-    if (voicePreviewUrl) {
-      URL.revokeObjectURL(voicePreviewUrl);
-      setVoicePreviewUrl(null);
-    }
-  };
-
   const getSpeechRecognitionConstructor = (): BrowserSpeechRecognitionConstructor | null => {
     if (typeof window === 'undefined') return null;
     const win = window as Window & {
@@ -1802,10 +1789,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   };
 
   const startVoiceRecording = async () => {
-    if (isRecordingVoice || isTranscribingVoice) return;
+    if (isRecordingVoice) return;
 
     setVoiceError('');
-    setVoiceTranscriptDraft('');
 
     const RecognitionCtor = getSpeechRecognitionConstructor();
     if (!RecognitionCtor) {
@@ -1831,7 +1817,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
           else interimTranscript += text;
         }
         const combined = `${finalTranscript} ${interimTranscript}`.trim();
-        if (combined) setVoiceTranscriptDraft(combined);
+        if (combined) {
+          setInput(combined);
+          requestAnimationFrame(autoResizeTextArea);
+        }
       };
 
       recognition.onerror = (event) => {
@@ -1855,13 +1844,6 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     if (!isRecordingVoice) return;
     speechRecognitionRef.current?.stop();
     setIsRecordingVoice(false);
-  };
-
-  const sendVoiceNote = async () => {
-    const transcript = voiceTranscriptDraft.trim();
-    if (!transcript || isTranscribingVoice || typing) return;
-    await sendMessage(transcript);
-    clearVoiceDraft();
   };
 
   const sendMessage = async (directText?: string) => {
@@ -2278,51 +2260,19 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
           </div>
 
           <div style={{ padding: '12px 16px 28px', borderTop: `1px solid ${theme.colors.divider}` }}>
-            {voicePreviewUrl || voiceTranscriptDraft.trim() || isRecordingVoice || isTranscribingVoice || voiceError ? (
-              <div style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.sageDark }}>
-                    {locale === 'es' ? '🎤 Nota de voz' : '🎤 Voice note'}
-                  </span>
-                  <button type='button' onClick={clearVoiceDraft} style={{ border: 'none', background: 'transparent', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.midText, cursor: 'pointer' }}>
-                    {locale === 'es' ? 'Descartar' : 'Discard'}
-                  </button>
-                </div>
-
-                {voicePreviewUrl ? <audio controls src={voicePreviewUrl} style={{ width: '100%', marginBottom: 8 }} /> : null}
-                {isRecordingVoice ? (
-                  <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>{locale === 'es' ? 'Escuchando… toca ■ para detener.' : 'Listening… tap ■ to stop.'}</p>
-                ) : null}
-
-                {isTranscribingVoice ? (
-                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{locale === 'es' ? 'Transcribiendo audio…' : 'Transcribing audio…'}</p>
-                ) : (
-                  <>
-                    <textarea
-                      value={voiceTranscriptDraft}
-                      onChange={(e) => setVoiceTranscriptDraft(e.target.value)}
-                      placeholder={locale === 'es' ? 'Aquí aparecerá la transcripción…' : 'Transcript will appear here…'}
-                      rows={2}
-                      style={{ width: '100%', border: `1px solid ${theme.colors.divider}`, borderRadius: 10, padding: '8px 10px', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.45, resize: 'vertical', minHeight: 56 }}
-                    />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                      <button type='button' onClick={() => void sendVoiceNote()} disabled={!voiceTranscriptDraft.trim() || typing} style={{ border: 'none', borderRadius: 10, padding: '8px 12px', background: voiceTranscriptDraft.trim() ? theme.colors.sage : theme.colors.divider, color: '#fff', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, cursor: voiceTranscriptDraft.trim() ? 'pointer' : 'default' }}>
-                        {locale === 'es' ? 'Enviar nota' : 'Send note'}
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {voiceError ? <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B34747' }}>{voiceError}</p> : null}
-              </div>
+            {isRecordingVoice ? (
+              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>
+                {locale === 'es' ? '🎤 Dictando… toca ■ para detener.' : '🎤 Dictating… tap ■ to stop.'}
+              </p>
             ) : null}
+            {voiceError ? <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B34747' }}>{voiceError}</p> : null}
 
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, background: '#fff', borderRadius: 24, padding: '10px 12px 10px 18px', border: `1.5px solid ${theme.colors.blushMid}` }}>
               <button
                 type='button'
                 onClick={isRecordingVoice ? stopVoiceRecording : () => void startVoiceRecording()}
-                disabled={typing || isTranscribingVoice}
-                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : speechRecognitionAvailable ? theme.colors.sageLight : theme.colors.divider, color: isRecordingVoice ? '#fff' : speechRecognitionAvailable ? theme.colors.sageDark : theme.colors.midText, cursor: typing || isTranscribingVoice ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                disabled={typing}
+                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : speechRecognitionAvailable ? theme.colors.sageLight : theme.colors.divider, color: isRecordingVoice ? '#fff' : speechRecognitionAvailable ? theme.colors.sageDark : theme.colors.midText, cursor: typing ? 'not-allowed' : 'pointer', flexShrink: 0 }}
                 aria-label={locale === 'es' ? 'Grabar nota de voz' : 'Record voice note'}
                 title={speechRecognitionAvailable ? (locale === 'es' ? 'Dictado por voz' : 'Voice dictation') : (locale === 'es' ? 'Navegador sin soporte de dictado Web Speech' : 'Browser without Web Speech support')}
               >
