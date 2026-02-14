@@ -6,6 +6,7 @@ import path from 'node:path';
 import { formatAgeLabel, getAgeInMonths } from '@/lib/childAge';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getUserLanguage } from '@/lib/language';
+import { VALID_SCHEMA_KEYS, normalizeSchemaList } from '@/lib/schemas';
 
 type InsightRequestBody = {
   observation?: string;
@@ -156,9 +157,7 @@ function parseInsightPayload(raw: string): InsightPayload {
           how_to_be_present: parsedPayload.wonder.article?.how_to_be_present ?? '',
           curiosity_closer: parsedPayload.wonder.article?.curiosity_closer ?? '',
         },
-        schemas_detected: Array.isArray(parsedPayload.wonder.schemas_detected)
-          ? parsedPayload.wonder.schemas_detected.filter((value): value is string => typeof value === 'string')
-          : [],
+        schemas_detected: normalizeSchemaList(parsedPayload.wonder.schemas_detected),
       }
     : null;
 
@@ -229,16 +228,15 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    const detectedSchemas = (recentInsightRows ?? [])
-      .flatMap((row) => {
+    const detectedSchemas = normalizeSchemaList(
+      (recentInsightRows ?? []).flatMap((row) => {
         const fromSchemaDetected = typeof row.schema_detected === 'string' ? [row.schema_detected] : [];
         const fromJson = Array.isArray((row.json_response as { payload?: { schemas_detected?: string[] } } | null)?.payload?.schemas_detected)
           ? (row.json_response as { payload?: { schemas_detected?: string[] } }).payload?.schemas_detected ?? []
           : [];
         return [...fromSchemaDetected, ...fromJson];
       })
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .slice(0, 10);
+    ).slice(0, 10);
 
     const { data: observationRow, error: observationError } = await db
       .from('observations')
@@ -295,6 +293,8 @@ export async function POST(request: Request) {
       '  }',
       '}',
       'Do NOT return top-level keys like title, revelation, brain_science_gem, activity, observe_next, or schemas_detected.',
+      `Allowed schemas_detected values only: ${VALID_SCHEMA_KEYS.join(', ')}.`,
+      'Never invent or output schema labels outside that list; map legacy wording to the closest allowed value.',
       'Always include both reply and wonder.',
       'Use the child\'s name naturally and keep the tone warm and specific.',
       preferredLanguage === 'es' ? 'Write every value in Spanish.' : 'Write every value in English.',

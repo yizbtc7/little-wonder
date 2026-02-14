@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage, languagePriority } from '@/lib/language';
+import { normalizeSchemaList } from '@/lib/schemas';
 
 type ActivityRow = {
   id: string;
@@ -83,9 +84,10 @@ export async function GET(request: Request) {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  const schemaList = (wonderRows ?? [])
-    .flatMap((row) => ((row as { schemas_detected?: string[] | null }).schemas_detected ?? []))
-    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+  const schemaList = normalizeSchemaList(
+    (wonderRows ?? [])
+      .flatMap((row) => ((row as { schemas_detected?: string[] | null }).schemas_detected ?? []))
+  );
 
   const schemaCounts = toCountMap(schemaList);
   const topSchemas = Array.from(schemaCounts.entries())

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { normalizeSchemaList } from '@/lib/schemas';
 
 type WonderRow = {
   id: string;
@@ -52,7 +53,7 @@ export async function GET() {
 
   const schemaWonderMap = new Map<string, Set<string>>();
   for (const wonder of wonderRows) {
-    const uniqueSchemasInWonder = new Set((wonder.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0));
+    const uniqueSchemasInWonder = new Set(normalizeSchemaList(wonder.schemas_detected ?? []));
     for (const schema of uniqueSchemasInWonder) {
       if (!schemaWonderMap.has(schema)) {
         schemaWonderMap.set(schema, new Set());
@@ -70,7 +71,7 @@ export async function GET() {
     created_at: wonder.created_at,
     title: wonder.title,
     observation: wonder.observation_text,
-    schemas: Array.from(new Set((wonder.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0))),
+    schemas: normalizeSchemaList(wonder.schemas_detected ?? []),
   }));
 
   return NextResponse.json({ timeline, schema_stats: schemaStats });

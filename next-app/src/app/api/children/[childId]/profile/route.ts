@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { normalizeSchemaList } from '@/lib/schemas';
 
 function dbClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -70,7 +71,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
   const schemaCountMap = new Map<string, number>();
 
   for (const row of timelineRows) {
-    const unique = new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0));
+    const unique = new Set(normalizeSchemaList(row.schemas_detected ?? []));
     for (const schema of unique) {
       schemaCountMap.set(schema, (schemaCountMap.get(schema) ?? 0) + 1);
     }
@@ -109,14 +110,14 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
       created_at: row.created_at,
       title: row.title,
       observation: row.observation_text,
-      schemas: Array.from(new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0))),
+      schemas: normalizeSchemaList(row.schemas_detected ?? []),
     })),
     recent_moments: timelineRows.slice(0, 3).map((row) => ({
       id: row.id,
       title: row.title,
       observation: row.observation_text,
       created_at: row.created_at,
-      schemas: Array.from(new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0))),
+      schemas: normalizeSchemaList(row.schemas_detected ?? []),
     })),
     savedArticles,
   });
