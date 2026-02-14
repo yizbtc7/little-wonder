@@ -64,24 +64,6 @@ function interleaveByType(input: Article[]) {
   return out;
 }
 
-function readingStreakDays(completedAts: Array<string | null>) {
-  const days = new Set(
-    completedAts
-      .filter((v): v is string => Boolean(v))
-      .map((v) => new Date(v).toISOString().slice(0, 10))
-  );
-
-  let streak = 0;
-  let cursor = new Date();
-  while (true) {
-    const key = cursor.toISOString().slice(0, 10);
-    if (!days.has(key)) break;
-    streak += 1;
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
-  return streak;
-}
-
 export async function GET() {
   const supabaseAuth = await createSupabaseServerClient();
   const {
@@ -103,7 +85,7 @@ export async function GET() {
     .maybeSingle();
 
   if (!child?.birthdate) {
-    return NextResponse.json({ new_for_you: [], keep_reading: [], deep_dives: [], recently_read: [], stats: { total_available: 0, total_read: 0, reading_streak_days: 0 }, coming_next: [] });
+    return NextResponse.json({ new_for_you: [], keep_reading: [], deep_dives: [], recently_read: [], stats: { total_available: 0, total_read: 0 }, coming_next: [] });
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
@@ -191,7 +173,6 @@ export async function GET() {
     stats: {
       total_available: totalAvailable,
       total_read: totalRead,
-      reading_streak_days: readingStreakDays(Array.from(readsMap.values()).map((r) => r.completed_at)),
     },
   });
 }

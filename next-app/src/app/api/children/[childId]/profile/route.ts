@@ -81,6 +81,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
   const top_schema = schema_stats[0] ?? null;
+  const top_schemas = schema_stats.slice(0, 3);
 
   const savedArticles = ((savedArticlesRows ?? []) as unknown as SavedArticleRow[])
     .map((row) => {
@@ -102,6 +103,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
     interests: (interests ?? []).map((row) => row.interest).filter((v): v is string => typeof v === 'string' && v.length > 0),
     schema_stats,
     top_schema,
+    top_schemas,
     timeline: timelineRows.map((row) => ({
       id: row.id,
       created_at: row.created_at,
@@ -114,6 +116,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
       title: row.title,
       observation: row.observation_text,
       created_at: row.created_at,
+      schemas: Array.from(new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0))),
     })),
     savedArticles,
   });

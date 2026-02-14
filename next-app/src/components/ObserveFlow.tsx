@@ -147,8 +147,9 @@ type ChildProfilePayload = {
   interests?: string[];
   schema_stats?: ProfileSchemaStat[];
   top_schema?: ProfileSchemaStat | null;
+  top_schemas?: ProfileSchemaStat[];
   timeline?: ProfileWonderTimelineEntry[];
-  recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string }>;
+  recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>;
   savedArticles?: ExploreArticleRow[];
 };
 
@@ -653,7 +654,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [savedArticles, setSavedArticles] = useState<ExploreArticleRow[]>([]);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
   const [openArticleOriginTab, setOpenArticleOriginTab] = useState<'explore' | 'profile'>('explore');
-  const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0, reading_streak_days: 0 });
+  const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
   const [showProfileBookmarks, setShowProfileBookmarks] = useState(true);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
@@ -673,11 +674,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [profileInterests, setProfileInterests] = useState<string[]>([]);
-  const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string }>>([]);
+  const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
   const [profileTopSchema, setProfileTopSchema] = useState<ProfileSchemaStat | null>(null);
+  const [profileTopSchemas, setProfileTopSchemas] = useState<ProfileSchemaStat[]>([]);
   const [locale, setLocale] = useState<Language>(initialLanguage);
   const t = translations[locale];
 
@@ -869,7 +871,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             deep_dives?: ExploreArticleRow[];
             recently_read?: ExploreArticleRow[];
             coming_next?: ExploreArticleRow[];
-            stats?: { total_available?: number; total_read?: number; reading_streak_days?: number };
+            stats?: { total_available?: number; total_read?: number };
           };
           setNewForYouArticles(payload.new_for_you ?? []);
           setKeepReadingArticles(payload.keep_reading ?? []);
@@ -879,7 +881,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           setExploreStats({
             total_available: payload.stats?.total_available ?? 0,
             total_read: payload.stats?.total_read ?? 0,
-            reading_streak_days: payload.stats?.reading_streak_days ?? 0,
           });
         }
       } catch {
@@ -1102,6 +1103,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileMomentsCount(payload.child?.moments_count ?? 0);
         setSavedArticles(payload.savedArticles ?? []);
         setProfileTopSchema(payload.top_schema ?? null);
+        setProfileTopSchemas(payload.top_schemas ?? (payload.top_schema ? [payload.top_schema] : []));
       } catch {
         // ignore fetch errors in non-browser test environments
       }
@@ -2195,10 +2197,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       )}
                     </div>
 
-                    {profileTopSchema ? (
-                      <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${theme.colors.divider}`, padding: 14, marginBottom: 18 }}>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{locale === 'es' ? 'Esquema principal' : 'Top schema'}</p>
-                        <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.serif, fontSize: 20, color: theme.colors.charcoal }}>{formatSchemaLabel(profileTopSchema.name)}</p>
+                    {(profileTopSchemas.length > 0 || profileTopSchema) ? (
+                      <div style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
+                        {(profileTopSchemas.length > 0 ? profileTopSchemas : profileTopSchema ? [profileTopSchema] : []).slice(0, 3).map((schema, idx) => {
+                          const softBg = ['#FFF6F3', '#F4F2FF', '#EEF8F0'][idx % 3];
+                          const contextLine = schemaContextLine(schema.name, childName);
+                          return (
+                            <div key={schema.name} style={{ background: softBg, borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '12px 14px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 17, color: theme.colors.charcoal }}>{formatSchemaLabel(schema.name)}</p>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: theme.colors.roseDark, background: '#fff', borderRadius: 999, padding: '3px 8px' }}>{schema.count}</span>
+                              </div>
+                              {contextLine ? <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{contextLine}</p> : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : null}
 
@@ -2207,19 +2220,27 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       {profileInterests.length === 0 ? (
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
                       ) : profileInterests.map((interest) => (
-                        <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
+                        <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{interest}</span>
                       ))}
+                      <button type='button' style={{ border: '1px dashed #E1B7AF', background: '#FFF7F5', borderRadius: 50, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, fontWeight: 700, cursor: 'default' }}>+ {locale === 'es' ? 'Agregar' : 'Add'}</button>
                     </div>
 
                     <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
                     {profileRecentMoments.length === 0 ? (
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
-                    ) : profileRecentMoments.map((moment) => (
-                      <div key={moment.id} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: 12, marginBottom: 8 }}>
-                        <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>{moment.title}</p>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{moment.observation}</p>
-                      </div>
-                    ))}
+                    ) : profileRecentMoments.map((moment) => {
+                      const firstSchema = moment.schemas?.[0];
+                      return (
+                        <div key={moment.id} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: 12, marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                            <span style={{ width: 7, height: 7, borderRadius: 999, background: theme.colors.rose, display: 'inline-block' }} />
+                            {firstSchema ? <span style={{ fontSize: 10, color: theme.colors.roseDark, background: '#FFF0ED', padding: '2px 8px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(firstSchema)}</span> : null}
+                          </div>
+                          <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>{moment.title}</p>
+                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{moment.observation}</p>
+                        </div>
+                      );
+                    })}
 
 
                     <div ref={profileBookmarksRef} tabIndex={-1} style={{ outline: 'none', marginTop: 10, marginBottom: 18 }}>
@@ -2227,35 +2248,39 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                         <span>{locale === 'es' ? 'Artículos guardados' : 'Saved articles'} <span style={{ fontSize: 11, background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '2px 8px', marginLeft: 6 }}>{savedArticles.length}</span></span>
                         <span style={{ display: 'inline-block', transform: showProfileBookmarks ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>›</span>
                       </button>
-                      {showProfileBookmarks ? (
-                        <div style={{ marginTop: 10 }}>
-                          {savedArticles.length === 0 ? (
-                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>
-                              {locale === 'es' ? 'Aún no hay artículos guardados.' : 'No saved articles yet.'}
-                            </p>
-                          ) : null}
-                          {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
-                            const badge = article.type === 'research'
-                              ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
-                              : article.type === 'guide'
-                                ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
-                                : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
-                            return (
-                              <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
-                                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                          {savedArticles.length > 0 && showProfileBookmarks ? (
-                            <button onClick={() => setShowProfileBookmarks(false)} style={{ border: 'none', background: 'none', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                      <div style={{ marginTop: 10 }}>
+                        {savedArticles.length === 0 ? (
+                          <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>
+                            {locale === 'es' ? 'Aún no hay artículos guardados.' : 'No saved articles yet.'}
+                          </p>
+                        ) : null}
+                        {(showProfileBookmarks ? savedArticles : savedArticles.slice(0, 2)).map((article) => {
+                          const badge = article.type === 'research'
+                            ? { label: locale === 'es' ? 'Investigación' : 'Research', bg: '#EDE5F5', color: '#8B6CAE' }
+                            : article.type === 'guide'
+                              ? { label: locale === 'es' ? 'Guía' : 'Guide', bg: '#E8F5EE', color: '#5A9E6F' }
+                              : { label: locale === 'es' ? 'Artículo' : 'Article', bg: '#FFF0ED', color: '#D4766A' };
+                          return (
+                            <button key={`profile-saved-${article.id}`} onClick={() => { setOpenArticleOriginTab('profile'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.4 }}>{article.title}</span>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 10, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, flexShrink: 0 }}>{badge.label}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {savedArticles.length > 2 ? (
+                          showProfileBookmarks ? (
+                            <button onClick={() => setShowProfileBookmarks(false)} style={{ border: `1px solid ${theme.colors.divider}`, background: '#fff', borderRadius: 999, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
                               {locale === 'es' ? 'Mostrar menos' : 'Show less'}
                             </button>
-                          ) : null}
-                        </div>
-                      ) : null}
+                          ) : (
+                            <button onClick={() => setShowProfileBookmarks(true)} style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 700 }}>
+                              {locale === 'es' ? `Ver todos (${savedArticles.length})` : `Show all (${savedArticles.length})`}
+                            </button>
+                          )
+                        ) : null}
+                      </div>
                     </div>
                   </>
                 ) : null}
@@ -2292,7 +2317,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         </div>
       ) : null}
 
-      <nav style={{ background: 'rgba(255,251,247,0.92)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0 26px' }}>
+      <p style={{ margin: '10px 0 6px', textAlign: 'center', fontFamily: theme.fonts.sans, fontSize: 11, color: 'rgba(123,115,113,0.78)' }}>
+        {locale === 'es' ? 'Hecho para acompañar tu mirada curiosa.' : 'Made to support your curious parenting eye.'}
+      </p>
+      <nav style={{ background: 'rgba(255,251,247,0.9)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${theme.colors.divider}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 30px' }}>
         {[
           { id: 'chat' as Tab, icon: '💬', label: t.tabs.chat },
           { id: 'explore' as Tab, icon: '🔭', label: t.tabs.learn },
