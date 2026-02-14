@@ -73,7 +73,7 @@ export const translations = {
       whatHappeningNow: 'Lo que está pasando ahora',
       newForYou: '🆕 Nuevo para ti',
       keepReading: '📖 Sigue leyendo',
-      deepDives: '🔬 Profundizaciones',
+      deepDives: '🔬 Investigaciones',
       allCaughtUp: (childName: string) => `✨ ¡Estás al día! Aparecerán nuevos artículos mientras ${childName} crece.`,
       upcomingLocked: 'Explora artículos de los próximos meses 🔒',
       continueReading: 'Continuar leyendo →',
