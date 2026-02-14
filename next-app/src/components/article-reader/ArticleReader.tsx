@@ -117,13 +117,24 @@ function parseMarkdownToSections(body: string): ArticleSection[] {
   let paragraph: string[] = [];
 
   const flushParagraph = () => {
-    const text = paragraph.join(' ').trim();
+    const text = paragraph.join(' ').replace(/\s+/g, ' ').trim();
     if (text) sections.push({ type: 'body', text });
     paragraph = [];
   };
 
-  for (const raw of lines) {
-    const line = raw.trim();
+  const isSectionBreak = (line: string) => {
+    const l = line.trim();
+    return (
+      !l ||
+      l === '---' ||
+      l.startsWith('## ') ||
+      /^\d+\.\s+\*\*/.test(l) ||
+      l.startsWith('>')
+    );
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i].trim();
 
     if (!line) {
       flushParagraph();
@@ -142,41 +153,89 @@ function parseMarkdownToSections(body: string): ArticleSection[] {
       continue;
     }
 
-    const numbered = line.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s+[—-]\s+(.+)$/);
+    const numbered = line.match(/^(\d+)\.\s+\*\*(.+?)\*\*(?:\s*[—-]\s*(.*))?$/);
     if (numbered) {
       flushParagraph();
-      sections.push({ type: 'numbered_insight', number: Number(numbered[1]), title: numbered[2].trim(), text: numbered[3].trim() });
+      const number = Number(numbered[1]);
+      const title = numbered[2].trim();
+      const textParts = [numbered[3] ?? ''].filter(Boolean);
+
+      while (i + 1 < lines.length) {
+        const nextRaw = lines[i + 1];
+        const next = nextRaw.trim();
+        if (isSectionBreak(nextRaw) && next) break;
+        if (!next) {
+          i += 1;
+          break;
+        }
+        textParts.push(next);
+        i += 1;
+      }
+
+      sections.push({
+        type: 'numbered_insight',
+        number,
+        title,
+        text: textParts.join(' ').replace(/\s+/g, ' ').trim(),
+      });
       continue;
     }
 
     if (line.startsWith('>')) {
       flushParagraph();
-      const quote = line.replace(/^>\s?/, '').trim();
 
-      if (quote.startsWith('💡')) {
-        sections.push({ type: 'pull_quote', emoji: '💡', text: quote.replace(/^💡\s*/, '') });
+      const quoteLines: string[] = [];
+      while (i < lines.length) {
+        const current = lines[i].trim();
+        if (!current.startsWith('>')) break;
+        quoteLines.push(current.replace(/^>\s?/, '').trim());
+        i += 1;
+      }
+      i -= 1;
+
+      const quoteText = quoteLines.join('\n').trim();
+      const firstLine = quoteLines[0] ?? '';
+      const restText = quoteLines.slice(1).join(' ').replace(/\s+/g, ' ').trim();
+
+      if (firstLine.startsWith('💡')) {
+        const first = firstLine.replace(/^💡\s*/, '').trim();
+        sections.push({ type: 'pull_quote', emoji: '💡', text: `${first} ${restText}`.trim() });
         continue;
       }
 
-      if (quote.startsWith('🔬')) {
-        const science = quote.replace(/^🔬\s*/, '');
-        const m = science.match(/^\*\*(.+?)\*\*\s*(.*)$/);
-        sections.push({ type: 'science_callout', title: m?.[1]?.trim() || undefined, text: m?.[2]?.trim() || science });
+      if (firstLine.startsWith('🔬')) {
+        const scienceHead = firstLine.replace(/^🔬\s*/, '').trim();
+        const withBoldTitle = scienceHead.match(/^\*\*(.+?)\*\*\s*(.*)$/);
+        if (withBoldTitle) {
+          sections.push({
+            type: 'science_callout',
+            title: withBoldTitle[1].trim(),
+            text: `${withBoldTitle[2]} ${restText}`.trim(),
+          });
+        } else {
+          sections.push({
+            type: 'science_callout',
+            title: scienceHead || undefined,
+            text: restText || scienceHead,
+          });
+        }
         continue;
       }
 
-      if (quote.startsWith('🌱')) {
-        sections.push({ type: 'try_this', text: quote.replace(/^🌱\s*/, '') });
+      if (firstLine.startsWith('🌱')) {
+        const first = firstLine.replace(/^🌱\s*/, '').trim();
+        sections.push({ type: 'try_this', text: `${first} ${restText}`.trim() });
         continue;
       }
 
-      if (quote.startsWith('💛') || quote.startsWith('🤲')) {
-        const emoji = quote.startsWith('💛') ? '💛' : '🤲';
-        sections.push({ type: 'warm_tip', emoji, text: quote.replace(/^(💛|🤲)\s*/, '') });
+      if (firstLine.startsWith('💛') || firstLine.startsWith('🤲')) {
+        const emoji = firstLine.startsWith('💛') ? '💛' : '🤲';
+        const first = firstLine.replace(/^(💛|🤲)\s*/, '').trim();
+        sections.push({ type: 'warm_tip', emoji, text: `${first} ${restText}`.trim() });
         continue;
       }
 
-      paragraph.push(quote);
+      paragraph.push(quoteText.replace(/\s+/g, ' ').trim());
       continue;
     }
 
