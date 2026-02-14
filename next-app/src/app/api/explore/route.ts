@@ -111,7 +111,10 @@ export async function GET() {
           language: dailyTip.language,
           article: {
             tip: dailyTip.body,
-            why: dailyTip.body,
+            why:
+              dailyTip.language === 'es'
+                ? 'Este tipo de micro-momentos fortalece funciones ejecutivas, lenguaje y vínculo emocional cuando se repiten con calma y presencia.'
+                : 'These small daily moments strengthen executive function, language, and emotional connection when repeated with calm presence.',
           },
         }
       : null,
