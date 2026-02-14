@@ -16,6 +16,8 @@ type Article = {
   domain: string | null;
   language: string;
   read_time_minutes: number | null;
+  content: { sections?: unknown[]; sources?: string } | null;
+  sources: string | null;
   created_at: string;
 };
 
@@ -115,7 +117,7 @@ export async function GET() {
   for (const language of languagePriority(preferredLanguage)) {
     const { data: allRows, error } = await db
       .from('explore_articles')
-      .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
+      .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,content,sources,created_at')
       .eq('language', language)
       .lte('age_min_months', ageMonths)
       .gte('age_max_months', ageMonths)
@@ -175,7 +177,7 @@ export async function GET() {
 
   const { data: upcomingRows } = await db
     .from('explore_articles')
-    .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
+    .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,content,sources,created_at')
     .eq('language', chosenLanguage)
     .gte('age_min_months', ageMonths + 1)
     .lte('age_min_months', ageMonths + 3)

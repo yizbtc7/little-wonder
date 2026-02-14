@@ -1,0 +1,82 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
+
+function dbClient() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+}
+
+type TimelineRow = {
+  id: string;
+  created_at: string;
+  title: string;
+  observation_text: string;
+  schemas_detected: string[] | null;
+};
+
+export async function GET(_: Request, context: { params: Promise<{ childId: string }> }) {
+  const supabaseAuth = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabaseAuth.auth.getUser();
+
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { childId } = await context.params;
+  const db = dbClient();
+
+  const { data: child, error: childError } = await db
+    .from('children')
+    .select('id,name,birthdate,photo_url,curiosity_quote,curiosity_quote_updated_at,current_streak,last_moment_date,created_at')
+    .eq('id', childId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (childError) return NextResponse.json({ error: childError.message }, { status: 500 });
+  if (!child) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const [{ data: interests }, { data: timeline }, observationCountResult] = await Promise.all([
+    db.from('child_interests').select('interest').eq('child_id', childId).order('interest', { ascending: true }),
+    db.from('wonders').select('id,created_at,title,observation_text,schemas_detected').eq('child_id', childId).order('created_at', { ascending: false }).limit(50),
+    db.from('observations').select('id', { count: 'exact', head: true }).eq('child_id', childId).eq('user_id', user.id),
+  ]);
+
+  const timelineRows = (timeline ?? []) as TimelineRow[];
+  const schemaCountMap = new Map<string, number>();
+
+  for (const row of timelineRows) {
+    const unique = new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0));
+    for (const schema of unique) {
+      schemaCountMap.set(schema, (schemaCountMap.get(schema) ?? 0) + 1);
+    }
+  }
+
+  const schema_stats = Array.from(schemaCountMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  const top_schema = schema_stats[0] ?? null;
+
+  return NextResponse.json({
+    child: {
+      ...child,
+      moments_count: observationCountResult.count ?? 0,
+    },
+    interests: (interests ?? []).map((row) => row.interest).filter((v): v is string => typeof v === 'string' && v.length > 0),
+    schema_stats,
+    top_schema,
+    timeline: timelineRows.map((row) => ({
+      id: row.id,
+      created_at: row.created_at,
+      title: row.title,
+      observation: row.observation_text,
+      schemas: Array.from(new Set((row.schemas_detected ?? []).filter((s): s is string => typeof s === 'string' && s.length > 0))),
+    })),
+    recent_moments: timelineRows.slice(0, 3).map((row) => ({
+      id: row.id,
+      title: row.title,
+      observation: row.observation_text,
+      created_at: row.created_at,
+    })),
+  });
+}

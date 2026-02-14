@@ -9,6 +9,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 import { translations, type Language } from '@/lib/translations';
+import ArticleReader, { type ArticleContent } from '@/components/article-reader/ArticleReader';
 
 type WonderPayload = {
   title: string;
@@ -88,6 +89,8 @@ type ExploreArticleRow = {
   domain: string | null;
   language: string;
   read_time_minutes?: number;
+  content?: ArticleContent | null;
+  sources?: string | null;
   created_at: string;
   is_read?: boolean;
   opened_at?: string | null;
@@ -129,6 +132,24 @@ type ProfileWonderTimelineEntry = {
 type ProfileSchemaStat = {
   name: string;
   count: number;
+};
+
+type ChildProfilePayload = {
+  child?: {
+    id: string;
+    name: string;
+    birthdate: string | null;
+    photo_url: string | null;
+    curiosity_quote: string | null;
+    curiosity_quote_updated_at: string | null;
+    current_streak: number;
+    moments_count: number;
+  };
+  interests?: string[];
+  schema_stats?: ProfileSchemaStat[];
+  top_schema?: ProfileSchemaStat | null;
+  timeline?: ProfileWonderTimelineEntry[];
+  recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string }>;
 };
 
 type Props = {
@@ -633,6 +654,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0, reading_streak_days: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
+  const [focusChatComposerIntent, setFocusChatComposerIntent] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
   const [activitiesList, setActivitiesList] = useState<ActivityItem[]>([]);
@@ -645,12 +667,27 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [activitiesRetry, setActivitiesRetry] = useState(0);
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
+  const [profileInterests, setProfileInterests] = useState<string[]>([]);
+  const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string }>>([]);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
+  const [profileStreak, setProfileStreak] = useState(0);
+  const [profileMomentsCount, setProfileMomentsCount] = useState(0);
+  const [profileTopSchema, setProfileTopSchema] = useState<ProfileSchemaStat | null>(null);
   const [locale, setLocale] = useState<Language>(initialLanguage);
   const t = translations[locale];
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    if (activeTab !== 'chat' || !focusChatComposerIntent) return;
+    requestAnimationFrame(() => {
+      textAreaRef.current?.focus();
+      setFocusChatComposerIntent(false);
+    });
+  }, [activeTab, focusChatComposerIntent]);
 
   const prompts = useMemo(() => getQuickPrompts(getAgeMonths(childBirthdate), childName, locale), [childBirthdate, childName, locale]);
 
@@ -941,22 +978,23 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     if (activeTab !== 'profile') return;
     void (async () => {
       try {
-        const response = await fetch(apiUrl('/api/profile/wonders'));
-        if (!response.ok) {
-          setTimeout(() => setActivitiesRetry((v) => v + 1), 1200);
-          return;
-        }
-        const payload = (await response.json()) as {
-          timeline?: ProfileWonderTimelineEntry[];
-          schema_stats?: ProfileSchemaStat[];
-        };
+        const response = await fetch(apiUrl(`/api/children/${childId}/profile`));
+        if (!response.ok) return;
+        const payload = (await response.json()) as ChildProfilePayload;
         setProfileTimeline(payload.timeline ?? []);
         setProfileSchemaStats(payload.schema_stats ?? []);
+        setProfileInterests(payload.interests ?? []);
+        setProfileRecentMoments(payload.recent_moments ?? []);
+        setProfilePhotoUrl(payload.child?.photo_url ?? null);
+        setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
+        setProfileStreak(payload.child?.current_streak ?? 0);
+        setProfileMomentsCount(payload.child?.moments_count ?? 0);
+        setProfileTopSchema(payload.top_schema ?? null);
       } catch {
         // ignore fetch errors in non-browser test environments
       }
     })();
-  }, [activeTab]);
+  }, [activeTab, childId]);
 
   const toggleSaveActivity = async (activityId: string, isSaved: boolean) => {
     await fetch(apiUrl(`/api/activities/${activityId}/save`), { method: isSaved ? 'DELETE' : 'POST' });
@@ -1104,52 +1142,19 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   };
 
   if (activeTab === 'explore' && openExploreArticle) {
-    const accentByType: Record<ExploreArticleRow['type'], string> = {
-      article: theme.colors.rose,
-      research: theme.colors.lavender,
-      guide: theme.colors.sage,
-    };
-
-    const accent = accentByType[openExploreArticle.type] ?? theme.colors.rose;
-    const personalizedTitle = withChildName(openExploreArticle.title, childName);
-    const personalizedBody = withChildName(openExploreArticle.body, childName);
-    const personalizedIntro = `For ${childName} (${childAgeLabel}), this is especially relevant right now. Use it as a lens to observe one concrete moment today and respond in a way that supports their current developmental pattern.`;
-
     return (
-      <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
-        <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 36px' }}>
-          <button onClick={() => setOpenExploreArticle(null)} style={{ background: 'rgba(255,255,255,0.5)', border: 'none', borderRadius: 50, padding: '8px 16px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText, cursor: 'pointer', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22 }}>
-            <span style={{ fontSize: 14 }}>←</span> Back to Learn
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <span style={{ fontSize: 30 }}>{openExploreArticle.emoji}</span>
-            <span style={{ fontSize: 10, color: accent, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{formatExploreTypeLabel(openExploreArticle.type, locale)}</span>
-            {openExploreArticle.domain ? <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.domain}</span> : null}
-            <span style={{ fontSize: 10, color: theme.colors.midText, background: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{openExploreArticle.read_time_minutes ? `${openExploreArticle.read_time_minutes} min read` : estimateReadTime(openExploreArticle.body)}</span>
-          </div>
-
-          <h1 style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.15, color: theme.colors.charcoal }}>{personalizedTitle}</h1>
-        </div>
-
-        <div style={{ padding: '0 24px 40px' }}>
-          <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 16, padding: '12px 14px', marginBottom: 16 }}>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.55, color: theme.colors.midText }}>{personalizedIntro}</p>
-          </div>
-          <div
-            style={{ fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}
-            dangerouslySetInnerHTML={{ __html: markdownToHtml(personalizedBody) }}
-          />
-          {articleReadPulse ? <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.sage, fontWeight: 700 }}>✓ Read</p> : null}
-          <style>{`
-            h2 { font-family: ${theme.fonts.serif}; font-size: 22px; margin: 24px 0 8px; color: ${theme.colors.charcoal}; }
-            h3 { font-family: ${theme.fonts.serif}; font-size: 18px; margin: 18px 0 6px; color: ${theme.colors.charcoal}; }
-            p { margin: 0 0 14px; }
-            ul, ol { margin: 0 0 14px 20px; padding: 0; }
-            li { margin-bottom: 6px; }
-          `}</style>
-        </div>
-      </main>
+      <ArticleReader
+        article={openExploreArticle}
+        childName={childName}
+        childAgeLabel={childAgeLabel}
+        locale={locale}
+        onBack={() => setOpenExploreArticle(null)}
+        onRegisterMoment={() => {
+          setOpenExploreArticle(null);
+          setActiveTab('chat');
+          setFocusChatComposerIntent(true);
+        }}
+      />
     );
   }
 
@@ -1990,63 +1995,95 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             </div>
           ) : (
             <>
-              <div style={{ background: `linear-gradient(160deg, ${theme.colors.blush} 0%, ${theme.colors.blushMid} 50%, rgba(232,160,144,0.25) 100%)`, padding: '20px 20px 24px', borderRadius: '0 0 32px 32px' }}>
+              <div style={{ background: `linear-gradient(160deg, ${theme.colors.blush} 0%, ${theme.colors.blushMid} 48%, rgba(232,160,144,0.2) 100%)`, padding: '20px 20px 24px', borderRadius: '0 0 32px 32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{childName}</h1>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText }}>{childAgeLabel}</span>
-                      <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 18, background: 'rgba(255,255,255,0.65)', border: `1px solid ${theme.colors.blushMid}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 26 }}>
+                      {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
+                    </div>
+                    <div>
+                      <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 28, fontWeight: 700, color: theme.colors.charcoal }}>{childName}</h1>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText }}>{childAgeLabel}</span>
+                        <span style={{ fontSize: 11, color: theme.colors.roseDark, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{STAGE_CONTENT.stage}</span>
+                      </div>
                     </div>
                   </div>
-                  <button onClick={() => setProfileTab('settings')} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>⚙️</button>
+                  <button onClick={() => setProfileTab('settings')} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>⚙️</button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   {[
-                    { n: profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
-                    { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
-                    { n: (locale === 'es' ? ['🎵 Música', '📦 Construcción', '🐛 Animales', '📚 Libros'] : ['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books']).length, l: locale === 'es' ? 'Intereses' : 'Interests' },
+                    { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
+                    { n: profileStreak, l: locale === 'es' ? 'Racha' : 'Streak' },
+                    { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
-                    <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.5)', borderRadius: 18, padding: 12, textAlign: 'center' }}>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 22, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
+                    <div key={s.l} style={{ flex: 1, background: 'rgba(255,255,255,0.6)', borderRadius: 16, padding: 10, textAlign: 'center' }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontSize: 21, fontWeight: 700, color: theme.colors.charcoal }}>{s.n}</p>
                       <p style={{ margin: '2px 0 0', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.midText }}>{s.l}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', padding: '0 20px', marginTop: 20, borderBottom: `1px solid ${theme.colors.divider}` }}>
+              <div style={{ display: 'flex', padding: '0 20px', marginTop: 18, borderBottom: `1px solid ${theme.colors.divider}` }}>
                 {(['overview', 'timeline'] as const).map((tab) => (
-                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, textTransform: 'capitalize', color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab === 'overview' ? t.profile.overview : t.profile.timeline}</button>
+                  <button key={tab} onClick={() => setProfileTab(tab)} style={{ background: 'none', border: 'none', padding: '8px 16px 12px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: profileTab === tab ? theme.colors.roseDark : theme.colors.lightText, borderBottom: profileTab === tab ? `2px solid ${theme.colors.rose}` : '2px solid transparent' }}>{tab === 'overview' ? (locale === 'es' ? 'Resumen' : 'Overview') : (locale === 'es' ? 'Línea de Tiempo' : 'Timeline')}</button>
                 ))}
               </div>
 
               <div style={{ padding: 20 }}>
                 {profileTab === 'overview' ? (
                   <>
-                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.schemasDetected}</h3>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                    <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 14, border: `1px solid ${theme.colors.divider}` }}>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.lightText }}>{locale === 'es' ? 'Frase de curiosidad' : 'Curiosity quote'}</p>
+                      <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.5, color: theme.colors.roseDark }}>
+                        {profileCuriosityQuote || (locale === 'es' ? `${childName} está construyendo su mundo, un momento a la vez.` : `${childName} is building a world, one moment at a time.`)}
+                      </p>
+                    </div>
+
+                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema garden'}</h3>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
                       {profileSchemaStats.length === 0 ? (
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noSchemaData}</p>
                       ) : (
                         profileSchemaStats.map((schema, idx) => {
                           const bg = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#E8F0E4'][idx % 4];
                           return (
-                            <div key={schema.name} style={{ background: bg, borderRadius: 18, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: theme.colors.darkText }}>{formatSchemaLabel(schema.name)}</span>
-                              <span style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 10, padding: '2px 7px', fontSize: 11, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
+                            <div key={schema.name} style={{ background: bg, borderRadius: 16, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.darkText }}>{formatSchemaLabel(schema.name)}</span>
+                              <span style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 700, color: theme.colors.midText }}>{schema.count}</span>
                             </div>
                           );
                         })
                       )}
                     </div>
-                    <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {(locale === 'es' ? ['🎵 Música', '📦 Construcción', '🐛 Animales', '📚 Libros'] : ['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books']).map((interest) => (
+
+                    {profileTopSchema ? (
+                      <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${theme.colors.divider}`, padding: 14, marginBottom: 18 }}>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{locale === 'es' ? 'Esquema principal' : 'Top schema'}</p>
+                        <p style={{ margin: '4px 0 0', fontFamily: theme.fonts.serif, fontSize: 20, color: theme.colors.charcoal }}>{formatSchemaLabel(profileTopSchema.name)}</p>
+                      </div>
+                    ) : null}
+
+                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+                      {profileInterests.length === 0 ? (
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
+                      ) : profileInterests.map((interest) => (
                         <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
                       ))}
                     </div>
+
+                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Momentos recientes' : 'Recent moments'}</h3>
+                    {profileRecentMoments.length === 0 ? (
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.profile.noWonders}</p>
+                    ) : profileRecentMoments.map((moment) => (
+                      <div key={moment.id} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: 12, marginBottom: 8 }}>
+                        <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>{moment.title}</p>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{moment.observation}</p>
+                      </div>
+                    ))}
                   </>
                 ) : null}
 
