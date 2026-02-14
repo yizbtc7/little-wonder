@@ -865,15 +865,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [recentlyReadArticles, setRecentlyReadArticles] = useState<ExploreArticleRow[]>([]);
   const [comingNextArticles, setComingNextArticles] = useState<ExploreArticleRow[]>([]);
   const [savedArticles, setSavedArticles] = useState<ExploreArticleRow[]>([]);
+  const [savedArticlesViewOrigin, setSavedArticlesViewOrigin] = useState<'explore' | 'profile' | null>(null);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
   const [openArticleOriginTab, setOpenArticleOriginTab] = useState<'explore' | 'profile'>('explore');
+  const [returnToSavedArticlesViewOnReaderBack, setReturnToSavedArticlesViewOnReaderBack] = useState(false);
   const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0 });
   const [showReadArticles, setShowReadArticles] = useState(false);
   const [showProfileBookmarks, setShowProfileBookmarks] = useState(false);
   const [showAllRecentMoments, setShowAllRecentMoments] = useState(false);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
   const [readerToast, setReaderToast] = useState('');
-  const [pendingProfileBookmarksFocus, setPendingProfileBookmarksFocus] = useState(false);
   const [focusChatComposerIntent, setFocusChatComposerIntent] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
@@ -902,6 +903,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const t = translations[locale];
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const exploreScrollRef = useRef<HTMLDivElement>(null);
+  const profileScrollRef = useRef<HTMLDivElement>(null);
+  const savedArticlesReturnScrollRef = useRef<number>(0);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileBookmarksRef = useRef<HTMLDivElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -1222,18 +1226,25 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     setTimeout(() => setReaderToast(''), 1500);
   };
 
-  const openAllSavedInProfile = () => {
-    setActiveTab('profile');
-    setShowProfileBookmarks(true);
-    setPendingProfileBookmarksFocus(true);
+  const openSavedArticlesView = (origin: 'explore' | 'profile') => {
+    const sourceRef = origin === 'explore' ? exploreScrollRef : profileScrollRef;
+    savedArticlesReturnScrollRef.current = sourceRef.current?.scrollTop ?? 0;
+    setSavedArticlesViewOrigin(origin);
+    setActiveTab(origin);
+    setReturnToSavedArticlesViewOnReaderBack(false);
   };
 
-  useEffect(() => {
-    if (activeTab !== 'profile' || !pendingProfileBookmarksFocus) return;
-    profileBookmarksRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    profileBookmarksRef.current?.focus();
-    setPendingProfileBookmarksFocus(false);
-  }, [activeTab, pendingProfileBookmarksFocus]);
+  const handleBackFromSavedArticlesView = () => {
+    if (!savedArticlesViewOrigin) return;
+    const origin = savedArticlesViewOrigin;
+    const scrollTop = savedArticlesReturnScrollRef.current;
+    setSavedArticlesViewOrigin(null);
+    setActiveTab(origin);
+    requestAnimationFrame(() => {
+      const sourceRef = origin === 'explore' ? exploreScrollRef : profileScrollRef;
+      sourceRef.current?.scrollTo({ top: scrollTop, behavior: 'auto' });
+    });
+  };
 
   useEffect(() => {
     if (!openExploreArticle) return;
@@ -2125,7 +2136,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F0EDE8', padding: '14px 14px 8px', marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>🔖 {locale === 'es' ? 'Guardados' : 'Saved'}</p>
-                  <button onClick={openAllSavedInProfile} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: '#D4766A' }}>
+                  <button onClick={() => openSavedArticlesView('explore')} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: '#D4766A' }}>
                     {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
                   </button>
                 </div>
@@ -2763,7 +2774,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                 {formatSchemaChipLabel(schemaForChip)}
                               </span>
                             </div>
-                            <p style={{ margin: '10px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 15.5, fontWeight: 700, lineHeight: 1.4, color: '#4A3A36' }}>{momentBody}</p>
+                            <p style={{ margin: '10px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, lineHeight: 1.38, color: '#3E302C' }}>{momentBody}</p>
                           </div>
                         );
                       })}
@@ -2942,7 +2953,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                     {chipLabel}
                                   </span>
                                 </div>
-                                <p style={{ margin: '9px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 15, lineHeight: 1.42, fontWeight: 700, color: '#493A36' }}>
+                                <p style={{ margin: '9px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 16, lineHeight: 1.4, fontWeight: 800, color: '#3E302C' }}>
                                   {bodyText}
                                 </p>
                               </div>
