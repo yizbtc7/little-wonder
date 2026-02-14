@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import FadeUp from '@/components/ui/FadeUp';
 import SoftButton from '@/components/ui/SoftButton';
 import { DAILY_INSIGHT } from '@/data/daily-insights';
@@ -676,6 +676,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [profileInterests, setProfileInterests] = useState<string[]>([]);
   const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [profilePhotoError, setProfilePhotoError] = useState<string>('');
+  const [profilePhotoUploading, setProfilePhotoUploading] = useState(false);
   const [profileCuriosityQuote, setProfileCuriosityQuote] = useState<string>('');
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
   const [profileTopSchema, setProfileTopSchema] = useState<ProfileSchemaStat | null>(null);
@@ -686,6 +688,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileBookmarksRef = useRef<HTMLDivElement>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -705,7 +708,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   ];
 
   const quoteOfTheDay = t.chat.quoteLine;
-
+  const maxPhotoSizeBytes = 5 * 1024 * 1024;
 
   const DAILY_INSIGHT_ES = {
     tip: `Cuando leas con ${childName} esta noche, deja que pase las páginas, aunque se salte algunas.`,
@@ -1135,6 +1138,58 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       setTimeout(() => setCopiedInviteLink(false), 1800);
     } catch {
       setCopiedInviteLink(false);
+    }
+  };
+
+  const openProfilePhotoPicker = () => {
+    if (profilePhotoUploading) return;
+    setProfilePhotoError('');
+    profilePhotoInputRef.current?.click();
+  };
+
+  const uploadProfilePhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+    const inputElement = event.target;
+    const selectedFile = inputElement.files?.[0];
+
+    if (!selectedFile) return;
+
+    const isImage = selectedFile.type.startsWith('image/');
+    if (!isImage) {
+      setProfilePhotoError(locale === 'es' ? 'Por favor elige una imagen válida.' : 'Please choose a valid image file.');
+      inputElement.value = '';
+      return;
+    }
+
+    if (selectedFile.size > maxPhotoSizeBytes) {
+      setProfilePhotoError(locale === 'es' ? 'La imagen es muy pesada. Máximo 5MB.' : 'Image is too large. Maximum size is 5MB.');
+      inputElement.value = '';
+      return;
+    }
+
+    setProfilePhotoUploading(true);
+    setProfilePhotoError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('photo', selectedFile);
+
+      const response = await fetch(apiUrl(`/api/children/${childId}/photo`), {
+        method: 'POST',
+        body: formData,
+      });
+
+      const payload = (await response.json()) as { error?: string; photo_url?: string };
+
+      if (!response.ok || !payload.photo_url) {
+        throw new Error(payload.error || 'upload_failed');
+      }
+
+      setProfilePhotoUrl(payload.photo_url);
+    } catch {
+      setProfilePhotoError(locale === 'es' ? 'No pudimos subir la foto. Inténtalo de nuevo.' : 'We could not upload the photo. Please try again.');
+    } finally {
+      setProfilePhotoUploading(false);
+      inputElement.value = '';
     }
   };
 
@@ -2133,6 +2188,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             </div>
           ) : (
             <>
+              <input
+                ref={profilePhotoInputRef}
+                type='file'
+                accept='image/*'
+                onChange={(event) => void uploadProfilePhoto(event)}
+                style={{ display: 'none' }}
+              />
               <div style={{ background: `linear-gradient(178deg, #FCEAE5 0%, #F8DFD7 45%, #F4D7CE 100%)`, padding: '14px 18px 18px', borderRadius: '0 0 34px 34px', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', right: -48, top: 108, width: 142, height: 142, borderRadius: '50%', background: 'rgba(255,255,255,0.28)' }} />
                 <div style={{ position: 'absolute', left: -30, bottom: -28, width: 108, height: 108, borderRadius: '50%', background: 'rgba(255,255,255,0.22)' }} />
@@ -2150,14 +2212,36 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                  <div style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', fontSize: 42 }}>
+                  <div
+                    onClick={() => openProfilePhotoPicker()}
+                    role='button'
+                    aria-label={locale === 'es' ? 'Subir foto del niño' : 'Upload child photo'}
+                    style={{ width: 94, height: 94, borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 10px 24px rgba(108,77,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', fontSize: 42, cursor: profilePhotoUploading ? 'default' : 'pointer', opacity: profilePhotoUploading ? 0.8 : 1 }}
+                  >
                     <div style={{ width: '100%', height: '100%', borderRadius: 999, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {profilePhotoUrl ? <img src={profilePhotoUrl} alt={childName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧒'}
                     </div>
-                    <div style={{ position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.16)', zIndex: 2 }}>📷</div>
+                    <button
+                      type='button'
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openProfilePhotoPicker();
+                      }}
+                      aria-label={locale === 'es' ? 'Cambiar foto' : 'Change photo'}
+                      style={{ position: 'absolute', right: -6, bottom: -6, width: 30, height: 30, borderRadius: 999, background: '#FFFFFF', border: '1px solid rgba(232,160,144,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, boxShadow: '0 2px 8px rgba(88,65,58,0.16)', zIndex: 2, cursor: profilePhotoUploading ? 'default' : 'pointer' }}
+                      disabled={profilePhotoUploading}
+                    >
+                      📷
+                    </button>
                   </div>
 
                   <h1 style={{ margin: '12px 0 2px', fontFamily: theme.fonts.serif, fontSize: 30, lineHeight: 1.05, fontWeight: 700, color: '#3E302C' }}>{childName}</h1>
+                  {profilePhotoUploading ? (
+                    <p style={{ margin: '4px 0 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#6E5A55' }}>{locale === 'es' ? 'Subiendo foto…' : 'Uploading photo…'}</p>
+                  ) : null}
+                  {profilePhotoError ? (
+                    <p style={{ margin: '4px 0 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{profilePhotoError}</p>
+                  ) : null}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#6E5A55', fontWeight: 500 }}>{childAgeLabel}</span>
                     <span style={{ fontSize: 11, color: '#B05C52', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.8)', padding: '3px 10px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{`${STAGE_CONTENT.stageEmoji} ${STAGE_CONTENT.stage}`}</span>
