@@ -872,6 +872,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [completedActivities, setCompletedActivities] = useState<ActivityItem[]>([]);
   const [activitiesStats, setActivitiesStats] = useState({ total: 0, completed: 0 });
   const [showCompletedActivities, setShowCompletedActivities] = useState(false);
+  const [showProfileCompletedActivities, setShowProfileCompletedActivities] = useState(false);
   const [childSchemas, setChildSchemas] = useState<string[]>([]);
   const [activitiesLoaded, setActivitiesLoaded] = useState(false);
   const [activitiesRetry, setActivitiesRetry] = useState(0);
@@ -1345,7 +1346,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   }, [locale, childId]);
 
   useEffect(() => {
-    if (activeTab !== 'activities' || activitiesLoaded) return;
+    if ((activeTab !== 'activities' && activeTab !== 'profile') || activitiesLoaded) return;
     void (async () => {
       try {
         const response = await fetch(apiUrl(`/api/activities?child_id=${childId}`));
@@ -2862,6 +2863,52 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                             </div>
                           ) : null}
                         </div>
+                      </div>
+                    ) : null}
+
+                    {completedActivities.length > 0 ? (
+                      <div style={{ marginBottom: 32 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 18, lineHeight: 1 }}>✅</span>
+                            <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
+                              {locale === 'es' ? 'Actividades realizadas' : 'Completed activities'}
+                            </h3>
+                            <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: '#4F8E65', background: '#EAF7ED', borderRadius: 999, padding: '5px 12px', lineHeight: 1, minWidth: 30, textAlign: 'center' }}>
+                              {completedActivities.length}
+                            </span>
+                          </div>
+                          {completedActivities.length > 2 ? (
+                            <button
+                              type='button'
+                              onClick={() => setShowProfileCompletedActivities((prev) => !prev)}
+                              style={{ border: 'none', background: 'transparent', padding: '2px 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              {showProfileCompletedActivities
+                                ? (locale === 'es' ? 'Ver menos →' : 'Show less →')
+                                : (locale === 'es' ? 'Ver todos →' : 'View all →')}
+                            </button>
+                          ) : null}
+                        </div>
+
+                        {(showProfileCompletedActivities ? completedActivities : completedActivities.slice(0, 2)).map((activity) => (
+                          <div key={`profile-completed-${activity.id}`} style={{ background: '#fff', borderRadius: 16, padding: '11px 12px', marginBottom: 9, border: '1px solid #ECE2DD', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, opacity: 0.9 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                              <span style={{ width: 30, height: 30, borderRadius: 999, background: '#EAF7ED', border: '1px solid #D8EEDC', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>
+                                {activity.emoji || '✅'}
+                              </span>
+                              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: '#493A35', lineHeight: 1.28, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {withChildName(activity.title, childName)}
+                                </span>
+                                <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782' }}>
+                                  {activity.completed_at ? `${locale === 'es' ? 'Completada' : 'Completed'} · ${formatRelativeMomentDate(activity.completed_at, locale)}` : (locale === 'es' ? 'Completada' : 'Completed')}
+                                </span>
+                              </span>
+                            </span>
+                            <span style={{ flexShrink: 0, fontSize: 16 }}>✅</span>
+                          </div>
+                        ))}
                       </div>
                     ) : null}
                   </>
