@@ -1312,11 +1312,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
               <div style={{ padding: '0 24px 40px' }}>
                 <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
-                {String(openWonder.article.pull_quote ?? '').trim() ? (
-                  <div style={{ margin: '0 0 24px', padding: '22px 0', borderTop: `2px solid ${theme.colors.rose}55`, borderBottom: `2px solid ${theme.colors.rose}55` }}>
-                    <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontStyle: 'italic', fontWeight: 700, textAlign: 'center', fontSize: 20, color: '#2A2A2A' }}>{openWonder.article.pull_quote}</p>
-                  </div>
-                ) : null}
                 {(openWonder.article.signs ?? []).filter((sign) => String(sign ?? '').trim()).length > 0 ? (
                   <>
                     <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, textTransform: 'uppercase', letterSpacing: 0.8 }}>✨ {locale === 'es' ? 'Lo reconocerás cuando…' : 'You\'ll recognize it when…'}</p>
