@@ -2362,7 +2362,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             <div style={{ width: 88, height: 88, borderRadius: 44, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52, background: theme.colors.blush }}>
               {openActivityDetail.emoji}
             </div>
-            <h1 style={{ fontFamily: theme.fonts.serif, fontSize: 28, color: theme.colors.charcoal, margin: '0 0 8px', fontWeight: 700, lineHeight: 1.15, textAlign: 'center' }}>{withChildName(cleanActivityTitle(openActivityDetail.title), childName)}</h1>
+            <h1 style={{ fontFamily: theme.fonts.display, fontSize: 28, color: theme.colors.charcoal, margin: '0 0 8px', fontWeight: 400, lineHeight: 1.15, textAlign: 'center' }}>{withChildName(cleanActivityTitle(openActivityDetail.title), childName)}</h1>
             <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.midText, margin: 0, textAlign: 'center' }}>{withChildName(openActivityDetail.subtitle, childName)}</p>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
@@ -2433,7 +2433,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{activitiesFeatured.emoji}</div>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 20, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{withChildName(cleanActivityTitle(activitiesFeatured.title), childName)}</h3>
+                    <h3 style={{ fontFamily: theme.fonts.display, fontSize: 20, fontWeight: 400, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{withChildName(cleanActivityTitle(activitiesFeatured.title), childName)}</h3>
                     <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 10px', lineHeight: 1.4, fontStyle: 'italic' }}>{childSchemas.includes(activitiesFeatured.schema_target) ? schemaContextLine(activitiesFeatured.schema_target, childName, locale) ?? withChildName(activitiesFeatured.subtitle, childName) : withChildName(activitiesFeatured.subtitle, childName)}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: theme.colors.midText, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>⏱ {activitiesFeatured.duration_minutes} min</span>
@@ -2456,7 +2456,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 <div key={activity.id} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 18, padding: '16px 18px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, display: 'flex', gap: 14, alignItems: 'center' }}>
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: iconBackgrounds[idx % iconBackgrounds.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{activity.emoji}</div>
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: theme.colors.darkText, margin: '0 0 3px' }}>{withChildName(cleanActivityTitle(activity.title), childName)}</h4>
+                    <h4 style={{ fontFamily: theme.fonts.display, fontSize: 15, fontWeight: 400, color: theme.colors.darkText, margin: '0 0 3px' }}>{withChildName(cleanActivityTitle(activity.title), childName)}</h4>
                     <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: '0 0 6px', lineHeight: 1.4 }}>{childSchemas.includes(activity.schema_target) ? schemaContextLine(activity.schema_target, childName, locale) ?? withChildName(activity.subtitle, childName) : withChildName(activity.subtitle, childName)}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>⏱ {activity.duration_minutes} min</span>
@@ -2475,7 +2475,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 <h2 style={{ fontFamily: theme.fonts.serif, fontSize: 18, color: theme.colors.charcoal, margin: '14px 0 10px', fontWeight: 600 }}>🔖 {locale === 'es' ? 'Guardadas' : 'Saved'}</h2>
                 {savedActivities.map((activity) => (
                   <div key={`saved-${activity.id}`} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{withChildName(cleanActivityTitle(activity.title), childName)}</span>
+                    <span style={{ fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: theme.colors.darkText }}>{withChildName(cleanActivityTitle(activity.title), childName)}</span>
                     <span style={{ fontSize: 16 }}>🔖</span>
                   </div>
                 ))}
@@ -2489,7 +2489,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </button>
                 {showCompletedActivities ? completedActivities.map((activity) => (
                   <div key={`completed-${activity.id}`} onClick={() => setOpenActivityDetail(activity)} style={{ background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, cursor: 'pointer', opacity: 0.75, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{withChildName(cleanActivityTitle(activity.title), childName)}</span>
+                    <span style={{ fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: theme.colors.darkText }}>{withChildName(cleanActivityTitle(activity.title), childName)}</span>
                     <span style={{ fontSize: 16 }}>✅</span>
                   </div>
                 )) : null}
@@ -3069,7 +3069,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                                 {activity.emoji || '✅'}
                               </span>
                               <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                                <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: '#493A35', lineHeight: 1.28, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#493A35', lineHeight: 1.28, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {withChildName(cleanActivityTitle(activity.title), childName)}
                                 </span>
                                 <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782' }}>
