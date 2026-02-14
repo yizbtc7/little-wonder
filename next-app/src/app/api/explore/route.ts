@@ -104,7 +104,7 @@ export async function GET() {
           language: dailyTip.language,
           article: {
             tip: dailyTip.body,
-            why: '',
+            why: dailyTip.body,
           },
         }
       : null,
