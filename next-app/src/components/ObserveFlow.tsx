@@ -209,6 +209,17 @@ function deserializeAssistantInsight(content: string): InsightPayload {
 
     if (parsed.reply || parsed.wonder) {
       if (typeof parsed.reply === 'string') {
+        const replyText = parsed.reply.trim();
+        const replyLooksStructured =
+          replyText.startsWith('```json') ||
+          replyText.startsWith('{') ||
+          replyText.includes('"wonder"') ||
+          replyText.includes('"reply"');
+
+        if (replyLooksStructured) {
+          return parseInsightPayload(parsed.reply);
+        }
+
         const nestedFromReply = parseInsightPayload(parsed.reply);
         if (nestedFromReply.wonder || nestedFromReply.reply !== parsed.reply) {
           return nestedFromReply;
