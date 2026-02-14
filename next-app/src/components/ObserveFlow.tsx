@@ -1059,6 +1059,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   }, [schemaGardenSorted]);
 
   const hasSavedArticles = savedArticles.length > 0;
+  const dailyGoalTarget = Math.min(3, exploreStats.total_available);
+  const dailyGoalProgress = Math.min(exploreStats.total_read, dailyGoalTarget);
+  const dailyGoalCompleted = dailyGoalTarget > 0 && dailyGoalProgress >= dailyGoalTarget;
 
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
@@ -2013,11 +2016,11 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
-                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{locale === 'es' ? `${exploreStats.total_read} de ${exploreStats.total_available} leídos` : `${exploreStats.total_read} of ${exploreStats.total_available} read`}</span>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: dailyGoalCompleted ? '#2E7D32' : '#8A8690', fontWeight: dailyGoalCompleted ? 700 : 500 }}>{dailyGoalCompleted ? (locale === 'es' ? '✅ Meta del día completada' : '✅ Daily goal completed') : (locale === 'es' ? `${dailyGoalProgress} de ${dailyGoalTarget} leídos` : `${dailyGoalProgress} of ${dailyGoalTarget} read`)}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#F0EDE8' }}>
-                    <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: 8, borderRadius: 999, background: '#E8A090' }} />
+                    <div style={{ width: `${dailyGoalTarget > 0 ? Math.round((dailyGoalProgress / dailyGoalTarget) * 100) : 0}%`, height: 8, borderRadius: 999, background: dailyGoalCompleted ? '#7FB98A' : '#E8A090' }} />
                   </div>
                 </div>
               </div>
