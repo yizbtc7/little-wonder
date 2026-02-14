@@ -671,8 +671,8 @@ function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMe
   return (
     <div style={{ marginTop: 20, marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <span style={{ fontSize: 24, lineHeight: 1 }}>🌱</span>
-        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
+        <span style={{ fontSize: 18, lineHeight: 1 }}>🌱</span>
+        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
       </div>
       <p style={{ margin: '0 0 12px', fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#938E97', lineHeight: 1.32 }}>
         {locale === 'es' ? `Los patrones de exploración que ${childName} cultiva` : `${childName}'s strongest play patterns`}
@@ -2491,8 +2491,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                        <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
-                        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
+                        <span style={{ fontSize: 18, lineHeight: 1 }}>💜</span>
+                        <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>Lo que le fascina</h3>
                       </div>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                         {profileInterests.length === 0 ? (
@@ -2592,8 +2592,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 24, lineHeight: 1 }}>📝</span>
-                          <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                          <span style={{ fontSize: 18, lineHeight: 1 }}>📝</span>
+                          <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
                             {locale === 'es' ? 'Últimos momentos' : 'Latest moments'}
                           </h3>
                         </div>
@@ -2662,8 +2662,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                               }}
                             >
                               <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                                <span style={{ fontSize: 24, lineHeight: 1 }}>🔖</span>
-                                <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>
+                                <span style={{ fontSize: 18, lineHeight: 1 }}>🔖</span>
+                                <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 18, fontWeight: 700, color: '#2D2B32', lineHeight: 1.2 }}>
                                   {locale === 'es' ? 'Artículos guardados' : 'Saved articles'}
                                 </h3>
                                 <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 800, color: '#A65E52', background: '#FFE3DD', borderRadius: 999, padding: '5px 12px', lineHeight: 1, minWidth: 30, textAlign: 'center' }}>
