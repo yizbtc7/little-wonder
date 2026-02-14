@@ -2902,15 +2902,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                             </button>
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                            <button
-                              type='button'
-                              onClick={() => openSavedArticlesView('profile')}
-                              style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.roseDark, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                            >
-                              {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
-                            </button>
-                          </div>
                         </div>
 
                         <div style={{ marginTop: 2 }}>
@@ -2965,24 +2956,41 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                             );
                           })}
 
-                          {savedArticles.length > 2 ? (
-                            showProfileBookmarks ? (
+                          {!showProfileBookmarks ? (
+                            <button
+                              type='button'
+                              onClick={() => {
+                                if (savedArticles.length > 2) {
+                                  setShowProfileBookmarks(true);
+                                  return;
+                                }
+                                openSavedArticlesView('profile');
+                              }}
+                              style={{ width: '100%', marginTop: 8, background: '#F8E8E0', border: 'none', borderRadius: 12, padding: '11px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 800, color: '#D4766A', cursor: 'pointer' }}
+                            >
+                              {savedArticles.length > 2
+                                ? (locale === 'es' ? `Ver ${savedArticles.length - 2} más →` : `View ${savedArticles.length - 2} more →`)
+                                : (locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`)}
+                            </button>
+                          ) : null}
+
+                          {showProfileBookmarks ? (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                               <button
                                 type='button'
                                 onClick={() => setShowProfileBookmarks(false)}
-                                style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 800 }}
+                                style={{ border: 'none', background: 'transparent', padding: '8px 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690', cursor: 'pointer', fontWeight: 700 }}
                               >
                                 {locale === 'es' ? 'Mostrar menos' : 'Show less'}
                               </button>
-                            ) : (
                               <button
                                 type='button'
-                                onClick={() => setShowProfileBookmarks(true)}
-                                style={{ border: 'none', background: 'transparent', padding: '4px 2px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 800 }}
+                                onClick={() => openSavedArticlesView('profile')}
+                                style={{ border: 'none', background: 'transparent', padding: '8px 2px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark, cursor: 'pointer', fontWeight: 800 }}
                               >
-                                {locale === 'es' ? `Ver ${savedArticles.length - 2} más →` : `View ${savedArticles.length - 2} more →`}
+                                {locale === 'es' ? `Ver todos (${savedArticles.length}) →` : `View all (${savedArticles.length}) →`}
                               </button>
-                            )
+                            </div>
                           ) : null}
                         </div>
                       </div>
