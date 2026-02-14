@@ -1623,7 +1623,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             {(keepReadingArticles.length > 0 || comingNextArticles.length > 0) ? (
               <>
-                <h3 style={{ margin: '10px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h3>
+                <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
                 {[...keepReadingArticles, ...comingNextArticles]
                   .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
                   .slice(0, 8)
