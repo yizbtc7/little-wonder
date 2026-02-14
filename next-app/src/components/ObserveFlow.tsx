@@ -1221,6 +1221,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     });
   };
 
+  const markArticleReadInCollection = (items: ExploreArticleRow[], articleId: string, completedAt: string) =>
+    items.map((item) => (item.id === articleId ? { ...item, is_read: true, completed_at: completedAt } : item));
+
   useEffect(() => {
     if (!openExploreArticle) {
       completeOpenArticleReadRef.current = null;
@@ -1229,6 +1232,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
     const articleId = openExploreArticle.id;
     const article = openExploreArticle;
+    const wasAlreadyRead = Boolean(article.is_read);
     const openedAtMs = Date.now();
     let completed = false;
     setOpenArticleProgress(0);
@@ -1244,14 +1248,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ read_completed: true, read_time_seconds: elapsed }),
       });
+      const completedAt = new Date().toISOString();
       setArticleReadPulse(true);
       setTimeout(() => setArticleReadPulse(false), 1400);
       setNewForYouArticles((prev) => prev.filter((a) => a.id !== articleId));
       setKeepReadingArticles((prev) => prev.filter((a) => a.id !== articleId));
+      setDeepDiveArticles((prev) => markArticleReadInCollection(prev, articleId, completedAt));
       setComingNextArticles((prev) => prev.filter((a) => a.id !== articleId));
-      setRecentlyReadArticles((prev) => [{ ...article, is_read: true, completed_at: new Date().toISOString() }, ...prev.filter((a) => a.id !== articleId)].slice(0, 10));
-      setExploreStats((prev) => ({ ...prev, total_read: Math.min(prev.total_available, prev.total_read + 1) }));
-      setReaderToast(locale === 'es' ? '✅ Artículo marcado como leído' : '✅ Article marked as read');
+      setSavedArticles((prev) => markArticleReadInCollection(prev, articleId, completedAt));
+      setOpenExploreArticle((prev) => (prev?.id === articleId ? { ...prev, is_read: true, completed_at: completedAt } : prev));
+      setRecentlyReadArticles((prev) => [{ ...article, is_read: true, completed_at: completedAt }, ...prev.filter((a) => a.id !== articleId)].slice(0, 10));
+      if (!wasAlreadyRead) {
+        setExploreStats((prev) => ({ ...prev, total_read: Math.min(prev.total_available, prev.total_read + 1) }));
+      }
+      setReaderToast(locale === 'es' ? '✅ Leído' : '✅ Read');
       setTimeout(() => setReaderToast(''), 1800);
       void loadExploreArticles();
     };
@@ -1981,7 +1991,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 {savedArticles.slice(0, 3).map((article) => (
                   <button key={`saved-preview-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 12, padding: '9px 10px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
-                    <span style={{ marginLeft: 8, fontSize: 14 }}>🔖</span>
+                    <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 8px', borderRadius: 999, lineHeight: 1 }}>{t.learn.read}</span> : null}
+                      <span style={{ fontSize: 14 }}>🔖</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -2697,6 +2710,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 800, color: badge.color, background: badge.bg, padding: '3px 8px', borderRadius: 999, lineHeight: 1 }}>
                                       {badge.label}
                                     </span>
+                                    {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 8px', borderRadius: 999, lineHeight: 1 }}>{t.learn.read}</span> : null}
                                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, color: '#958782', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 118 }}>
                                       {domainLabel}
                                     </span>
