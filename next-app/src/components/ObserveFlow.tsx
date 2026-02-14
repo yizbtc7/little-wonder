@@ -1058,9 +1058,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <h2 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 600, color: theme.colors.charcoal }}>Inside {childName}&apos;s brain</h2>
             <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>What&apos;s happening right now</p>
-            {personalizedCards.map((card, idx) => (
-              <WonderCard key={card.title} icon={card.icon} title={card.title} domain={card.domain} body={card.preview} delay={idx * 100} onClick={() => setSelectedExploreCard(idx)} />
-            ))}
+            {personalizedCards.map((card, idx) => {
+              const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
+              return (
+                <WonderCard
+                  key={card.title}
+                  icon={card.icon}
+                  title={card.title}
+                  domain={card.domain}
+                  body={card.preview}
+                  delay={idx * 100}
+                  iconBackground={iconBackgrounds[idx % iconBackgrounds.length]}
+                  onClick={() => setSelectedExploreCard(idx)}
+                />
+              );
+            })}
           </div>
         </div>
       ) : null}

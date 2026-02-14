@@ -11,13 +11,14 @@ type WonderCardProps = {
   domain: string;
   delay?: number;
   onClick?: () => void;
+  iconBackground?: string;
 };
 
 function toPreview(text: string): string {
   return text.length > 190 ? `${text.slice(0, 190)}...` : text;
 }
 
-export default function WonderCard({ icon, title, body, domain, delay = 0, onClick }: WonderCardProps) {
+export default function WonderCard({ icon, title, body, domain, delay = 0, onClick, iconBackground }: WonderCardProps) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -44,7 +45,7 @@ export default function WonderCard({ icon, title, body, domain, delay = 0, onCli
               width: 52,
               height: 52,
               borderRadius: 16,
-              background: theme.colors.blushLight,
+              background: iconBackground ?? theme.colors.blushLight,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
