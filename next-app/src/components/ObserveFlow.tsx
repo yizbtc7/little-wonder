@@ -877,6 +877,8 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [settingsStatus, setSettingsStatus] = useState('');
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const [inviteLink, setInviteLink] = useState<string>('');
+  const [inviteLinkError, setInviteLinkError] = useState<string>('');
+  const [inviteLinkLoading, setInviteLinkLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -1545,17 +1547,31 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
   const ensureInviteLink = useCallback(async (): Promise<string | null> => {
     if (inviteLink) return inviteLink;
+    if (inviteLinkLoading) return null;
+
+    setInviteLinkLoading(true);
+    setInviteLinkError('');
+
     try {
       const response = await fetch(apiUrl('/api/invites/create'), { method: 'POST' });
-      if (!response.ok) return null;
-      const payload = (await response.json()) as { url?: string };
-      if (!payload.url) return null;
+      if (!response.ok) {
+        setInviteLinkError(locale === 'es' ? 'No se pudo generar el enlace' : 'Could not generate invite link');
+        return null;
+      }
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!payload.url) {
+        setInviteLinkError(locale === 'es' ? 'No se pudo generar el enlace' : 'Could not generate invite link');
+        return null;
+      }
       setInviteLink(payload.url);
       return payload.url;
     } catch {
+      setInviteLinkError(locale === 'es' ? 'No se pudo generar el enlace' : 'Could not generate invite link');
       return null;
+    } finally {
+      setInviteLinkLoading(false);
     }
-  }, [inviteLink]);
+  }, [inviteLink, inviteLinkLoading, locale]);
 
 
   const copyInviteLink = async () => {
@@ -2493,13 +2509,18 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <div style={{ flex: 1, padding: '10px 14px', borderRadius: 12, background: theme.colors.blushLight, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, border: `1px solid ${theme.colors.blushMid}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {inviteLink || (locale === 'es' ? 'Generando enlace…' : 'Generating invite link…')}
+                  <div style={{ flex: 1, padding: '10px 14px', borderRadius: 12, background: theme.colors.blushLight, fontFamily: theme.fonts.sans, fontSize: 13, color: inviteLinkError ? '#B0493A' : theme.colors.midText, border: `1px solid ${theme.colors.blushMid}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {inviteLink || inviteLinkError || (locale === 'es' ? 'Generando enlace…' : 'Generating invite link…')}
                   </div>
-                  <button onClick={() => void copyInviteLink()} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: copiedInviteLink ? theme.colors.sageBg : theme.colors.charcoal, color: copiedInviteLink ? theme.colors.sage : '#fff', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                    {copiedInviteLink ? (locale === 'es' ? '✓ Copiado' : '✓ Copied') : (locale === 'es' ? 'Copiar' : 'Copy')}
+                  <button disabled={inviteLinkLoading} onClick={() => void copyInviteLink()} style={{ padding: '10px 18px', borderRadius: 12, border: 'none', background: copiedInviteLink ? theme.colors.sageBg : theme.colors.charcoal, color: copiedInviteLink ? theme.colors.sage : '#fff', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, cursor: inviteLinkLoading ? 'not-allowed' : 'pointer', opacity: inviteLinkLoading ? 0.7 : 1 }}>
+                    {inviteLinkLoading ? (locale === 'es' ? 'Cargando…' : 'Loading…') : copiedInviteLink ? (locale === 'es' ? '✓ Copiado' : '✓ Copied') : (locale === 'es' ? 'Copiar' : 'Copy')}
                   </button>
                 </div>
+                {inviteLinkError ? (
+                  <button type='button' onClick={() => void ensureInviteLink()} style={{ marginTop: 8, border: 'none', background: 'transparent', padding: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, cursor: 'pointer' }}>
+                    {locale === 'es' ? 'Reintentar generar enlace' : 'Retry generating link'}
+                  </button>
+                ) : null}
               </div>
 
               <div style={{ background: '#fff', borderRadius: 18, padding: 16, marginBottom: 16, border: `1px solid ${theme.colors.divider}` }}>
