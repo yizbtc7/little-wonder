@@ -862,6 +862,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [articleReadPulse, setArticleReadPulse] = useState(false);
   const [openArticleProgress, setOpenArticleProgress] = useState(0);
   const [readerToast, setReaderToast] = useState('');
+  const [activitiesToast, setActivitiesToast] = useState('');
+  const [activityCompleting, setActivityCompleting] = useState(false);
   const [focusChatComposerIntent, setFocusChatComposerIntent] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
@@ -1454,38 +1456,52 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   };
 
   const completeActivity = async (activityId: string) => {
-    const targetActivity = [activitiesFeatured, ...activitiesList, ...savedActivities].find((item) => item?.id === activityId) ?? null;
+    if (activityCompleting) return;
+    setActivityCompleting(true);
 
-    const response = await fetch(apiUrl(`/api/activities/${activityId}/complete`), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
+    const targetActivity = [activitiesFeatured, ...activitiesList, ...savedActivities, openActivityDetail].find((item) => item?.id === activityId) ?? null;
 
-    if (!response.ok) {
+    try {
+      const response = await fetch(apiUrl(`/api/activities/${activityId}/complete`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        setActivitiesToast(locale === 'es' ? 'No pudimos marcarla como hecha' : 'Could not mark as done');
+        setTimeout(() => setActivitiesToast(''), 1800);
+        setActivitiesLoaded(false);
+        setActivitiesRetry((v) => v + 1);
+        return;
+      }
+
+      const completedAt = new Date().toISOString();
+
+      setActivitiesFeatured((prev) => (prev?.id === activityId ? null : prev));
+      setActivitiesList((prev) => prev.filter((item) => item.id !== activityId));
+      setSavedActivities((prev) => prev.filter((item) => item.id !== activityId));
+      setCompletedActivities((prev) => {
+        if (!targetActivity) return prev;
+        const completedItem = { ...targetActivity, is_completed: true, completed_at: completedAt };
+        return [completedItem, ...prev.filter((item) => item.id !== activityId)];
+      });
+      setActivitiesStats((prev) => ({
+        ...prev,
+        completed: Math.min(prev.total, prev.completed + 1),
+      }));
+
+      setOpenActivityDetail(null);
+      setActivitiesToast(locale === 'es' ? '✅ Actividad completada' : '✅ Activity completed');
+      setTimeout(() => setActivitiesToast(''), 1800);
       setActivitiesLoaded(false);
       setActivitiesRetry((v) => v + 1);
-      return;
+    } catch {
+      setActivitiesToast(locale === 'es' ? 'No pudimos marcarla como hecha' : 'Could not mark as done');
+      setTimeout(() => setActivitiesToast(''), 1800);
+    } finally {
+      setActivityCompleting(false);
     }
-
-    const completedAt = new Date().toISOString();
-
-    setActivitiesFeatured((prev) => (prev?.id === activityId ? null : prev));
-    setActivitiesList((prev) => prev.filter((item) => item.id !== activityId));
-    setSavedActivities((prev) => prev.filter((item) => item.id !== activityId));
-    setCompletedActivities((prev) => {
-      if (!targetActivity) return prev;
-      const completedItem = { ...targetActivity, is_completed: true, completed_at: completedAt };
-      return [completedItem, ...prev.filter((item) => item.id !== activityId)];
-    });
-    setActivitiesStats((prev) => ({
-      ...prev,
-      completed: Math.min(prev.total, prev.completed + 1),
-    }));
-
-    setOpenActivityDetail(null);
-    setActivitiesLoaded(false);
-    setActivitiesRetry((v) => v + 1);
   };
 
   const copyInviteLink = async () => {
@@ -2235,8 +2251,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           </div>
 
           <div style={{ position: 'sticky', bottom: 0, padding: '10px 16px 14px', background: 'rgba(255,251,247,0.94)', borderTop: `1px solid ${theme.colors.divider}`, backdropFilter: 'blur(10px)', display: 'grid', gap: 8 }}>
-            <button onClick={() => void completeActivity(openActivityDetail.id)} style={{ border: 'none', borderRadius: 14, padding: '12px 16px', background: theme.colors.sage, color: '#fff', fontFamily: theme.fonts.sans, fontWeight: 700, cursor: 'pointer' }}>
-              ✅ {locale === 'es' ? '¡Lo hicimos!' : 'We did it!'}
+            <button disabled={activityCompleting} onClick={() => void completeActivity(openActivityDetail.id)} style={{ border: 'none', borderRadius: 14, padding: '12px 16px', background: theme.colors.sage, color: '#fff', fontFamily: theme.fonts.sans, fontWeight: 700, cursor: activityCompleting ? 'not-allowed' : 'pointer', opacity: activityCompleting ? 0.7 : 1 }}>
+              ✅ {activityCompleting ? (locale === 'es' ? 'Guardando...' : 'Saving...') : (locale === 'es' ? '¡Lo hicimos!' : 'We did it!')}
             </button>
             <button onClick={() => void toggleSaveActivity(openActivityDetail.id, Boolean(openActivityDetail.is_saved))} style={{ border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '12px 16px', background: '#fff', color: theme.colors.darkText, fontFamily: theme.fonts.sans, fontWeight: 700, cursor: 'pointer' }}>
               {openActivityDetail.is_saved ? '🔖 ' : '📑 '} {locale === 'es' ? 'Guardar para después' : 'Save for later'}
@@ -2934,6 +2950,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
             </>
           )}
+        </div>
+      ) : null}
+
+      {activitiesToast ? (
+        <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 108, zIndex: 120, background: 'rgba(46,43,50,0.94)', color: '#fff', padding: '10px 14px', borderRadius: 12, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, boxShadow: '0 6px 18px rgba(0,0,0,0.2)' }}>
+          {activitiesToast}
         </div>
       ) : null}
 
