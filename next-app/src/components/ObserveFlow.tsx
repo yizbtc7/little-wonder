@@ -1676,7 +1676,27 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: theme.colors.darkText }}>{t.settings.language}</label>
-                <select value={locale} onChange={(e) => void saveLanguage(e.target.value as Language)} style={{ width: '100%', padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${theme.colors.blushMid}`, fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText }}>
+                <select
+                  value={locale}
+                  onChange={(e) => void saveLanguage(e.target.value as Language)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 44px 14px 16px',
+                    borderRadius: 18,
+                    border: `1.5px solid ${theme.colors.blushMid}`,
+                    fontFamily: theme.fonts.sans,
+                    fontSize: 16,
+                    color: theme.colors.darkText,
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage:
+                      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236E6E6E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    backgroundSize: '16px',
+                  }}
+                >
                   <option value='es'>{t.settings.spanish}</option>
                   <option value='en'>{t.settings.english}</option>
                 </select>
