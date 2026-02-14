@@ -995,6 +995,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const voiceChunksRef = useRef<BlobPart[]>([]);
+  const voiceMimeTypeRef = useRef<string>('audio/webm');
   const completeOpenArticleReadRef = useRef<(() => void) | null>(null);
   const supabase = createSupabaseBrowserClient();
 
@@ -1770,13 +1771,13 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     }
   };
 
-  const transcribeVoiceBlob = async (blob: Blob) => {
+  const transcribeVoiceBlob = async (blob: Blob, fileName: string) => {
     setIsTranscribingVoice(true);
     setVoiceError('');
 
     try {
       const formData = new FormData();
-      formData.append('audio', blob, `voice-note-${Date.now()}.webm`);
+      formData.append('audio', blob, fileName);
       formData.append('language', locale);
 
       const response = await fetch(apiUrl('/api/chat/voice'), {
@@ -1807,7 +1808,17 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const preferredTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/mpeg'];
+      const selectedType = preferredTypes.find((type) => {
+        try {
+          return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type);
+        } catch {
+          return false;
+        }
+      });
+
+      const recorder = selectedType ? new MediaRecorder(stream, { mimeType: selectedType }) : new MediaRecorder(stream);
+      voiceMimeTypeRef.current = recorder.mimeType || selectedType || 'audio/webm';
       mediaStreamRef.current = stream;
       mediaRecorderRef.current = recorder;
       voiceChunksRef.current = [];
@@ -1817,11 +1828,14 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(voiceChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        const mimeType = voiceMimeTypeRef.current || recorder.mimeType || 'audio/webm';
+        const blob = new Blob(voiceChunksRef.current, { type: mimeType });
+        const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('mpeg') ? 'mp3' : 'webm';
+        const fileName = `voice-note-${Date.now()}.${extension}`;
         const nextUrl = URL.createObjectURL(blob);
         if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
         setVoicePreviewUrl(nextUrl);
-        void transcribeVoiceBlob(blob);
+        void transcribeVoiceBlob(blob, fileName);
         mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
         mediaStreamRef.current = null;
       };
