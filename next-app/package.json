@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "articles:generate": "node scripts/generate-articles.js"
+    "articles:generate": "node scripts/generate-articles.js",
+    "activities:generate": "node scripts/generate-activities.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
