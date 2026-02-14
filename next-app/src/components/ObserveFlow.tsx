@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import FadeUp from '@/components/ui/FadeUp';
 import SoftButton from '@/components/ui/SoftButton';
 import { DAILY_INSIGHT } from '@/data/daily-insights';
@@ -860,6 +860,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [showProfileBookmarks, setShowProfileBookmarks] = useState(false);
   const [showAllRecentMoments, setShowAllRecentMoments] = useState(false);
   const [articleReadPulse, setArticleReadPulse] = useState(false);
+  const [openArticleProgress, setOpenArticleProgress] = useState(0);
   const [readerToast, setReaderToast] = useState('');
   const [focusChatComposerIntent, setFocusChatComposerIntent] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
@@ -895,6 +896,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileBookmarksRef = useRef<HTMLDivElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const completeOpenArticleReadRef = useRef<(() => void) | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -1054,15 +1056,38 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  const loadExploreArticles = useCallback(async () => {
+    try {
+      const response = await fetch(apiUrl(`/api/explore/articles?language=${locale}`));
+      if (!response.ok) return;
+      const payload = (await response.json()) as {
+        new_for_you?: ExploreArticleRow[];
+        keep_reading?: ExploreArticleRow[];
+        deep_dives?: ExploreArticleRow[];
+        recently_read?: ExploreArticleRow[];
+        coming_next?: ExploreArticleRow[];
+        stats?: { total_available?: number; total_read?: number };
+      };
+      setNewForYouArticles(payload.new_for_you ?? []);
+      setKeepReadingArticles(payload.keep_reading ?? []);
+      setDeepDiveArticles(payload.deep_dives ?? []);
+      setRecentlyReadArticles(payload.recently_read ?? []);
+      setComingNextArticles(payload.coming_next ?? []);
+      setExploreStats({
+        total_available: payload.stats?.total_available ?? 0,
+        total_read: payload.stats?.total_read ?? 0,
+      });
+    } catch {
+      // ignore fetch errors in non-browser test environments
+    }
+  }, [locale]);
+
   useEffect(() => {
     if (activeTab !== 'explore') return;
     setOpenExploreArticle(null);
     void (async () => {
       try {
-        const [exploreResponse, articlesResponse] = await Promise.all([
-          fetch(apiUrl('/api/explore')),
-          fetch(apiUrl(`/api/explore/articles?language=${locale}`)),
-        ]);
+        const exploreResponse = await fetch(apiUrl('/api/explore'));
 
         if (exploreResponse.ok) {
           const payload = (await exploreResponse.json()) as {
@@ -1073,30 +1098,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           setExploreDailyTip(payload.daily_tip ?? null);
         }
 
-        if (articlesResponse.ok) {
-          const payload = (await articlesResponse.json()) as {
-            new_for_you?: ExploreArticleRow[];
-            keep_reading?: ExploreArticleRow[];
-            deep_dives?: ExploreArticleRow[];
-            recently_read?: ExploreArticleRow[];
-            coming_next?: ExploreArticleRow[];
-            stats?: { total_available?: number; total_read?: number };
-          };
-          setNewForYouArticles(payload.new_for_you ?? []);
-          setKeepReadingArticles(payload.keep_reading ?? []);
-          setDeepDiveArticles(payload.deep_dives ?? []);
-          setRecentlyReadArticles(payload.recently_read ?? []);
-          setComingNextArticles(payload.coming_next ?? []);
-          setExploreStats({
-            total_available: payload.stats?.total_available ?? 0,
-            total_read: payload.stats?.total_read ?? 0,
-          });
-        }
+        await loadExploreArticles();
       } catch {
         // ignore fetch errors in non-browser test environments
       }
     })();
-  }, [activeTab, locale]);
+  }, [activeTab, loadExploreArticles]);
 
   const loadSavedArticles = async () => {
     try {
@@ -1215,11 +1222,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   };
 
   useEffect(() => {
-    if (!openExploreArticle) return;
+    if (!openExploreArticle) {
+      completeOpenArticleReadRef.current = null;
+      return;
+    }
 
     const articleId = openExploreArticle.id;
+    const article = openExploreArticle;
     const openedAtMs = Date.now();
     let completed = false;
+    setOpenArticleProgress(0);
 
     void fetch(apiUrl(`/api/explore/articles/${articleId}/read`), { method: 'POST' });
 
@@ -1235,29 +1247,21 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       setArticleReadPulse(true);
       setTimeout(() => setArticleReadPulse(false), 1400);
       setNewForYouArticles((prev) => prev.filter((a) => a.id !== articleId));
-      const article = openExploreArticle;
       setRecentlyReadArticles((prev) => [{ ...article, is_read: true, completed_at: new Date().toISOString() }, ...prev.filter((a) => a.id !== articleId)].slice(0, 10));
       setExploreStats((prev) => ({ ...prev, total_read: Math.min(prev.total_available, prev.total_read + 1) }));
+      void loadExploreArticles();
+    };
+
+    completeOpenArticleReadRef.current = () => {
+      void maybeComplete();
     };
 
     const timer = setTimeout(() => {
       void maybeComplete();
     }, 60000);
 
-    const onScroll = () => {
-      if (!openExploreArticle) return;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (maxScroll <= 0) return;
-      const ratio = window.scrollY / maxScroll;
-      if (ratio >= 0.9) {
-        void maybeComplete();
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      completeOpenArticleReadRef.current = null;
       clearTimeout(timer);
       const elapsed = Math.max(1, Math.round((Date.now() - openedAtMs) / 1000));
       void fetch(apiUrl(`/api/explore/articles/${articleId}/read`), {
@@ -1266,7 +1270,14 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         body: JSON.stringify({ read_completed: completed, read_time_seconds: elapsed }),
       });
     };
-  }, [openExploreArticle]);
+  }, [loadExploreArticles, openExploreArticle]);
+
+  useEffect(() => {
+    if (!openExploreArticle) return;
+    if (openArticleProgress >= 0.9) {
+      completeOpenArticleReadRef.current?.();
+    }
+  }, [openArticleProgress, openExploreArticle]);
 
   useEffect(() => {
     setActivitiesLoaded(false);
@@ -1673,6 +1684,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         locale={locale}
         isBookmarked={Boolean(openExploreArticle.is_bookmarked)}
         toastMessage={readerToast}
+        onProgressChange={setOpenArticleProgress}
         onToggleBookmark={() => void toggleArticleBookmark(openExploreArticle.id)}
         onShare={() => void shareArticle(openExploreArticle)}
         onBack={() => {
@@ -1950,7 +1962,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#F0EDE8' }}>
                   <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: 6, borderRadius: 3, background: '#E8A090' }} />
                 </div>
-                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{exploreStats.total_read} de {exploreStats.total_available} leídos</span>
+                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available).replace('📚 ', '')}</span>
               </div>
             ) : null}
 

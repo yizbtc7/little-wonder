@@ -30,6 +30,7 @@ type Props = {
   locale: 'es' | 'en';
   isBookmarked?: boolean;
   toastMessage?: string;
+  onProgressChange?: (progress: number) => void;
   onToggleBookmark: () => void;
   onShare: () => void;
   onBack: () => void;
@@ -254,10 +255,14 @@ function parseMarkdownToSections(body: string): ArticleSection[] {
   return sections;
 }
 
-export default function ArticleReader({ article, childName, childAgeLabel, locale, isBookmarked = false, toastMessage = '', onToggleBookmark, onShare, onBack, onRegisterMoment }: Props) {
+export default function ArticleReader({ article, childName, childAgeLabel, locale, isBookmarked = false, toastMessage = '', onProgressChange, onToggleBookmark, onShare, onBack, onRegisterMoment }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress(scrollRef);
   const [bookmarkPulse, setBookmarkPulse] = useState(false);
+
+  useEffect(() => {
+    onProgressChange?.(progress);
+  }, [onProgressChange, progress]);
 
   useEffect(() => {
     if (!isBookmarked) return;
