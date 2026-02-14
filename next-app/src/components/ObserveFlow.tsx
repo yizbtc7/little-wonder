@@ -45,6 +45,9 @@ type ApiChatMessage = {
   content: string;
   wonder_id: string | null;
   created_at: string;
+  is_read?: boolean;
+  opened_at?: string | null;
+  completed_at?: string | null;
 };
 
 type ExploreBrainCardRow = {
@@ -84,6 +87,9 @@ type ExploreArticleRow = {
   language: string;
   read_time_minutes?: number;
   created_at: string;
+  is_read?: boolean;
+  opened_at?: string | null;
+  completed_at?: string | null;
 };
 
 type ActivityItem = {
@@ -278,11 +284,6 @@ function formatExploreTypeLabel(type: ExploreArticleRow['type']): string {
   return 'Article';
 }
 
-function formatExploreSectionLabel(type: ExploreArticleRow['type']): string {
-  if (type === 'guide') return 'Guides';
-  if (type === 'research') return 'Research';
-  return 'Articles';
-}
 
 function estimateReadTime(text: string): string {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -493,8 +494,15 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [openWonder, setOpenWonder] = useState<WonderPayload | null>(null);
   const [exploreCards, setExploreCards] = useState<ExploreBrainCardRow[]>([]);
   const [exploreDailyTip, setExploreDailyTip] = useState<ExploreDailyTipRow | null>(null);
-  const [exploreArticles, setExploreArticles] = useState<ExploreArticleRow[]>([]);
+  const [newForYouArticles, setNewForYouArticles] = useState<ExploreArticleRow[]>([]);
+  const [keepReadingArticles, setKeepReadingArticles] = useState<ExploreArticleRow[]>([]);
+  const [deepDiveArticles, setDeepDiveArticles] = useState<ExploreArticleRow[]>([]);
+  const [recentlyReadArticles, setRecentlyReadArticles] = useState<ExploreArticleRow[]>([]);
+  const [comingNextArticles, setComingNextArticles] = useState<ExploreArticleRow[]>([]);
   const [openExploreArticle, setOpenExploreArticle] = useState<ExploreArticleRow | null>(null);
+  const [exploreStats, setExploreStats] = useState({ total_available: 0, total_read: 0, reading_streak_days: 0 });
+  const [showReadArticles, setShowReadArticles] = useState(false);
+  const [articleReadPulse, setArticleReadPulse] = useState(false);
   const [openActivityDetail, setOpenActivityDetail] = useState<ActivityItem | null>(null);
   const [activitiesFeatured, setActivitiesFeatured] = useState<ActivityItem | null>(null);
   const [activitiesList, setActivitiesList] = useState<ActivityItem[]>([]);
@@ -641,14 +649,85 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         }
 
         if (articlesResponse.ok) {
-          const payload = (await articlesResponse.json()) as { articles?: ExploreArticleRow[] };
-          setExploreArticles(payload.articles ?? []);
+          const payload = (await articlesResponse.json()) as {
+            new_for_you?: ExploreArticleRow[];
+            keep_reading?: ExploreArticleRow[];
+            deep_dives?: ExploreArticleRow[];
+            recently_read?: ExploreArticleRow[];
+            coming_next?: ExploreArticleRow[];
+            stats?: { total_available?: number; total_read?: number; reading_streak_days?: number };
+          };
+          setNewForYouArticles(payload.new_for_you ?? []);
+          setKeepReadingArticles(payload.keep_reading ?? []);
+          setDeepDiveArticles(payload.deep_dives ?? []);
+          setRecentlyReadArticles(payload.recently_read ?? []);
+          setComingNextArticles(payload.coming_next ?? []);
+          setExploreStats({
+            total_available: payload.stats?.total_available ?? 0,
+            total_read: payload.stats?.total_read ?? 0,
+            reading_streak_days: payload.stats?.reading_streak_days ?? 0,
+          });
         }
       } catch {
         // ignore fetch errors in non-browser test environments
       }
     })();
   }, [activeTab, locale]);
+
+
+  useEffect(() => {
+    if (!openExploreArticle) return;
+
+    const articleId = openExploreArticle.id;
+    const openedAtMs = Date.now();
+    let completed = false;
+
+    void fetch(apiUrl(`/api/explore/articles/${articleId}/read`), { method: 'POST' });
+
+    const maybeComplete = async () => {
+      if (completed) return;
+      completed = true;
+      const elapsed = Math.max(1, Math.round((Date.now() - openedAtMs) / 1000));
+      await fetch(apiUrl(`/api/explore/articles/${articleId}/read`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ read_completed: true, read_time_seconds: elapsed }),
+      });
+      setArticleReadPulse(true);
+      setTimeout(() => setArticleReadPulse(false), 1400);
+      setNewForYouArticles((prev) => prev.filter((a) => a.id !== articleId));
+      const article = openExploreArticle;
+      setRecentlyReadArticles((prev) => [{ ...article, is_read: true, completed_at: new Date().toISOString() }, ...prev.filter((a) => a.id !== articleId)].slice(0, 10));
+      setExploreStats((prev) => ({ ...prev, total_read: Math.min(prev.total_available, prev.total_read + 1) }));
+    };
+
+    const timer = setTimeout(() => {
+      void maybeComplete();
+    }, 60000);
+
+    const onScroll = () => {
+      if (!openExploreArticle) return;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return;
+      const ratio = window.scrollY / maxScroll;
+      if (ratio >= 0.9) {
+        void maybeComplete();
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(timer);
+      const elapsed = Math.max(1, Math.round((Date.now() - openedAtMs) / 1000));
+      void fetch(apiUrl(`/api/explore/articles/${articleId}/read`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ read_completed: completed, read_time_seconds: elapsed }),
+      });
+    };
+  }, [openExploreArticle]);
 
   useEffect(() => {
     setActivitiesLoaded(false);
@@ -832,6 +911,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             style={{ fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}
             dangerouslySetInnerHTML={{ __html: markdownToHtml(personalizedBody) }}
           />
+          {articleReadPulse ? <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.sage, fontWeight: 700 }}>✓ Read</p> : null}
           <style>{`
             h2 { font-family: ${theme.fonts.serif}; font-size: 22px; margin: 24px 0 8px; color: ${theme.colors.charcoal}; }
             h3 { font-family: ${theme.fonts.serif}; font-size: 18px; margin: 18px 0 6px; color: ${theme.colors.charcoal}; }
@@ -1300,7 +1380,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 20 }}>
           <div style={{ padding: '20px 20px 18px', borderBottom: `1px solid ${theme.colors.divider}` }}>
             <h1 style={{ margin: '0 0 4px', fontFamily: theme.fonts.serif, fontSize: 26, fontWeight: 700, color: theme.colors.charcoal }}>Learn</h1>
-            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Discover what&apos;s happening at {childAgeLabel}</p>
+            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>Discover what&apos;s happening in {childName}&apos;s world</p>
           </div>
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
@@ -1330,42 +1410,75 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               );
             })}
 
-            <h2 style={{ margin: '18px 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>More to learn</h2>
-            {(['article', 'guide', 'research'] as const).map((type) => {
-              const accentByType: Record<ExploreArticleRow['type'], string> = {
-                article: theme.colors.rose,
-                research: theme.colors.lavender,
-                guide: theme.colors.sage,
-              };
+            <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
+              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>📚 {exploreStats.total_read} of {exploreStats.total_available} read</p>
+              <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
+                <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
+              </div>
+            </div>
+
+            <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🆕 New for you</h2>
+            {newForYouArticles.length === 0 ? (
+              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>✨ You're all caught up! New articles appear as {childName} grows.</p>
+                {comingNextArticles.length > 0 ? (
+                  <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>Explore articles for upcoming months 🔒</p>
+                ) : null}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, marginBottom: 12 }}>
+                {newForYouArticles.slice(0, 3).map((article, idx) => {
+                  const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
+                  return (
+                    <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ minWidth: 230, background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '12px 12px', textAlign: 'left', cursor: 'pointer' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: iconBackgrounds[idx % iconBackgrounds.length], marginBottom: 8 }}>{article.emoji}</div>
+                      <p style={{ margin: '0 0 5px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{formatExploreTypeLabel(article.type)} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {keepReadingArticles.length > 0 ? (
+              <>
+                <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>📖 Keep reading</h2>
+                {keepReadingArticles.map((article) => (
+                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                    <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark }}>Continue reading →</p>
+                  </button>
+                ))}
+              </>
+            ) : null}
+
+            <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🔬 Deep dives</h2>
+            {deepDiveArticles.map((article, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
-              const articlesByType = exploreArticles.filter((article) => article.type === type);
-              if (articlesByType.length === 0) return null;
-
               return (
-                <div key={type} style={{ marginBottom: 14 }}>
-                  <p style={{ margin: '4px 0 10px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: accentByType[type] }}>{formatExploreSectionLabel(type)}</p>
-                  {articlesByType.map((article, index) => {
-                    const accent = accentByType[article.type] ?? theme.colors.rose;
-                    const bg = iconBackgrounds[index % iconBackgrounds.length];
-
-                    return (
-                      <button
-                        key={article.id}
-                        onClick={() => setOpenExploreArticle(article)}
-                        style={{ width: '100%', background: '#fff', borderRadius: 18, padding: '14px 16px', marginBottom: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', border: `1px solid ${theme.colors.divider}`, textAlign: 'left' }}
-                      >
-                        <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: bg }}>{article.emoji}</span>
-                        <span style={{ flex: 1 }}>
-                          <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 600, color: theme.colors.darkText }}>{article.title}</span>
-                          <span style={{ display: 'block', marginTop: 4, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</span>
-                        </span>
-                        <span style={{ fontSize: 10, color: accent, background: theme.colors.blushLight, padding: '3px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>{formatExploreTypeLabel(article.type)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', opacity: article.is_read ? 0.85 : 1, borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: iconBackgrounds[idx % iconBackgrounds.length] }}>{article.emoji}</span>
+                  <span style={{ flex: 1 }}>
+                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
+                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</span>
+                  </span>
+                  {article.is_read ? <span style={{ color: theme.colors.sage, fontWeight: 700 }}>✓</span> : null}
+                </button>
               );
             })}
+
+            <button onClick={() => setShowReadArticles((v) => !v)} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', padding: '8px 0', cursor: 'pointer' }}>
+              <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>📖 {recentlyReadArticles.length} articles read {showReadArticles ? '▾' : '▸'}</span>
+            </button>
+            {showReadArticles ? (
+              <div>
+                {recentlyReadArticles.map((article) => (
+                  <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', opacity: 0.85, borderRadius: 16, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
