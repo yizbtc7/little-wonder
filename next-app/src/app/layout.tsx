@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
-import { Nunito, Playfair_Display } from 'next/font/google';
+import { Nunito, Young_Serif } from 'next/font/google';
 import './globals.css';
 import AppProviders from '@/components/AppProviders';
+
+const youngSerif = Young_Serif({
+  variable: '--font-display',
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
+});
 
 const nunito = Nunito({
   variable: '--font-body',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-});
-
-const playfairDisplay = Playfair_Display({
-  variable: '--font-display',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -49,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${nunito.variable} ${playfairDisplay.variable}`}>
+      <body className={`${youngSerif.variable} ${nunito.variable}`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

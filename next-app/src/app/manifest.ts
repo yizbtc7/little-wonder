@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'See the extraordinary things your child is already doing.',
     start_url: '/home',
     display: 'standalone',
-    background_color: '#FFFBF7',
-    theme_color: '#FFFBF7',
+    background_color: '#FAF5EF',
+    theme_color: '#FAF5EF',
     icons: [
       {
         src: '/icon-192x192.png',

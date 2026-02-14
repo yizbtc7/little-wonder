@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import SignInButton from '@/components/SignInButton';
-import FadeIn from '@/components/ui/FadeIn';
-import { theme } from '@/styles/theme';
+import SparkLogo from '@/components/SparkLogo';
 import { getAuthenticatedUser, getFirstChildProfile, getParentProfile } from '@/lib/userContext';
 
 export default async function HomePage() {
@@ -29,24 +28,65 @@ export default async function HomePage() {
         justifyContent: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 40%, ${theme.colors.warmWhite} 100%)`,
+        background: 'linear-gradient(180deg, #FAF5EF 0%, #FFFFFF 100%)',
         padding: '40px 28px',
       }}
     >
-      <FadeIn delay={100}>
-        <div style={{ fontSize: 56, marginBottom: 4 }}>✨</div>
-      </FadeIn>
-      <FadeIn delay={250}>
-        <h1 style={{ color: theme.colors.charcoal, fontSize: 38, marginBottom: 8, letterSpacing: -0.5, lineHeight: 1.1 }}>Little Wonder</h1>
-      </FadeIn>
-      <FadeIn delay={400}>
-        <p style={{ color: theme.colors.midText, fontFamily: theme.fonts.sans, fontSize: 16, maxWidth: 280, lineHeight: 1.6, marginBottom: 48 }}>
-          Descubre la ciencia extraordinaria dentro de los momentos cotidianos de tu hijo.
-        </p>
-      </FadeIn>
-      <FadeIn delay={550}>
+      <div className="lw-auth-enter" style={{ animationDelay: '0ms' }}>
+        <SparkLogo size={128} />
+      </div>
+
+      <h1
+        className="lw-auth-enter"
+        style={{
+          animationDelay: '700ms',
+          color: '#1E2340',
+          fontSize: 36,
+          lineHeight: 1.05,
+          whiteSpace: 'nowrap',
+          fontFamily: 'var(--font-display), Georgia, serif',
+          fontWeight: 400,
+          marginTop: 8,
+        }}
+      >
+        Little Wonder
+      </h1>
+
+      <p
+        className="lw-auth-fade"
+        style={{
+          animationDelay: '900ms',
+          color: '#B5AFA5',
+          letterSpacing: 4,
+          fontSize: 11,
+          fontWeight: 500,
+          fontFamily: 'var(--font-body), sans-serif',
+          marginTop: 8,
+        }}
+      >
+        CURIOSITY COMPANION
+      </p>
+
+      <div className="lw-auth-enter" style={{ animationDelay: '1200ms', marginTop: 44, width: '100%', maxWidth: 280 }}>
         <SignInButton />
-      </FadeIn>
+      </div>
+
+      <p
+        className="lw-auth-fade"
+        style={{
+          animationDelay: '1320ms',
+          marginTop: 14,
+          color: '#B5AFA5',
+          fontFamily: 'var(--font-body), sans-serif',
+          fontWeight: 300,
+          fontSize: 13,
+          lineHeight: 1.3,
+        }}
+      >
+        Takes less than
+        <br />
+        2 min to set up
+      </p>
     </main>
   );
 }

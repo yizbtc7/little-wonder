@@ -27,9 +27,59 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
-  font-weight: 600;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
 }
+
+@keyframes lwFloat {
+  0%,
+  100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes lwCenterPulse {
+  0%,
+  100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes lwTwinkle1 {
+  0%,
+  100% { opacity: 0.25; transform: scale(0.82); }
+  50% { opacity: 0.88; transform: scale(1.1); }
+}
+
+@keyframes lwTwinkle2 {
+  0%,
+  100% { opacity: 0.82; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes lwTwinkle3 {
+  0%,
+  100% { opacity: 0.4; }
+  40% { opacity: 1; }
+  75% { opacity: 0.15; }
+}
+
+@keyframes lwEnter {
+  0% { opacity: 0; transform: translateY(16px) scale(0.5); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lwFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lw-spark-float { animation: lwFloat 4s ease-in-out infinite; }
+.lw-center-pulse { transform-origin: center; animation: lwCenterPulse 2.5s ease-in-out infinite; }
+.lw-twinkle-1 { transform-origin: center; animation: lwTwinkle1 3.2s ease-in-out infinite; }
+.lw-twinkle-2 { transform-origin: center; animation: lwTwinkle2 3.8s ease-in-out infinite; animation-delay: 0.5s; }
+.lw-twinkle-3 { transform-origin: center; animation: lwTwinkle3 2.8s ease-in-out infinite; animation-delay: 1s; }
+
+.lw-auth-enter { opacity: 0; animation: lwEnter 600ms ease-out forwards; }
+.lw-auth-fade { opacity: 0; animation: lwFadeIn 400ms ease-out forwards; }
 
 a {
   color: inherit;
