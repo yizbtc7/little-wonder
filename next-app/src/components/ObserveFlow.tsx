@@ -1359,7 +1359,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     if ((activeTab !== 'activities' && activeTab !== 'profile') || activitiesLoaded) return;
     void (async () => {
       try {
-        const response = await fetch(apiUrl(`/api/activities?child_id=${childId}`));
+        const response = await fetch(apiUrl(`/api/activities?child_id=${childId}&language=${locale}`));
         if (!response.ok) {
           setTimeout(() => setActivitiesRetry((v) => v + 1), 1200);
           return;

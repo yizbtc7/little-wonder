@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage } from '@/lib/language';
+import { normalizeLanguage } from '@/lib/exploreGuarantees';
 import { normalizeSchemaList } from '@/lib/schemas';
 
 type ActivityRow = {
@@ -90,6 +91,7 @@ export async function GET(request: Request) {
   const search = new URL(request.url).searchParams;
   const requestedChildId = search.get('child_id');
   const preferredLanguage = await getUserLanguage(user.id, 'es');
+  const selectedLanguage = normalizeLanguage(search.get('language'), preferredLanguage);
 
   let childQuery = db.from('children').select('id,birthdate').eq('user_id', user.id).order('created_at', { ascending: true }).limit(1);
   if (requestedChildId) {
@@ -114,7 +116,7 @@ export async function GET(request: Request) {
           shortage: MIN_AVAILABLE_TO_DO,
         },
       },
-      inventory: { languages_checked: [preferredLanguage], sources_used: [] },
+      inventory: { languages_checked: [selectedLanguage], sources_used: [] },
     });
   }
 
@@ -137,13 +139,13 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map(([schema]) => schema);
 
-  const prioritizedLanguages = [preferredLanguage];
+  const prioritizedLanguages = [selectedLanguage];
   const rowsByLanguage = new Map<string, ActivityRow[]>();
 
   const { data: languageRows, error: languageError } = await db
     .from('activities')
     .select('id,title,subtitle,emoji,schema_target,domain,duration_minutes,materials,steps,science_note,age_min_months,age_max_months,language,is_featured,created_at')
-    .eq('language', preferredLanguage)
+    .eq('language', selectedLanguage)
     .lte('age_min_months', ageMonths)
     .gte('age_max_months', ageMonths)
     .order('created_at', { ascending: false });
@@ -153,13 +155,13 @@ export async function GET(request: Request) {
   }
 
   const typedRows = (languageRows ?? []) as ActivityRow[];
-  rowsByLanguage.set(preferredLanguage, typedRows);
+  rowsByLanguage.set(selectedLanguage, typedRows);
 
   const mergedRows: ActivityRow[] = [];
   const seenTitles = new Set<string>();
   const seenSubtitlesBySchema = new Set<string>();
   for (const row of typedRows) {
-    if (preferredLanguage === 'es' && looksEnglishTitle(row.title)) continue;
+    if (selectedLanguage === 'es' && looksEnglishTitle(row.title)) continue;
 
     const titleKey = canonicalTitleKey(row.title);
     if (seenTitles.has(titleKey)) continue;
@@ -180,7 +182,7 @@ export async function GET(request: Request) {
       completed: [],
       stats: { total: 0, completed: 0 },
       child_schemas: topSchemas,
-      language: preferredLanguage,
+      language: selectedLanguage,
       shortages: {
         available_to_do: {
           required: MIN_AVAILABLE_TO_DO,
@@ -239,7 +241,7 @@ export async function GET(request: Request) {
       completed: completed.length,
     },
     child_schemas: topSchemas,
-    language: preferredLanguage,
+    language: selectedLanguage,
     inventory: {
       min_available_to_do: MIN_AVAILABLE_TO_DO,
       languages_checked: prioritizedLanguages,
