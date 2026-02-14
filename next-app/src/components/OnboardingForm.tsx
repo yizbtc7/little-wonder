@@ -295,9 +295,9 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           <FadeIn delay={250}>
             <div style={{ display: 'grid', gap: 18, marginBottom: 22 }}>
               {[
-                { icon: '👁️', title: t.onboarding.youNotice, desc: `Tell us what ${childName || 'your child'} is doing — even small, everyday moments. A quick sentence is all it takes.` },
-                { icon: '💡', title: t.onboarding.weIlluminate, desc: 'We’ll show you the science and wonder behind what you observed. What looks like “just playing” is often extraordinary learning.' },
-                { icon: '🌱', title: t.onboarding.growTogether, desc: 'Get personalized ideas to nurture exactly what your child is naturally curious about right now.' },
+                { icon: '👁️', title: t.onboarding.youNotice, desc: t.onboarding.stepNoticeDesc(childName || t.onboarding.childNamePlaceholder) },
+                { icon: '💡', title: t.onboarding.weIlluminate, desc: t.onboarding.stepIlluminateDesc },
+                { icon: '🌱', title: t.onboarding.growTogether, desc: t.onboarding.stepGrowDesc },
               ].map((item) => (
                 <div key={item.title} style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: theme.radius.md, background: theme.colors.brandLight, display: 'grid', placeItems: 'center', fontSize: 22 }}>{item.icon}</div>
@@ -313,7 +313,7 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
           <FadeIn delay={350}>
             <div style={{ background: theme.colors.sageLight, borderRadius: 14, padding: '16px 18px', marginBottom: 24 }}>
               <p style={{ fontFamily: theme.fonts.body, fontSize: 14, color: theme.colors.sage, lineHeight: 1.5, textAlign: 'center' }}>
-                But first — we have some wonderful things to show you about what {childName || 'your child'} is likely doing right now.
+                {t.onboarding.introTeaser(childName || t.onboarding.childNamePlaceholder)}
               </p>
             </div>
           </FadeIn>
