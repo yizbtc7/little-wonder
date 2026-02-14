@@ -564,7 +564,7 @@ function TopSchemaCards({ schemaStats, childName }: { schemaStats: SchemaStat[];
 
 function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMessage }: { locale: Language; childName: string; schemaStats: SchemaStat[]; maxCount: number; emptyMessage: string }) {
   return (
-    <div style={{ marginTop: 2, marginBottom: 22 }}>
+    <div style={{ marginTop: 20, marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <span style={{ fontSize: 24, lineHeight: 1 }}>🌱</span>
         <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>{locale === 'es' ? 'Jardín de esquemas' : 'Schema Garden'}</h3>
