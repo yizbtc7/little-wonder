@@ -208,6 +208,20 @@ function deserializeAssistantInsight(content: string): InsightPayload {
     if (!parsed || typeof parsed !== 'object') return parseInsightPayload(content);
 
     if (parsed.reply || parsed.wonder) {
+      if (typeof parsed.reply === 'string') {
+        const nestedFromReply = parseInsightPayload(parsed.reply);
+        if (nestedFromReply.wonder || nestedFromReply.reply !== parsed.reply) {
+          return nestedFromReply;
+        }
+      }
+
+      if (typeof parsed.revelation === 'string' && parsed.revelation.includes('"reply"')) {
+        const nestedFromRevelation = parseInsightPayload(parsed.revelation);
+        if (nestedFromRevelation.wonder || nestedFromRevelation.reply.length > 0) {
+          return nestedFromRevelation;
+        }
+      }
+
       return {
         reply: parsed.reply ?? '',
         wonder: parsed.wonder ?? null,
