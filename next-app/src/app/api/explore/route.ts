@@ -84,20 +84,27 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    brain_cards: brainCards.map((row) => ({
-      id: row.id,
-      icon: row.emoji,
-      title: row.title,
-      domain: row.domain,
-      preview: row.body,
-      language: row.language,
-      article: {
-        whats_happening: row.body,
-        youll_see_it_when: [],
-        fascinating_part: '',
-        how_to_be_present: '',
-      },
-    })),
+    brain_cards: brainCards.map((row) => {
+      const defaultPresence =
+        row.language === 'es'
+          ? 'Escucha con curiosidad y acompaña sin corregir de inmediato. Tu presencia atenta le da seguridad para explorar más.'
+          : 'Stay curious and join without correcting too quickly. Your attentive presence gives them safety to explore more.';
+
+      return {
+        id: row.id,
+        icon: row.emoji,
+        title: row.title,
+        domain: row.domain,
+        preview: row.body,
+        language: row.language,
+        article: {
+          whats_happening: row.body,
+          youll_see_it_when: [row.body],
+          fascinating_part: row.body,
+          how_to_be_present: defaultPresence,
+        },
+      };
+    }),
     daily_tip: dailyTip
       ? {
           id: dailyTip.id,
