@@ -286,10 +286,17 @@ export default function OnboardingForm({ userId }: OnboardingFormProps) {
         <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '40px 28px', background: `linear-gradient(180deg, ${theme.colors.cream} 0%, ${theme.colors.white} 100%)` }}>
           <ProgressDots total={3} current={2} />
           <FadeIn delay={100}>
-            <div style={{ textAlign: 'center', margin: '40px 0 28px' }}>
+            <div style={{ textAlign: 'center', margin: '12px 0 26px' }}>
               <span style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>🔭</span>
-              <h2 style={{ fontSize: 38, color: theme.colors.dark, lineHeight: 1.25 }}>{t.onboarding.howItWorks}</h2>
+              <h2 style={{ fontSize: 30, color: theme.colors.dark, lineHeight: 1.25, margin: '0 0 14px', fontFamily: theme.fonts.serif }}>{t.onboarding.visionTitle}</h2>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.gray, lineHeight: 1.65, margin: '0 0 10px' }}>{t.onboarding.visionBody1}</p>
+              <p style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.gray, lineHeight: 1.65, margin: '0 0 12px' }}>{t.onboarding.visionBody2}</p>
+              <p style={{ fontFamily: theme.fonts.serif, fontSize: 17, color: theme.colors.roseDark, lineHeight: 1.5, margin: 0, fontStyle: 'italic' }}>{t.onboarding.visionCloser}</p>
             </div>
+          </FadeIn>
+
+          <FadeIn delay={180}>
+            <div style={{ width: 40, height: 3, borderRadius: 2, background: theme.colors.blushMid, margin: '0 auto 24px' }} />
           </FadeIn>
 
           <FadeIn delay={250}>
