@@ -780,6 +780,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [profileTimeline, setProfileTimeline] = useState<ProfileWonderTimelineEntry[]>([]);
   const [profileSchemaStats, setProfileSchemaStats] = useState<ProfileSchemaStat[]>([]);
   const [profileInterests, setProfileInterests] = useState<string[]>([]);
+  const [newInterestInput, setNewInterestInput] = useState('');
+  const [isAddingInterest, setIsAddingInterest] = useState(false);
+  const [interestError, setInterestError] = useState('');
   const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profilePhotoError, setProfilePhotoError] = useState<string>('');
@@ -1221,6 +1224,8 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         setProfileTimeline(payload.timeline ?? []);
         setProfileSchemaStats(payload.schema_stats ?? []);
         setProfileInterests(payload.interests ?? []);
+        setNewInterestInput('');
+        setInterestError('');
         setProfileRecentMoments(payload.recent_moments ?? []);
         setProfilePhotoUrl(payload.child?.photo_url ?? null);
         setProfileCuriosityQuote(payload.child?.curiosity_quote ?? '');
@@ -1231,6 +1236,43 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       }
     })();
   }, [activeTab, childId]);
+
+  const normalizeInterestLabel = (value: string): string => value.trim().replace(/\s+/g, ' ');
+
+  const submitNewInterest = async () => {
+    const normalized = normalizeInterestLabel(newInterestInput);
+    if (!normalized) return;
+
+    const duplicateExists = profileInterests.some((value) => normalizeInterestLabel(value).toLocaleLowerCase('es-ES') === normalized.toLocaleLowerCase('es-ES'));
+    if (duplicateExists) {
+      setInterestError(locale === 'es' ? 'Ese interés ya está guardado.' : 'That interest is already saved.');
+      return;
+    }
+
+    setIsAddingInterest(true);
+    setInterestError('');
+
+    try {
+      const response = await fetch(apiUrl(`/api/children/${childId}/interests`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interest: normalized }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || 'interest_failed');
+      }
+
+      const payload = (await response.json()) as { interests?: string[] };
+      setProfileInterests(payload.interests ?? profileInterests);
+      setNewInterestInput('');
+    } catch {
+      setInterestError(locale === 'es' ? 'No pudimos guardar el interés.' : 'Could not save interest.');
+    } finally {
+      setIsAddingInterest(false);
+    }
+  };
 
   const toggleSaveActivity = async (activityId: string, isSaved: boolean) => {
     await fetch(apiUrl(`/api/activities/${activityId}/save`), { method: isSaved ? 'DELETE' : 'POST' });
@@ -2443,14 +2485,64 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       emptyMessage={t.profile.noSchemaData}
                     />
 
-                    <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontSize: 24, lineHeight: 1 }}>💜</span>
+                      <h3 style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 24, letterSpacing: -0.2, fontWeight: 800, color: '#3E302C', lineHeight: 1.08 }}>Lo que le fascina</h3>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                       {profileInterests.length === 0 ? (
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
                       ) : profileInterests.map((interest) => (
                         <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{interest}</span>
                       ))}
-                      <button type='button' style={{ border: '1px dashed #E1B7AF', background: '#FFF7F5', borderRadius: 50, padding: '8px 12px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.roseDark, fontWeight: 700, cursor: 'default' }}>+ {locale === 'es' ? 'Agregar' : 'Add'}</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
+                      <input
+                        value={newInterestInput}
+                        onChange={(event) => {
+                          setNewInterestInput(event.target.value);
+                          if (interestError) setInterestError('');
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            void submitNewInterest();
+                          }
+                        }}
+                        placeholder={locale === 'es' ? 'Ej: dinosaurios, música, trenes' : 'Ex: dinosaurs, music, trains'}
+                        disabled={isAddingInterest}
+                        style={{
+                          flex: '1 1 220px',
+                          minWidth: 180,
+                          border: '1px solid #EAD1CC',
+                          borderRadius: 999,
+                          padding: '9px 13px',
+                          fontFamily: theme.fonts.sans,
+                          fontSize: 13,
+                          color: theme.colors.darkText,
+                          background: '#fff',
+                        }}
+                      />
+                      <button
+                        type='button'
+                        onClick={() => void submitNewInterest()}
+                        disabled={isAddingInterest || normalizeInterestLabel(newInterestInput).length === 0}
+                        style={{
+                          border: '1px dashed #E1B7AF',
+                          background: '#FFF7F5',
+                          borderRadius: 50,
+                          padding: '8px 12px',
+                          fontFamily: theme.fonts.sans,
+                          fontSize: 13,
+                          color: theme.colors.roseDark,
+                          fontWeight: 700,
+                          cursor: isAddingInterest ? 'wait' : 'pointer',
+                          opacity: isAddingInterest || normalizeInterestLabel(newInterestInput).length === 0 ? 0.6 : 1,
+                        }}
+                      >
+                        + {locale === 'es' ? 'Agregar' : 'Add'}
+                      </button>
+                      {interestError ? <p style={{ margin: 0, width: '100%', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B0493A' }}>{interestError}</p> : null}
                     </div>
 
                     <h3 style={{ margin: '0 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{locale === 'es' ? 'Últimos momentos' : 'Latest moments'}</h3>
