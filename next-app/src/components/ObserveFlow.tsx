@@ -35,6 +35,30 @@ type ChatMessage =
   | { role: 'user'; text: string }
   | { role: 'ai'; insight: InsightPayload };
 
+type BrowserSpeechRecognitionResult = {
+  isFinal: boolean;
+  0: { transcript: string };
+};
+
+type BrowserSpeechRecognitionEvent = {
+  resultIndex: number;
+  results: ArrayLike<BrowserSpeechRecognitionResult>;
+};
+
+type BrowserSpeechRecognition = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
 type ConversationSummary = {
   id: string;
   started_at: string;
@@ -924,6 +948,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [voiceTranscriptDraft, setVoiceTranscriptDraft] = useState('');
   const [voicePreviewUrl, setVoicePreviewUrl] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState('');
+  const [speechRecognitionAvailable, setSpeechRecognitionAvailable] = useState(false);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
   const [settingsStatus, setSettingsStatus] = useState('');
@@ -992,10 +1017,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileBookmarksRef = useRef<HTMLDivElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const voiceChunksRef = useRef<BlobPart[]>([]);
-  const voiceMimeTypeRef = useRef<string>('audio/webm');
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const completeOpenArticleReadRef = useRef<(() => void) | null>(null);
   const supabase = createSupabaseBrowserClient();
 
@@ -1008,14 +1030,12 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   }, [activeTab, focusChatComposerIntent]);
 
   useEffect(() => {
+    const hasSpeechApi = typeof window !== 'undefined' && Boolean((window as Window & { SpeechRecognition?: BrowserSpeechRecognitionConstructor; webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor }).SpeechRecognition || (window as Window & { SpeechRecognition?: BrowserSpeechRecognitionConstructor; webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor }).webkitSpeechRecognition);
+    setSpeechRecognitionAvailable(hasSpeechApi);
+
     return () => {
       if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
-      try {
-        if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
-      } catch {
-        // no-op cleanup
-      }
-      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      speechRecognitionRef.current?.stop();
     };
   }, [voicePreviewUrl]);
 
@@ -1771,86 +1791,70 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     }
   };
 
-  const transcribeVoiceBlob = async (blob: Blob, fileName: string) => {
-    setIsTranscribingVoice(true);
-    setVoiceError('');
+  const getSpeechRecognitionConstructor = (): BrowserSpeechRecognitionConstructor | null => {
+    if (typeof window === 'undefined') return null;
+    const win = window as Window & {
+      SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+      webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    };
 
-    try {
-      const formData = new FormData();
-      formData.append('audio', blob, fileName);
-      formData.append('language', locale);
-
-      const response = await fetch(apiUrl('/api/chat/voice'), {
-        method: 'POST',
-        body: formData,
-      });
-
-      const payload = (await response.json()) as { transcript?: string; error?: string };
-      if (!response.ok || !payload.transcript) {
-        throw new Error(payload.error || 'transcription_failed');
-      }
-
-      setVoiceTranscriptDraft(payload.transcript.trim());
-    } catch (error) {
-      const fallback = locale === 'es' ? 'No pudimos transcribir la nota. Intenta grabar de nuevo.' : 'We could not transcribe your note. Please try recording again.';
-      const detail = error instanceof Error && error.message ? error.message : '';
-      setVoiceError(detail ? `${fallback} (${detail})` : fallback);
-      setVoiceTranscriptDraft('');
-    } finally {
-      setIsTranscribingVoice(false);
-    }
+    return win.SpeechRecognition ?? win.webkitSpeechRecognition ?? null;
   };
 
   const startVoiceRecording = async () => {
     if (isRecordingVoice || isTranscribingVoice) return;
 
     setVoiceError('');
+    setVoiceTranscriptDraft('');
+
+    const RecognitionCtor = getSpeechRecognitionConstructor();
+    if (!RecognitionCtor) {
+      setVoiceError(locale === 'es' ? 'Tu navegador no soporta transcripción directa. Usa el dictado del teclado o cambia a Safari/Chrome.' : 'Your browser does not support direct speech transcription. Use keyboard dictation or switch to Safari/Chrome.');
+      return;
+    }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const preferredTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/mpeg'];
-      const selectedType = preferredTypes.find((type) => {
-        try {
-          return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type);
-        } catch {
-          return false;
+      const recognition = new RecognitionCtor();
+      speechRecognitionRef.current = recognition;
+      recognition.lang = locale === 'es' ? 'es-ES' : 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      let finalTranscript = '';
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const result = event.results[i];
+          const text = result[0]?.transcript ?? '';
+          if (result.isFinal) finalTranscript += text;
+          else interimTranscript += text;
         }
-      });
-
-      const recorder = selectedType ? new MediaRecorder(stream, { mimeType: selectedType }) : new MediaRecorder(stream);
-      voiceMimeTypeRef.current = recorder.mimeType || selectedType || 'audio/webm';
-      mediaStreamRef.current = stream;
-      mediaRecorderRef.current = recorder;
-      voiceChunksRef.current = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) voiceChunksRef.current.push(event.data);
+        const combined = `${finalTranscript} ${interimTranscript}`.trim();
+        if (combined) setVoiceTranscriptDraft(combined);
       };
 
-      recorder.onstop = () => {
-        const mimeType = voiceMimeTypeRef.current || recorder.mimeType || 'audio/webm';
-        const blob = new Blob(voiceChunksRef.current, { type: mimeType });
-        const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('mpeg') ? 'mp3' : 'webm';
-        const fileName = `voice-note-${Date.now()}.${extension}`;
-        const nextUrl = URL.createObjectURL(blob);
-        if (voicePreviewUrl) URL.revokeObjectURL(voicePreviewUrl);
-        setVoicePreviewUrl(nextUrl);
-        void transcribeVoiceBlob(blob, fileName);
-        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
+      recognition.onerror = (event) => {
+        const reason = event?.error ?? 'speech_error';
+        setVoiceError(locale === 'es' ? `No pudimos transcribir por voz (${reason}).` : `Voice transcription failed (${reason}).`);
       };
 
-      recorder.start();
+      recognition.onend = () => {
+        setIsRecordingVoice(false);
+      };
+
       setIsRecordingVoice(true);
+      recognition.start();
     } catch {
-      setVoiceError(locale === 'es' ? 'Necesitamos permiso de micrófono para grabar.' : 'Microphone permission is required to record.');
+      setIsRecordingVoice(false);
+      setVoiceError(locale === 'es' ? 'No se pudo iniciar la transcripción de voz.' : 'Could not start voice transcription.');
     }
   };
 
   const stopVoiceRecording = () => {
     if (!isRecordingVoice) return;
+    speechRecognitionRef.current?.stop();
     setIsRecordingVoice(false);
-    mediaRecorderRef.current?.stop();
   };
 
   const sendVoiceNote = async () => {
@@ -2274,7 +2278,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
           </div>
 
           <div style={{ padding: '12px 16px 28px', borderTop: `1px solid ${theme.colors.divider}` }}>
-            {voicePreviewUrl || isTranscribingVoice || voiceError ? (
+            {voicePreviewUrl || voiceTranscriptDraft.trim() || isRecordingVoice || isTranscribingVoice || voiceError ? (
               <div style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '10px 12px', marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <span style={{ fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 800, color: theme.colors.sageDark }}>
@@ -2286,6 +2290,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 </div>
 
                 {voicePreviewUrl ? <audio controls src={voicePreviewUrl} style={{ width: '100%', marginBottom: 8 }} /> : null}
+                {isRecordingVoice ? (
+                  <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>{locale === 'es' ? 'Escuchando… toca ■ para detener.' : 'Listening… tap ■ to stop.'}</p>
+                ) : null}
 
                 {isTranscribingVoice ? (
                   <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>{locale === 'es' ? 'Transcribiendo audio…' : 'Transcribing audio…'}</p>
@@ -2315,8 +2322,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 type='button'
                 onClick={isRecordingVoice ? stopVoiceRecording : () => void startVoiceRecording()}
                 disabled={typing || isTranscribingVoice}
-                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : theme.colors.sageLight, color: isRecordingVoice ? '#fff' : theme.colors.sageDark, cursor: typing || isTranscribingVoice ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : speechRecognitionAvailable ? theme.colors.sageLight : theme.colors.divider, color: isRecordingVoice ? '#fff' : speechRecognitionAvailable ? theme.colors.sageDark : theme.colors.midText, cursor: typing || isTranscribingVoice ? 'not-allowed' : 'pointer', flexShrink: 0 }}
                 aria-label={locale === 'es' ? 'Grabar nota de voz' : 'Record voice note'}
+                title={speechRecognitionAvailable ? (locale === 'es' ? 'Dictado por voz' : 'Voice dictation') : (locale === 'es' ? 'Navegador sin soporte de dictado Web Speech' : 'Browser without Web Speech support')}
               >
                 {isRecordingVoice ? '■' : '🎤'}
               </button>
