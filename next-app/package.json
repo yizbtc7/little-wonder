@@ -10,6 +10,7 @@
     "test": "vitest run",
     "articles:generate": "node scripts/generate-articles.js",
     "articles:refill": "node scripts/refill-explore-shortages.js",
+    "articles:prune-similar": "node scripts/prune-similar-articles.js",
     "activities:generate": "node scripts/generate-activities.js"
   },
   "dependencies": {

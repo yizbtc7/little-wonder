@@ -264,6 +264,6 @@ async function main() {
 
 main().catch(async (e) => {
   console.error(e);
-  await pool.end();
+  if (pool) await pool.end();
   process.exit(1);
 });
