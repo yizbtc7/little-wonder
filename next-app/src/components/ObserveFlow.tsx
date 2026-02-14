@@ -1594,7 +1594,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               <>
                 <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🔬 {t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
-                {deepDiveArticles.slice(0, 3).map((article) => (
+                {deepDiveArticles
+                  .filter((article, index, all) => all.findIndex((candidate) => candidate.title.trim().toLowerCase() === article.title.trim().toLowerCase()) === index)
+                  .slice(0, 3)
+                  .map((article) => (
                   <button key={`deep-${article.id}`} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
                     <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#EDE5F5' }}>{article.emoji}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>
