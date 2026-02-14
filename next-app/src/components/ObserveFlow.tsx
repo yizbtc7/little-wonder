@@ -435,6 +435,27 @@ function pickRecentMomentBody(moment: { title?: string; observation?: string }, 
   return candidates[0];
 }
 
+function localizeKnownTimelinePrompt(text: string, locale: Language, childName: string): string {
+  if (locale !== 'es') return text;
+
+  const normalized = text
+    .toLowerCase()
+    .replace(/["“”]/g, '')
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const mappings: Array<{ needle: string; label: string }> = [
+    { needle: 'pointed at something and said a new word', label: `${childName} señaló algo y dijo una palabra nueva` },
+    { needle: 'keeps stacking and knocking down blocks', label: `${childName} apila bloques y luego los tumba` },
+    { needle: 'had a big tantrum at the store', label: `${childName} tuvo una gran rabieta en la tienda` },
+    { needle: 'was pretending to cook me dinner', label: `${childName} estaba jugando a cocinarme la cena` },
+  ];
+
+  const match = mappings.find((item) => normalized.includes(item.needle));
+  return match ? match.label : text;
+}
+
 function formatExploreTypeLabel(type: ExploreArticleRow['type'], locale: Language): string {
   if (locale === 'es') {
     if (type === 'guide') return 'Guía práctica';
@@ -2866,7 +2887,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                           const schemaInfo = schemaKey ? SCHEMA_INFO[schemaKey] : null;
                           const railColor = schemaInfo?.color ?? '#D3C5C1';
                           const chipLabel = schemaInfo ? `${schemaInfo.emoji} ${schemaInfo.label}` : (locale === 'es' ? '✨ Momento' : '✨ Moment');
-                          const bodyText = entry.observation?.trim() || entry.title?.trim() || '';
+                          const bodyText = localizeKnownTimelinePrompt(entry.observation?.trim() || entry.title?.trim() || '', locale, childName);
 
                           return (
                             <div key={entry.id} style={{ display: 'flex', alignItems: 'stretch', gap: 12 }}>
