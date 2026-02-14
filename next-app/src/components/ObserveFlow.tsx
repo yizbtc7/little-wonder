@@ -484,11 +484,22 @@ function schemaBadgeColor(schema: string): string {
   return key ? schemaBadgeColors[key] : theme.colors.rose;
 }
 
-function schemaContextLine(schema: string, childName: string): string | null {
+function schemaContextLine(schema: string, childName: string, locale: Language): string | null {
   const key = normalizeSchemaKey(schema);
   if (!key) return null;
 
-  const map: Record<SchemaKey, string> = {
+  const mapEs: Record<SchemaKey, string> = {
+    trajectory: `Porque a ${childName} le encanta lanzar y dejar caer cosas`,
+    transporting: `Porque ${childName} transporta cosas de un lugar a otro`,
+    rotation: `Porque a ${childName} le fascina lo que gira`,
+    enclosure: `Porque a ${childName} le encanta meter cosas dentro de otras`,
+    connecting: `Porque ${childName} quiere conectar y desconectar todo`,
+    transforming: `Porque a ${childName} le encanta mezclar y transformar cosas`,
+    positioning: `Porque ${childName} alinea todo con precisión`,
+    enveloping: `Porque a ${childName} le encanta envolver y esconder cosas`,
+  };
+
+  const mapEn: Record<SchemaKey, string> = {
     trajectory: `Because ${childName} loves throwing and dropping things`,
     transporting: `Because ${childName} carries everything everywhere`,
     rotation: `Because ${childName} is fascinated by things that spin`,
@@ -499,7 +510,7 @@ function schemaContextLine(schema: string, childName: string): string | null {
     enveloping: `Because ${childName} loves hiding and wrapping things`,
   };
 
-  return map[key];
+  return (locale === 'es' ? mapEs : mapEn)[key];
 }
 
 
@@ -542,12 +553,12 @@ function SchemaBarChart({ schemaStats, maxCount }: { schemaStats: SchemaStat[]; 
   );
 }
 
-function TopSchemaCards({ schemaStats, childName }: { schemaStats: SchemaStat[]; childName: string }) {
+function TopSchemaCards({ schemaStats, childName, locale }: { schemaStats: SchemaStat[]; childName: string; locale: Language }) {
   return (
     <div style={{ display: 'grid', gap: 10 }}>
       {schemaStats.slice(0, 2).map(({ key, count }) => {
         const info = SCHEMA_INFO[key];
-        const contextLine = schemaContextLine(key, childName);
+        const contextLine = schemaContextLine(key, childName, locale);
         return (
           <div key={key} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '13px 14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -578,7 +589,7 @@ function SchemaGardenSection({ locale, childName, schemaStats, maxCount, emptyMe
       ) : (
         <>
           <SchemaBarChart schemaStats={schemaStats} maxCount={maxCount} />
-          <TopSchemaCards schemaStats={schemaStats} childName={childName} />
+          <TopSchemaCards schemaStats={schemaStats} childName={childName} locale={locale} />
         </>
       )}
     </div>
@@ -2146,7 +2157,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{activitiesFeatured.emoji}</div>
                   <div style={{ flex: 1 }}>
                     <h3 style={{ fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{withChildName(activitiesFeatured.title, childName)}</h3>
-                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 10px', lineHeight: 1.4, fontStyle: 'italic' }}>{childSchemas.includes(activitiesFeatured.schema_target) ? schemaContextLine(activitiesFeatured.schema_target, childName) ?? withChildName(activitiesFeatured.subtitle, childName) : withChildName(activitiesFeatured.subtitle, childName)}</p>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 10px', lineHeight: 1.4, fontStyle: 'italic' }}>{childSchemas.includes(activitiesFeatured.schema_target) ? schemaContextLine(activitiesFeatured.schema_target, childName, locale) ?? withChildName(activitiesFeatured.subtitle, childName) : withChildName(activitiesFeatured.subtitle, childName)}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: theme.colors.midText, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>⏱ {activitiesFeatured.duration_minutes} min</span>
                       <span style={{ fontSize: 11, color: '#fff', background: schemaBadgeColor(activitiesFeatured.schema_target), padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(activitiesFeatured.schema_target)}</span>
@@ -2169,7 +2180,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: iconBackgrounds[idx % iconBackgrounds.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{activity.emoji}</div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: theme.colors.darkText, margin: '0 0 3px' }}>{withChildName(activity.title, childName)}</h4>
-                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: '0 0 6px', lineHeight: 1.4 }}>{childSchemas.includes(activity.schema_target) ? schemaContextLine(activity.schema_target, childName) ?? withChildName(activity.subtitle, childName) : withChildName(activity.subtitle, childName)}</p>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText, margin: '0 0 6px', lineHeight: 1.4 }}>{childSchemas.includes(activity.schema_target) ? schemaContextLine(activity.schema_target, childName, locale) ?? withChildName(activity.subtitle, childName) : withChildName(activity.subtitle, childName)}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: theme.colors.lightText, fontFamily: theme.fonts.sans }}>⏱ {activity.duration_minutes} min</span>
                       <span style={{ fontSize: 10, color: '#fff', background: schemaBadgeColor(activity.schema_target), padding: '2px 8px', borderRadius: 10, fontFamily: theme.fonts.sans, fontWeight: 700 }}>{formatSchemaLabel(activity.schema_target)}</span>
