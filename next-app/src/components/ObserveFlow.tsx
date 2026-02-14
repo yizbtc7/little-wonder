@@ -1178,15 +1178,22 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         body: formData,
       });
 
-      const payload = (await response.json()) as { error?: string; photo_url?: string };
+      let payload: { error?: string; photo_url?: string } | null = null;
+      try {
+        payload = (await response.json()) as { error?: string; photo_url?: string };
+      } catch {
+        payload = null;
+      }
 
-      if (!response.ok || !payload.photo_url) {
-        throw new Error(payload.error || 'upload_failed');
+      if (!response.ok || !payload?.photo_url) {
+        throw new Error(payload?.error || 'upload_failed');
       }
 
       setProfilePhotoUrl(payload.photo_url);
-    } catch {
-      setProfilePhotoError(locale === 'es' ? 'No pudimos subir la foto. Inténtalo de nuevo.' : 'We could not upload the photo. Please try again.');
+    } catch (error) {
+      const fallback = locale === 'es' ? 'No pudimos subir la foto. Inténtalo de nuevo.' : 'We could not upload the photo. Please try again.';
+      const message = error instanceof Error && error.message && error.message !== 'upload_failed' ? error.message : fallback;
+      setProfilePhotoError(message);
     } finally {
       setProfilePhotoUploading(false);
       inputElement.value = '';
