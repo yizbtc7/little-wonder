@@ -1257,12 +1257,22 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   }, [activeTab, childId]);
 
   const normalizeInterestLabel = (value: string): string => value.trim().replace(/\s+/g, ' ');
+  const hasLeadingEmoji = (value: string): boolean => /^\p{Extended_Pictographic}/u.test(value.trim());
+  const interestComparableKey = (value: string): string =>
+    normalizeInterestLabel(value)
+      .replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, '')
+      .toLocaleLowerCase('es-ES');
+  const ensureInterestEmoji = (value: string): string => {
+    const normalized = normalizeInterestLabel(value);
+    if (!normalized) return normalized;
+    return hasLeadingEmoji(normalized) ? normalized : `✨ ${normalized}`;
+  };
 
   const submitNewInterest = async () => {
-    const normalized = normalizeInterestLabel(newInterestInput);
+    const normalized = ensureInterestEmoji(newInterestInput);
     if (!normalized) return;
 
-    const duplicateExists = profileInterests.some((value) => normalizeInterestLabel(value).toLocaleLowerCase('es-ES') === normalized.toLocaleLowerCase('es-ES'));
+    const duplicateExists = profileInterests.some((value) => interestComparableKey(value) === interestComparableKey(normalized));
     if (duplicateExists) {
       setInterestError(locale === 'es' ? 'Ese interés ya está guardado.' : 'That interest is already saved.');
       return;
@@ -2512,7 +2522,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       {profileInterests.length === 0 ? (
                         <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{locale === 'es' ? 'Aún no hay intereses guardados.' : 'No saved interests yet.'}</p>
                       ) : profileInterests.map((interest) => (
-                        <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{interest}</span>
+                        <span key={interest} style={{ background: '#FFEFEB', borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#5C4D48', border: '1px solid #F5D3CC' }}>{ensureInterestEmoji(interest)}</span>
                       ))}
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
