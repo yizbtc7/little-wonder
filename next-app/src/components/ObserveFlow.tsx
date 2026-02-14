@@ -53,6 +53,7 @@ type ApiChatMessage = {
 
 type ExploreBrainCardRow = {
   id: string;
+  language?: 'en' | 'es';
   icon: string;
   title: string;
   domain: string;
@@ -67,6 +68,7 @@ type ExploreBrainCardRow = {
 
 type ExploreDailyTipRow = {
   id: string;
+  language?: 'en' | 'es';
   article: {
     tip: string;
     why: string;
@@ -545,6 +547,56 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   const quoteOfTheDay = dailyQuotes[Math.floor(Date.now() / 86400000) % 5];
 
+
+  const DAILY_INSIGHT_ES = {
+    tip: `Cuando leas con ${childName} esta noche, deja que pase las páginas, aunque se salte algunas.`,
+    why: 'Cada vez que pasa una página toma una decisión. Ese pequeño acto entrena lenguaje, atención y autorregulación al mismo tiempo.',
+  };
+
+  const STAGE_CONTENT_ES = {
+    cards: [
+      {
+        icon: '🎭',
+        title: 'El teléfono banana y la mente de doble realidad',
+        domain: 'Imaginación',
+        color: '#F0EBF5',
+        preview: `Cuando ${childName} usa una banana como teléfono, sostiene dos realidades a la vez: lo que ES y lo que REPRESENTA.`,
+        full: {
+          whats_happening: `En el cerebro de ${childName} está apareciendo algo enorme: la representación dual. Sabe que es una banana y al mismo tiempo decide que es un teléfono.`,
+          youll_see_it_when: ['Da de comer a un peluche con una cuchara vacía', 'Habla por objetos como si fueran teléfonos', 'Arropa juguetes para "dormirlos"', 'Inventa sonidos para escenas de juego'],
+          fascinating_part: 'El juego simbólico predice crecimiento de lenguaje y pensamiento abstracto.',
+          how_to_be_present: 'Sigue su historia en vez de corregirla. Si la banana suena, contesta.',
+        },
+      },
+      {
+        icon: '💬',
+        title: 'El diccionario invisible 5x',
+        domain: 'Lenguaje',
+        color: '#EDF5EC',
+        preview: `${childName} entiende muchas más palabras de las que puede decir. Su cerebro está construyendo una biblioteca invisible.`,
+        full: {
+          whats_happening: `${childName} está en una ventana de lenguaje de alta velocidad. Con pocas palabras habladas, su comprensión crece con cada conversación significativa.`,
+          youll_see_it_when: ['Sigue instrucciones complejas', 'Señala para pedir palabras', 'Usa una palabra para una idea completa', 'Balbuceo largo con ritmo conversacional'],
+          fascinating_part: 'Los turnos conversacionales son de los predictores más fuertes del vocabulario futuro.',
+          how_to_be_present: 'Cuando señale, nombra lo que ve y haz una pausa para que responda.',
+        },
+      },
+      {
+        icon: '✊',
+        title: "Por qué decir 'no' es un avance",
+        domain: 'Socioemocional',
+        color: '#F8E8E0',
+        preview: `Ese 'no' fuerte muchas veces es autonomía en desarrollo. ${childName} descubre que es una persona separada con preferencias.`,
+        full: {
+          whats_happening: `Cuando ${childName} dice no, está practicando agencia. Está organizando identidad, preferencia y límites.`,
+          youll_see_it_when: ["'Yo solo' aunque tome más tiempo", 'Preferencias intensas por objetos', 'Dice no para probar elección', 'Resistencia en transiciones'],
+          fascinating_part: 'Los sistemas de autonomía temprana sostienen luego control de impulsos y mejor toma de decisiones.',
+          how_to_be_present: 'Ofrece opciones con límites claros y valida primero la emoción.',
+        },
+      },
+    ],
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = (localStorage.getItem('locale') || localStorage.getItem('language') || '').toLowerCase();
@@ -587,7 +639,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               how_to_be_present: card.article.how_to_be_present,
             },
           }))
-        : STAGE_CONTENT.cards;
+        : (locale === 'es' ? STAGE_CONTENT_ES.cards : STAGE_CONTENT.cards);
 
     return sourceCards.map((card) => ({
       ...card,
@@ -600,7 +652,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
         how_to_be_present: withChildName(card.full.how_to_be_present, childName),
       },
     }));
-  }, [childName, exploreCards]);
+  }, [childName, exploreCards, locale]);
 
   const fetchConversations = async (): Promise<ConversationSummary[]> => {
     try {
@@ -1410,10 +1462,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.blushLight} 100%)`, borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 16 }}>
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: theme.colors.roseDark }}>{t.learn.todaysTip}</p>
-              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(exploreDailyTip?.article?.tip ?? DAILY_INSIGHT.tip, childName)}</p>
+              <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{withChildName(locale === 'es' && exploreDailyTip?.language !== 'es' ? DAILY_INSIGHT_ES.tip : (exploreDailyTip?.article?.tip ?? DAILY_INSIGHT.tip), childName)}</p>
               <div onClick={() => setTipExpanded((v) => !v)} style={{ background: '#fff', borderRadius: 12, padding: tipExpanded ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark }}>{t.learn.whyThisMatters}</p>
-                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(exploreDailyTip?.article?.why ?? DAILY_INSIGHT.why, childName)}</p> : null}
+                {tipExpanded ? <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.sans, fontSize: 14, lineHeight: 1.6, color: theme.colors.midText }}>{withChildName(locale === 'es' && exploreDailyTip?.language !== 'es' ? DAILY_INSIGHT_ES.why : (exploreDailyTip?.article?.why ?? DAILY_INSIGHT.why), childName)}</p> : null}
               </div>
             </div>
 

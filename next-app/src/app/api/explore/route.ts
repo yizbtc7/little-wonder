@@ -37,7 +37,7 @@ export async function GET() {
   const loadBrainCards = async (language: 'en' | 'es') =>
     db
       .from('explore_content')
-      .select('id,icon,title,domain,preview,article')
+      .select('id,icon,title,domain,preview,article,language')
       .eq('type', 'brain_card')
       .eq('language', language)
       .lte('age_range_start', ageMonths)
@@ -48,7 +48,7 @@ export async function GET() {
   const loadDailyTip = async (language: 'en' | 'es') =>
     db
       .from('explore_content')
-      .select('id,article,source')
+      .select('id,article,source,language')
       .eq('type', 'daily_tip')
       .eq('language', language)
       .lte('age_range_start', ageMonths)
