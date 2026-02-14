@@ -1288,9 +1288,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
           {openWonder ? (
             <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: theme.colors.cream, overflowY: 'auto' }}>
               <div style={{ background: `linear-gradient(180deg, ${theme.colors.blush} 0%, ${theme.colors.cream} 100%)`, padding: '16px 24px 40px' }}>
-                <button onClick={() => setOpenWonder(null)} style={{ border: 'none', borderRadius: 50, background: 'rgba(255,255,255,0.6)', padding: '8px 16px', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>← Back to chat</button>
+                <button onClick={() => setOpenWonder(null)} style={{ border: 'none', borderRadius: 50, background: 'rgba(255,255,255,0.6)', padding: '8px 16px', cursor: 'pointer', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>← {locale === 'es' ? 'Volver al chat' : 'Back to chat'}</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <span style={{ background: theme.colors.blush, color: '#E8A090', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 }}>✨ WONDER</span>
+                  <span style={{ background: theme.colors.blush, color: '#E8A090', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 }}>✨ {locale === 'es' ? 'MARAVILLA' : 'WONDER'}</span>
                   {(openWonder.schemas_detected ?? []).map((schema) => (
                     <span
                       key={schema}
@@ -1312,27 +1312,35 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
               </div>
               <div style={{ padding: '0 24px 40px' }}>
                 <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
-                <div style={{ margin: '0 0 24px', padding: '22px 0', borderTop: `2px solid ${theme.colors.rose}55`, borderBottom: `2px solid ${theme.colors.rose}55` }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontStyle: 'italic', fontWeight: 700, textAlign: 'center', fontSize: 20, color: '#2A2A2A' }}>{openWonder.article.pull_quote}</p>
-                </div>
-                <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, textTransform: 'uppercase', letterSpacing: 0.8 }}>✨ You&apos;ll recognize it when…</p>
-                <div style={{ marginBottom: 32 }}>
-                  {(openWonder.article.signs ?? []).map((rawSign, index) => {
-                    const signText = String(rawSign ?? '').trim();
-                    if (!signText) return null;
+                {String(openWonder.article.pull_quote ?? '').trim() ? (
+                  <div style={{ margin: '0 0 24px', padding: '22px 0', borderTop: `2px solid ${theme.colors.rose}55`, borderBottom: `2px solid ${theme.colors.rose}55` }}>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.serif, fontStyle: 'italic', fontWeight: 700, textAlign: 'center', fontSize: 20, color: '#2A2A2A' }}>{openWonder.article.pull_quote}</p>
+                  </div>
+                ) : null}
+                {(openWonder.article.signs ?? []).filter((sign) => String(sign ?? '').trim()).length > 0 ? (
+                  <>
+                    <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, textTransform: 'uppercase', letterSpacing: 0.8 }}>✨ {locale === 'es' ? 'Lo reconocerás cuando…' : 'You\'ll recognize it when…'}</p>
+                    <div style={{ marginBottom: 32 }}>
+                      {(openWonder.article.signs ?? []).map((rawSign, index) => {
+                        const signText = String(rawSign ?? '').trim();
+                        if (!signText) return null;
 
-                    return (
-                      <div key={index} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: theme.colors.blush, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.roseDark, flexShrink: 0, marginTop: 1 }}>{index + 1}</div>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{signText}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 24, padding: '24px 22px' }}>
-                  <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.sage, textTransform: 'uppercase', letterSpacing: 0.8 }}>🤲 How to be present</p>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{openWonder.article.how_to_be_present}</p>
-                </div>
+                        return (
+                          <div key={index} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: theme.colors.blush, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.roseDark, flexShrink: 0, marginTop: 1 }}>{index + 1}</div>
+                            <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: theme.colors.darkText }}>{signText}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : null}
+                {String(openWonder.article.how_to_be_present ?? '').trim() ? (
+                  <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 24, padding: '24px 22px' }}>
+                    <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.sage, textTransform: 'uppercase', letterSpacing: 0.8 }}>🤲 {locale === 'es' ? 'Cómo estar presente' : 'How to be present'}</p>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{openWonder.article.how_to_be_present}</p>
+                  </div>
+                ) : null}
                 {openWonder.article.curiosity_closer ? (
                   <p style={{ margin: '28px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: '#C4756A', textAlign: 'center', padding: '0 8px' }}>{openWonder.article.curiosity_closer}</p>
                 ) : null}
