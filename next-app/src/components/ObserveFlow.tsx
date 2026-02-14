@@ -1740,7 +1740,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </div>
                     <h3 style={{ margin: '0 0 12px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.profile.interests}</h3>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books'].map((interest) => (
+                      {(locale === 'es' ? ['🎵 Música', '📦 Construcción', '🐛 Animales', '📚 Libros'] : ['🎵 Music', '📦 Stacking', '🐛 Animals', '📚 Books']).map((interest) => (
                         <span key={interest} style={{ background: theme.colors.blushLight, borderRadius: 50, padding: '8px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.darkText }}>{interest}</span>
                       ))}
                     </div>
