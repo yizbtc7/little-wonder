@@ -9,7 +9,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { theme } from '@/styles/theme';
 import { replaceChildName } from '@/utils/personalize';
 import { translations, type Language } from '@/lib/translations';
-import ArticleReader, { type ArticleContent } from '@/components/article-reader/ArticleReader';
+import ArticleReader from '@/components/article-reader/ArticleReader';
 
 type WonderPayload = {
   title: string;
@@ -89,8 +89,6 @@ type ExploreArticleRow = {
   domain: string | null;
   language: string;
   read_time_minutes?: number;
-  content?: ArticleContent | null;
-  sources?: string | null;
   created_at: string;
   is_read?: boolean;
   opened_at?: string | null;

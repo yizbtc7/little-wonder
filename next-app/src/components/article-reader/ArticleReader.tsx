@@ -13,11 +13,6 @@ export type ArticleSection =
   | { type: 'try_this'; text: string }
   | { type: 'warm_tip'; text: string; emoji?: string };
 
-export type ArticleContent = {
-  sections?: ArticleSection[];
-  sources?: string;
-};
-
 type ExploreArticle = {
   id: string;
   title: string;
@@ -26,8 +21,6 @@ type ExploreArticle = {
   body: string;
   domain: string | null;
   read_time_minutes?: number;
-  content?: ArticleContent | null;
-  sources?: string | null;
 };
 
 type Props = {
@@ -114,16 +107,84 @@ function Divider() {
   return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '32px 0', gap: 12 }}><div style={{ height: 1, flex: 1, background: theme.colors.border }} /><span style={{ fontSize: 10, color: theme.colors.textTer }}>✦</span><div style={{ height: 1, flex: 1, background: theme.colors.border }} /></div>;
 }
 
-function markdownFallbackToSections(body: string): ArticleSection[] {
-  return body
-    .split(/\n\n+/)
-    .map((text) => text.trim())
-    .filter(Boolean)
-    .map((text) => ({ type: 'body', text }) as ArticleSection);
-}
-
 function htmlSafe(text: string) {
   return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function parseMarkdownToSections(body: string): ArticleSection[] {
+  const lines = body.replace(/\r\n/g, '\n').split('\n');
+  const sections: ArticleSection[] = [];
+  let paragraph: string[] = [];
+
+  const flushParagraph = () => {
+    const text = paragraph.join(' ').trim();
+    if (text) sections.push({ type: 'body', text });
+    paragraph = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+
+    if (line === '---') {
+      flushParagraph();
+      sections.push({ type: 'divider' });
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      flushParagraph();
+      sections.push({ type: 'section_header', text: line.slice(3).trim() });
+      continue;
+    }
+
+    const numbered = line.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s+[—-]\s+(.+)$/);
+    if (numbered) {
+      flushParagraph();
+      sections.push({ type: 'numbered_insight', number: Number(numbered[1]), title: numbered[2].trim(), text: numbered[3].trim() });
+      continue;
+    }
+
+    if (line.startsWith('>')) {
+      flushParagraph();
+      const quote = line.replace(/^>\s?/, '').trim();
+
+      if (quote.startsWith('💡')) {
+        sections.push({ type: 'pull_quote', emoji: '💡', text: quote.replace(/^💡\s*/, '') });
+        continue;
+      }
+
+      if (quote.startsWith('🔬')) {
+        const science = quote.replace(/^🔬\s*/, '');
+        const m = science.match(/^\*\*(.+?)\*\*\s*(.*)$/);
+        sections.push({ type: 'science_callout', title: m?.[1]?.trim() || undefined, text: m?.[2]?.trim() || science });
+        continue;
+      }
+
+      if (quote.startsWith('🌱')) {
+        sections.push({ type: 'try_this', text: quote.replace(/^🌱\s*/, '') });
+        continue;
+      }
+
+      if (quote.startsWith('💛') || quote.startsWith('🤲')) {
+        const emoji = quote.startsWith('💛') ? '💛' : '🤲';
+        sections.push({ type: 'warm_tip', emoji, text: quote.replace(/^(💛|🤲)\s*/, '') });
+        continue;
+      }
+
+      paragraph.push(quote);
+      continue;
+    }
+
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  return sections;
 }
 
 export default function ArticleReader({ article, childName, childAgeLabel, locale, onBack, onRegisterMoment }: Props) {
@@ -135,17 +196,17 @@ export default function ArticleReader({ article, childName, childAgeLabel, local
   }, [article.id]);
 
   const content = useMemo(() => {
-    const base = article.content?.sections?.length ? article.content.sections : markdownFallbackToSections(article.body);
+    const base = parseMarkdownToSections(article.body);
     return base.map((section) => {
       const next = { ...section } as ArticleSection;
       if ('text' in next && typeof next.text === 'string') next.text = replacePlaceholders(next.text, childName, childAgeLabel);
       if ('title' in next && typeof next.title === 'string') next.title = replacePlaceholders(next.title, childName, childAgeLabel);
       return next;
     });
-  }, [article.body, article.content?.sections, childAgeLabel, childName]);
+  }, [article.body, childAgeLabel, childName]);
 
   const title = replacePlaceholders(article.title, childName, childAgeLabel);
-  const sources = replacePlaceholders(article.content?.sources || article.sources || 'Erikson (Autonomía vs. Vergüenza) · Gerber/RIE · Harvard CCHD · Diamond', childName, childAgeLabel);
+  const sources = 'Erikson (Autonomía vs. Vergüenza) · Gerber/RIE · Harvard CCHD · Diamond';
 
   return (
     <div style={{ maxWidth: 390, margin: '0 auto', height: '100vh', background: theme.colors.bg, fontFamily: theme.fonts.body, position: 'relative', boxShadow: '0 0 40px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
