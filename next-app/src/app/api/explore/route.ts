@@ -79,7 +79,7 @@ export async function GET() {
         .lte('age_min_months', ageMonths)
         .gte('age_max_months', ageMonths)
         .order('created_at', { ascending: false })
-        .limit(30),
+        .limit(60),
       db
         .from('daily_tips')
         .select('id,body,language')
