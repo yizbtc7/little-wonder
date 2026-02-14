@@ -1971,12 +1971,16 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {!(exploreStats.total_available === 0 && personalizedCards.length === 0 && !exploreDailyTip) ? (
             <>
             {exploreStats.total_available > 0 ? (
-              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 20 }}>📚</span>
-                <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#F0EDE8' }}>
-                  <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: 6, borderRadius: 3, background: '#E8A090' }} />
+              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{locale === 'es' ? `${exploreStats.total_read} de ${exploreStats.total_available} leídos` : `${exploreStats.total_read} of ${exploreStats.total_available} read`}</span>
                 </div>
-                <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available).replace('📚 ', '')}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#F0EDE8' }}>
+                    <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: 8, borderRadius: 999, background: '#E8A090' }} />
+                  </div>
+                </div>
               </div>
             ) : null}
 
