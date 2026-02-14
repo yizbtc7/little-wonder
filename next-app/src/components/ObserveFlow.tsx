@@ -2905,7 +2905,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                                 {formatSchemaChipLabel(schemaForChip)}
                               </span>
                             </div>
-                            <p style={{ margin: '10px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, lineHeight: 1.38, color: '#3E302C' }}>{momentBody}</p>
+                            <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.display, fontSize: 16, fontWeight: 400, lineHeight: 1.38, color: '#3E302C' }}>{momentBody}</p>
                           </div>
                         );
                       })}
@@ -2976,7 +2976,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                                   {article.emoji || '📚'}
                                 </span>
                                 <span style={{ flex: 1, minWidth: 0 }}>
-                                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "'Nunito', sans-serif", fontSize: 14, fontWeight: 800, color: '#493A35', lineHeight: 1.28 }}>
+                                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#493A35', lineHeight: 1.28 }}>
                                     {article.title}
                                   </span>
                                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
