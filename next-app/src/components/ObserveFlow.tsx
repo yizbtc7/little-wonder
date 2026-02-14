@@ -1004,6 +1004,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
   if (activeTab === 'explore' && selectedExploreCard !== null) {
     const card = personalizedCards[selectedExploreCard];
+    const hasDistinctFascinating =
+      card.full.fascinating_part.trim().length > 0 && card.full.fascinating_part.trim() !== card.full.whats_happening.trim();
+    const distinctSigns = card.full.youll_see_it_when.filter((item) => item.trim().length > 0 && item.trim() !== card.full.whats_happening.trim());
+    const hasPresenceText = card.full.how_to_be_present.trim().length > 0;
 
     return (
       <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
@@ -1101,110 +1105,118 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             </p>
           </FadeUp>
 
-          <FadeUp delay={500}>
-            <div
-              style={{
-                margin: '0 0 32px',
-                padding: '24px 0',
-                borderTop: `2px solid ${theme.colors.rose}30`,
-                borderBottom: `2px solid ${theme.colors.rose}30`,
-              }}
-            >
-              <p
+          {hasDistinctFascinating ? (
+            <FadeUp delay={500}>
+              <div
                 style={{
-                  fontFamily: theme.fonts.serif,
-                  fontSize: 19,
-                  color: theme.colors.charcoal,
-                  margin: 0,
-                  lineHeight: 1.5,
-                  fontWeight: 600,
-                  fontStyle: 'italic',
-                  textAlign: 'center',
-                  padding: '0 8px',
+                  margin: '0 0 32px',
+                  padding: '24px 0',
+                  borderTop: `2px solid ${theme.colors.rose}30`,
+                  borderBottom: `2px solid ${theme.colors.rose}30`,
                 }}
               >
-                {card.full.fascinating_part}
-              </p>
-            </div>
-          </FadeUp>
+                <p
+                  style={{
+                    fontFamily: theme.fonts.serif,
+                    fontSize: 19,
+                    color: theme.colors.charcoal,
+                    margin: 0,
+                    lineHeight: 1.5,
+                    fontWeight: 600,
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    padding: '0 8px',
+                  }}
+                >
+                  {card.full.fascinating_part}
+                </p>
+              </div>
+            </FadeUp>
+          ) : null}
 
-          <FadeUp delay={700}>
-            <p
-              style={{
-                fontFamily: theme.fonts.sans,
-                fontSize: 12,
-                fontWeight: 700,
-                color: theme.colors.rose,
-                margin: '0 0 14px',
-                textTransform: 'uppercase',
-                letterSpacing: 0.8,
-              }}
-            >
-              ✨ You&apos;ll recognize it when…
-            </p>
-            <div style={{ marginBottom: 32 }}>
-              {card.full.youll_see_it_when.map((item, i) => (
-                <div key={item} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      background: theme.colors.blush,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginTop: 1,
-                    }}
-                  >
-                    <span style={{ fontSize: 13, color: theme.colors.roseDark, fontWeight: 700 }}>{i + 1}</span>
-                  </div>
-                  <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.6 }}>{item}</p>
-                </div>
-              ))}
-            </div>
-          </FadeUp>
-
-          <FadeUp delay={850}>
-            <div
-              style={{
-                width: 40,
-                height: 3,
-                borderRadius: 2,
-                background: theme.colors.blushMid,
-                margin: '0 auto 32px',
-              }}
-            />
-          </FadeUp>
-
-          <FadeUp delay={900}>
-            <div
-              style={{
-                background: `linear-gradient(135deg, ${theme.colors.blush}90 0%, ${theme.colors.warmWhite} 100%)`,
-                borderRadius: 32,
-                padding: '28px 24px',
-                marginBottom: 16,
-              }}
-            >
+          {distinctSigns.length > 0 ? (
+            <FadeUp delay={700}>
               <p
                 style={{
                   fontFamily: theme.fonts.sans,
                   fontSize: 12,
                   fontWeight: 700,
-                  color: theme.colors.sage,
-                  margin: '0 0 10px',
+                  color: theme.colors.rose,
+                  margin: '0 0 14px',
                   textTransform: 'uppercase',
                   letterSpacing: 0.8,
                 }}
               >
-                🤲 How to be present
+                ✨ You&apos;ll recognize it when…
               </p>
-              <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: 0, lineHeight: 1.7 }}>
-                {card.full.how_to_be_present}
-              </p>
-            </div>
-          </FadeUp>
+              <div style={{ marginBottom: 32 }}>
+                {distinctSigns.map((item, i) => (
+                  <div key={item} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: theme.colors.blush,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: 1,
+                      }}
+                    >
+                      <span style={{ fontSize: 13, color: theme.colors.roseDark, fontWeight: 700 }}>{i + 1}</span>
+                    </div>
+                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.6 }}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </FadeUp>
+          ) : null}
+
+          {hasDistinctFascinating || distinctSigns.length > 0 ? (
+            <FadeUp delay={850}>
+              <div
+                style={{
+                  width: 40,
+                  height: 3,
+                  borderRadius: 2,
+                  background: theme.colors.blushMid,
+                  margin: '0 auto 32px',
+                }}
+              />
+            </FadeUp>
+          ) : null}
+
+          {hasPresenceText ? (
+            <FadeUp delay={900}>
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${theme.colors.blush}90 0%, ${theme.colors.warmWhite} 100%)`,
+                  borderRadius: 32,
+                  padding: '28px 24px',
+                  marginBottom: 16,
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: theme.fonts.sans,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: theme.colors.sage,
+                    margin: '0 0 10px',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.8,
+                  }}
+                >
+                  🤲 How to be present
+                </p>
+                <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: 0, lineHeight: 1.7 }}>
+                  {card.full.how_to_be_present}
+                </p>
+              </div>
+            </FadeUp>
+          ) : null}
 
           <FadeUp delay={1050}>
             <p
