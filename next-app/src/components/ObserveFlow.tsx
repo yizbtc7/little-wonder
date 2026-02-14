@@ -429,61 +429,105 @@ function getAgeMonths(birthdate: string): number {
 }
 
 function getQuickPrompts(ageMonths: number, childName: string, locale: Language): string[] {
+  const es = locale === 'es';
+
   if (ageMonths <= 4) {
-    return [
-      `🌀 ${childName} keeps staring at the ceiling fan`,
-      `😊 ${childName} smiled when I talked`,
-      `🤏 ${childName} grabbed my finger tightly`,
-      `😢 ${childName} keeps crying and I can't tell why`,
-    ];
+    return es
+      ? [
+          `🌀 ${childName} se queda mirando el ventilador del techo`,
+          `😊 ${childName} sonrió cuando le hablé`,
+          `🤏 ${childName} me agarró el dedo con fuerza`,
+          `😢 ${childName} llora mucho y no logro saber por qué`,
+        ]
+      : [
+          `🌀 ${childName} keeps staring at the ceiling fan`,
+          `😊 ${childName} smiled when I talked`,
+          `🤏 ${childName} grabbed my finger tightly`,
+          `😢 ${childName} keeps crying and I can't tell why`,
+        ];
   }
 
   if (ageMonths <= 8) {
-    return [
-      `👶 ${childName} puts everything in their mouth`,
-      `🙈 ${childName} laughed so hard at peek-a-boo`,
-      `📱 ${childName} keeps reaching for my phone`,
-      `😭 ${childName} cried when grandma held them`,
-    ];
+    return es
+      ? [
+          `👶 ${childName} se mete todo a la boca`,
+          `🙈 ${childName} se rió muchísimo con el cucú-tras`,
+          `📱 ${childName} siempre quiere agarrar mi celular`,
+          `😭 ${childName} lloró cuando lo/la cargó la abuela`,
+        ]
+      : [
+          `👶 ${childName} puts everything in their mouth`,
+          `🙈 ${childName} laughed so hard at peek-a-boo`,
+          `📱 ${childName} keeps reaching for my phone`,
+          `😭 ${childName} cried when grandma held them`,
+        ];
   }
 
   if (ageMonths <= 14) {
-    return [
-      `🍽️ ${childName} keeps dropping food from the high chair`,
-      `📦 ${childName} keeps putting things into boxes`,
-      `👋 ${childName} waved bye-bye today`,
-      `😣 ${childName} got frustrated trying to reach something`,
-    ];
+    return es
+      ? [
+          `🍽️ ${childName} tira la comida desde la silla alta`,
+          `📦 ${childName} mete cosas dentro de cajas`,
+          `👋 ${childName} hoy se despidió con la mano`,
+          `😣 ${childName} se frustró intentando alcanzar algo`,
+        ]
+      : [
+          `🍽️ ${childName} keeps dropping food from the high chair`,
+          `📦 ${childName} keeps putting things into boxes`,
+          `👋 ${childName} waved bye-bye today`,
+          `😣 ${childName} got frustrated trying to reach something`,
+        ];
   }
 
   if (ageMonths <= 24) {
-    return [
-      `🧱 ${childName} keeps stacking and knocking down blocks`,
-      `🗣️ ${childName} pointed at something and said a new word`,
-      `😤 ${childName} had a big tantrum at the store`,
-      `🎭 ${childName} was pretending to cook me dinner`,
-    ];
+    return es
+      ? [
+          `🧱 ${childName} apila bloques y luego los tumba`,
+          `🗣️ ${childName} señaló algo y dijo una palabra nueva`,
+          `😤 ${childName} tuvo una gran rabieta en la tienda`,
+          `🎭 ${childName} estaba jugando a cocinarme la cena`,
+        ]
+      : [
+          `🧱 ${childName} keeps stacking and knocking down blocks`,
+          `🗣️ ${childName} pointed at something and said a new word`,
+          `😤 ${childName} had a big tantrum at the store`,
+          `🎭 ${childName} was pretending to cook me dinner`,
+        ];
   }
 
   if (ageMonths <= 48) {
-    return [
-      `❓ ${childName} keeps asking "why?" nonstop`,
-      `✏️ ${childName} keeps drawing circles and lines`,
-      `🧸 ${childName} got really upset when another kid took a toy`,
-      `🧚 ${childName} told me about an imaginary friend`,
-    ];
+    return es
+      ? [
+          `❓ ${childName} pregunta "¿por qué?" sin parar`,
+          `✏️ ${childName} dibuja círculos y líneas todo el tiempo`,
+          `🧸 ${childName} se enojó mucho cuando otro niño le quitó un juguete`,
+          `🧚 ${childName} me habló de un amigo imaginario`,
+        ]
+      : [
+          `❓ ${childName} keeps asking "why?" nonstop`,
+          `✏️ ${childName} keeps drawing circles and lines`,
+          `🧸 ${childName} got really upset when another kid took a toy`,
+          `🧚 ${childName} told me about an imaginary friend`,
+        ];
   }
 
   if (ageMonths <= 84) {
-    return [
-      `📍 ${childName} is trying to read signs everywhere`,
-      `🧱 ${childName} built an elaborate Lego structure`,
-      `💔 ${childName} said "nobody wants to play with me"`,
-      `🔧 ${childName} keeps asking how things work`,
-    ];
+    return es
+      ? [
+          `📍 ${childName} intenta leer letreros en todas partes`,
+          `🧱 ${childName} construyó una estructura de Lego muy compleja`,
+          `💔 ${childName} me dijo "nadie quiere jugar conmigo"`,
+          `🔧 ${childName} pregunta todo el tiempo cómo funcionan las cosas`,
+        ]
+      : [
+          `📍 ${childName} is trying to read signs everywhere`,
+          `🧱 ${childName} built an elaborate Lego structure`,
+          `💔 ${childName} said "nobody wants to play with me"`,
+          `🔧 ${childName} keeps asking how things work`,
+        ];
   }
 
-  return locale === 'es'
+  return es
     ? [
         `📺 ${childName} solo quiere ver YouTube últimamente`,
         `📚 ${childName} está batallando con las tareas`,
