@@ -53,20 +53,7 @@ type ApiChatMessage = {
   completed_at?: string | null;
 };
 
-type ExploreBrainCardRow = {
-  id: string;
-  language?: 'en' | 'es';
-  icon: string;
-  title: string;
-  domain: string;
-  preview: string;
-  article: {
-    whats_happening: string;
-    fascinating_part: string;
-    youll_see_it_when: string[];
-    how_to_be_present: string;
-  };
-};
+type ExploreBrainCardRow = ExploreArticleRow;
 
 type ExploreDailyTipRow = {
   id: string;
@@ -848,7 +835,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [typingMessageIndex, setTypingMessageIndex] = useState(0);
-  const [selectedExploreCard, setSelectedExploreCard] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'brain' | 'activity' | null>(null);
   const [signOutError, setSignOutError] = useState('');
   const [settingsStatus, setSettingsStatus] = useState('');
@@ -1006,32 +992,13 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
 
   const personalizedCards = useMemo(() => {
-    const sourceCards = exploreCards.map((card) => ({
-      icon: card.icon,
-      title: card.title,
-      domain: card.domain,
-      color: theme.colors.lavenderBg,
-      preview: card.preview,
-      full: {
-        whats_happening: card.article.whats_happening,
-        youll_see_it_when: card.article.youll_see_it_when,
-        fascinating_part: card.article.fascinating_part,
-        how_to_be_present: card.article.how_to_be_present,
-      },
+    return exploreCards.map((article) => ({
+      ...article,
+      title: withChildName(article.title, childName),
+      summary: withChildName(article.summary ?? '', childName),
+      domain: article.domain ? withChildName(article.domain, childName) : article.domain,
     }));
-
-    return sourceCards.map((card) => ({
-      ...card,
-      title: withChildName(card.title, childName),
-      preview: withChildName(card.preview, childName),
-      full: {
-        whats_happening: withChildName(card.full.whats_happening, childName),
-        youll_see_it_when: card.full.youll_see_it_when.map((v) => withChildName(v, childName)),
-        fascinating_part: withChildName(card.full.fascinating_part, childName),
-        how_to_be_present: withChildName(card.full.how_to_be_present, childName),
-      },
-    }));
-  }, [childName, exploreCards, locale]);
+  }, [childName, exploreCards]);
 
   const schemaGardenSorted = useMemo<SchemaStat[]>(() => {
     const rollup = new Map<SchemaKey, number>();
@@ -1727,241 +1694,6 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
     );
   }
 
-  if (activeTab === 'explore' && selectedExploreCard !== null) {
-    const card = personalizedCards[selectedExploreCard];
-    const hasDistinctFascinating =
-      card.full.fascinating_part.trim().length > 0 && card.full.fascinating_part.trim() !== card.full.whats_happening.trim();
-    const distinctSigns = card.full.youll_see_it_when.filter((item) => item.trim().length > 0 && item.trim() !== card.full.whats_happening.trim());
-    const hasPresenceText = card.full.how_to_be_present.trim().length > 0;
-
-    return (
-      <main style={{ minHeight: '100vh', background: theme.colors.cream }}>
-        <div
-          style={{
-            background: `linear-gradient(180deg, ${card.color ?? theme.colors.blush} 0%, ${theme.colors.cream} 100%)`,
-            padding: '16px 24px 40px',
-          }}
-        >
-          <button
-            onClick={() => setSelectedExploreCard(null)}
-            style={{
-              background: 'rgba(255,255,255,0.5)',
-              border: 'none',
-              borderRadius: 50,
-              padding: '8px 16px',
-              fontFamily: theme.fonts.sans,
-              fontSize: 13,
-              fontWeight: 600,
-              color: theme.colors.darkText,
-              cursor: 'pointer',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              marginBottom: 28,
-            }}
-          >
-            <span style={{ fontSize: 14 }}>←</span> Back
-          </button>
-
-          <FadeUp delay={100}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div
-                style={{
-                  width: 44,
-                  height: 64,
-                  borderRadius: 14,
-                  background: 'rgba(255,255,255,0.6)',
-                  backdropFilter: 'blur(8px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 24,
-                }}
-              >
-                {card.icon}
-              </div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: theme.colors.roseDark,
-                  background: 'rgba(255,255,255,0.6)',
-                  padding: '4px 12px',
-                  borderRadius: 20,
-                  fontFamily: theme.fonts.sans,
-                  fontWeight: 700,
-                  letterSpacing: 0.5,
-                  textTransform: 'uppercase',
-                  backdropFilter: 'blur(8px)',
-                }}
-              >
-                {card.domain}
-              </span>
-            </div>
-            <h1
-              style={{
-                fontFamily: theme.fonts.serif,
-                fontSize: 30,
-                color: theme.colors.charcoal,
-                margin: 0,
-                fontWeight: 700,
-                lineHeight: 1.15,
-                letterSpacing: -0.3,
-              }}
-            >
-              {card.title}
-            </h1>
-          </FadeUp>
-        </div>
-
-        <div style={{ padding: '0 24px 120px', marginTop: -8 }}>
-          <FadeUp delay={300}>
-            <p
-              style={{
-                fontFamily: theme.fonts.sans,
-                fontSize: 16.5,
-                color: theme.colors.darkText,
-                margin: '0 0 28px',
-                lineHeight: 1.75,
-                fontWeight: 400,
-              }}
-            >
-              {card.full.whats_happening}
-            </p>
-          </FadeUp>
-
-          {hasDistinctFascinating ? (
-            <FadeUp delay={500}>
-              <div
-                style={{
-                  margin: '0 0 32px',
-                  padding: '24px 0',
-                  borderTop: `2px solid ${theme.colors.rose}30`,
-                  borderBottom: `2px solid ${theme.colors.rose}30`,
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: theme.fonts.serif,
-                    fontSize: 19,
-                    color: theme.colors.charcoal,
-                    margin: 0,
-                    lineHeight: 1.5,
-                    fontWeight: 600,
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    padding: '0 8px',
-                  }}
-                >
-                  {card.full.fascinating_part}
-                </p>
-              </div>
-            </FadeUp>
-          ) : null}
-
-          {distinctSigns.length > 0 ? (
-            <FadeUp delay={700}>
-              <p
-                style={{
-                  fontFamily: theme.fonts.sans,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: theme.colors.rose,
-                  margin: '0 0 14px',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.8,
-                }}
-              >
-                ✨ You&apos;ll recognize it when…
-              </p>
-              <div style={{ marginBottom: 32 }}>
-                {distinctSigns.map((item, i) => (
-                  <div key={item} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        background: theme.colors.blush,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      <span style={{ fontSize: 13, color: theme.colors.roseDark, fontWeight: 700 }}>{i + 1}</span>
-                    </div>
-                    <p style={{ fontFamily: theme.fonts.sans, fontSize: 15, color: theme.colors.darkText, margin: 0, lineHeight: 1.6 }}>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </FadeUp>
-          ) : null}
-
-          {hasDistinctFascinating || distinctSigns.length > 0 ? (
-            <FadeUp delay={850}>
-              <div
-                style={{
-                  width: 40,
-                  height: 3,
-                  borderRadius: 2,
-                  background: theme.colors.blushMid,
-                  margin: '0 auto 32px',
-                }}
-              />
-            </FadeUp>
-          ) : null}
-
-          {hasPresenceText ? (
-            <FadeUp delay={900}>
-              <div
-                style={{
-                  background: `linear-gradient(135deg, ${theme.colors.blush}90 0%, ${theme.colors.warmWhite} 100%)`,
-                  borderRadius: 32,
-                  padding: '28px 24px',
-                  marginBottom: 16,
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: theme.fonts.sans,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: theme.colors.sage,
-                    margin: '0 0 10px',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                  }}
-                >
-                  🤲 How to be present
-                </p>
-                <p style={{ fontFamily: theme.fonts.sans, fontSize: 16, color: theme.colors.darkText, margin: 0, lineHeight: 1.7 }}>
-                  {card.full.how_to_be_present}
-                </p>
-              </div>
-            </FadeUp>
-          ) : null}
-
-          <FadeUp delay={1050}>
-            <p
-              style={{
-                fontFamily: theme.fonts.sans,
-                fontSize: 12,
-                color: theme.colors.lightText,
-                textAlign: 'center',
-                margin: '24px 0 0',
-                lineHeight: 1.5,
-              }}
-            >
-              Based on developmental research from Gopnik, Athey &amp; Harvard CCHD
-            </p>
-          </FadeUp>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main style={{ position: 'relative', maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: theme.colors.cream, boxShadow: '0 0 60px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
       {activeTab === 'chat' ? (
@@ -2251,20 +1983,20 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
-            {personalizedCards.slice(0, 3).map((card, idx) => {
+            {personalizedCards.slice(0, 3).map((card) => {
               const d = card.domain?.toLowerCase() ?? '';
               const bg = d.includes('cogn') ? '#EDE5F5' : d.includes('motiv') ? '#FFF0ED' : d.includes('social') ? '#E8F5EE' : d.includes('leng') ? '#FFF0ED' : d.includes('motor') ? '#E5F0F8' : d.includes('emoc') ? '#FFF8E0' : '#F5F0EB';
               const badgeColor = d.includes('cogn') ? '#8B6CAE' : d.includes('motiv') ? '#D4766A' : d.includes('social') ? '#5A9E6F' : d.includes('leng') ? '#D4766A' : d.includes('motor') ? '#5A8AA0' : '#8A8690';
               return (
-                <button key={card.title} onClick={() => setSelectedExploreCard(idx)} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.icon}</div>
+                <button key={card.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(card); }} style={{ width: '100%', background: '#FFFFFF', borderRadius: 16, padding: 18, marginBottom: 12, border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
-                      <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain}</span>
+                      <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: badgeColor, background: bg, padding: '3px 10px', borderRadius: 20 }}>{card.domain ?? t.learn.generalDomain}</span>
                     </div>
-                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{withChildName(card.preview, childName)}</p>
-                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>{locale === 'es' ? 'Leer más →' : 'Read more →'}</p>
+                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
+                    <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
                   </div>
                 </button>
               );

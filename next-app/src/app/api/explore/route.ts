@@ -4,7 +4,22 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getAgeInMonths } from '@/lib/childAge';
 import { getUserLanguage, languagePriority } from '@/lib/language';
 
-type BrainCardRow = {
+type ExploreArticleRow = {
+  id: string;
+  title: string;
+  emoji: string;
+  type: 'article' | 'research' | 'guide';
+  summary: string | null;
+  body: string;
+  age_min_months: number;
+  age_max_months: number;
+  domain: string | null;
+  language: 'en' | 'es';
+  read_time_minutes: number | null;
+  created_at: string;
+};
+
+type LegacyBrainCardRow = {
   id: string;
   emoji: string;
   title: string;
@@ -43,20 +58,21 @@ export async function GET() {
     .maybeSingle();
 
   if (!child?.birthdate) {
-    return NextResponse.json({ brain_cards: [], daily_tip: null });
+    return NextResponse.json({ brain_cards: [], daily_tip: null, brain_cards_source: 'none' });
   }
 
   const ageMonths = getAgeInMonths(child.birthdate);
   const preferredLanguage = await getUserLanguage(user.id, 'es');
 
-  let brainCards: BrainCardRow[] = [];
+  let brainCards: ExploreArticleRow[] = [];
   let dailyTip: DailyTipRow | null = null;
+  let brainCardsSource: 'explore_articles' | 'legacy_brain_cards_fallback_temporary' | 'none' = 'none';
 
   for (const language of languagePriority(preferredLanguage)) {
-    const [brainRes, tipRes] = await Promise.all([
+    const [articlesRes, tipRes] = await Promise.all([
       db
-        .from('explore_brain_cards')
-        .select('id,emoji,title,body,domain,language')
+        .from('explore_articles')
+        .select('id,title,emoji,type,summary,body,age_min_months,age_max_months,domain,language,read_time_minutes,created_at')
         .eq('language', language)
         .lte('age_min_months', ageMonths)
         .gte('age_max_months', ageMonths)
@@ -72,39 +88,62 @@ export async function GET() {
         .limit(1),
     ]);
 
-    if (brainRes.error || tipRes.error) {
-      return NextResponse.json({ error: brainRes.error?.message ?? tipRes.error?.message }, { status: 500 });
+    if (articlesRes.error || tipRes.error) {
+      return NextResponse.json({ error: articlesRes.error?.message ?? tipRes.error?.message }, { status: 500 });
     }
 
-    if ((brainRes.data?.length ?? 0) > 0 || (tipRes.data?.length ?? 0) > 0) {
-      brainCards = (brainRes.data ?? []) as BrainCardRow[];
+    const hasLongArticles = (articlesRes.data?.length ?? 0) > 0;
+    const hasDailyTip = (tipRes.data?.length ?? 0) > 0;
+
+    if (hasLongArticles || hasDailyTip) {
+      brainCards = (articlesRes.data ?? []) as ExploreArticleRow[];
       dailyTip = ((tipRes.data ?? [])[0] as DailyTipRow | undefined) ?? null;
+      brainCardsSource = hasLongArticles ? 'explore_articles' : 'none';
       break;
     }
   }
 
-  return NextResponse.json({
-    brain_cards: brainCards.map((row) => {
-      const defaultPresence =
-        row.language === 'es'
-          ? 'Escucha con curiosidad y acompaña sin corregir de inmediato. Tu presencia atenta le da seguridad para explorar más.'
-          : 'Stay curious and join without correcting too quickly. Your attentive presence gives them safety to explore more.';
+  // Temporary explicit fallback only when no long-form article rows exist for this age/language set.
+  if (brainCards.length === 0) {
+    for (const language of languagePriority(preferredLanguage)) {
+      const fallbackRes = await db
+        .from('explore_brain_cards')
+        .select('id,emoji,title,body,domain,language')
+        .eq('language', language)
+        .lte('age_min_months', ageMonths)
+        .gte('age_max_months', ageMonths)
+        .order('created_at', { ascending: false })
+        .limit(3);
 
-      return {
-        id: row.id,
-        icon: row.emoji,
-        title: row.title,
-        domain: row.domain,
-        preview: row.body,
-        language: row.language,
-        article: {
-          whats_happening: row.body,
-          youll_see_it_when: [row.body],
-          fascinating_part: row.body,
-          how_to_be_present: defaultPresence,
-        },
-      };
-    }),
+      if (fallbackRes.error) {
+        return NextResponse.json({ error: fallbackRes.error.message }, { status: 500 });
+      }
+
+      if ((fallbackRes.data?.length ?? 0) > 0) {
+        const legacyRows = (fallbackRes.data ?? []) as LegacyBrainCardRow[];
+        brainCards = legacyRows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          emoji: row.emoji,
+          type: 'article',
+          summary: row.body,
+          body: row.body,
+          age_min_months: ageMonths,
+          age_max_months: ageMonths,
+          domain: row.domain,
+          language: row.language,
+          read_time_minutes: 3,
+          created_at: new Date().toISOString(),
+        }));
+        brainCardsSource = 'legacy_brain_cards_fallback_temporary';
+        break;
+      }
+    }
+  }
+
+  return NextResponse.json({
+    brain_cards: brainCards,
+    brain_cards_source: brainCardsSource,
     daily_tip: dailyTip
       ? {
           id: dailyTip.id,
