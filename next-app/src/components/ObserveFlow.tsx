@@ -715,6 +715,7 @@ function dedupeArticleTitleKey(title: string): string {
 
 function cleanActivityTitle(title: string): string {
   return title
+    .replace(/\s*(?:[·•]\s*)?refill-[\w-]+(?:\s*\d+)?$/i, '')
     .replace(/\s*[·•]\s*refill-[^\n]+$/i, '')
     .replace(/\s*·\s*(?:ACT)?B\d+-[\w-]+$/i, '')
     .replace(/\s*\((?:ACT)?B\d+-[\w-]+\)$/i, '')
