@@ -1247,8 +1247,12 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
       setArticleReadPulse(true);
       setTimeout(() => setArticleReadPulse(false), 1400);
       setNewForYouArticles((prev) => prev.filter((a) => a.id !== articleId));
+      setKeepReadingArticles((prev) => prev.filter((a) => a.id !== articleId));
+      setComingNextArticles((prev) => prev.filter((a) => a.id !== articleId));
       setRecentlyReadArticles((prev) => [{ ...article, is_read: true, completed_at: new Date().toISOString() }, ...prev.filter((a) => a.id !== articleId)].slice(0, 10));
       setExploreStats((prev) => ({ ...prev, total_read: Math.min(prev.total_available, prev.total_read + 1) }));
+      setReaderToast(locale === 'es' ? '✅ Artículo marcado como leído' : '✅ Article marked as read');
+      setTimeout(() => setReaderToast(''), 1800);
       void loadExploreArticles();
     };
 
@@ -2009,6 +2013,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     </div>
                     <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
                     <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 600, color: '#E8A090' }}>📖 {card.read_time_minutes ?? 7} min</p>
+                    {card.is_read ? <span style={{ display: 'inline-flex', marginTop: 8, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                   </div>
                 </button>
               );
@@ -2029,6 +2034,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     <div style={{ height: 6, background: article.type === 'guide' ? '#8FAE8B' : article.type === 'research' ? '#C4B5D4' : '#E8A090' }} />
                     <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: article.type === 'guide' ? '#5A9E6F' : article.type === 'research' ? '#8B6CAE' : '#D4766A' }}>{formatExploreTypeLabel(article.type, locale)}</div>
                     <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
+                    {article.is_read ? <span style={{ display: 'inline-flex', margin: '8px 16px 0', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                     <p style={{ margin: '10px 16px 16px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7} min</p>
                   </button>
                 ))}
@@ -2050,6 +2056,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                       <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                         <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#8B6CAE', background: '#EDE5F5', padding: '3px 10px', borderRadius: 20 }}>{locale === 'es' ? 'INVESTIGACIÓN' : 'RESEARCH'}</span>
+                        {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                         <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>{article.read_time_minutes ?? 6} min</span>
                       </span>
                     </span>
@@ -2067,7 +2074,10 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   .slice(0, 8)
                   .map((article) => (
                   <button key={`more-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                      <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                      {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '2px 8px', borderRadius: 999, width: 'fit-content' }}>{t.learn.read}</span> : null}
+                    </span>
                     <span style={{ marginLeft: 10, fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7}m</span>
                   </button>
                 ))}
@@ -2080,8 +2090,9 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             {showReadArticles ? (
               <div>
                 {recentlyReadArticles.map((article) => (
-                  <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', opacity: 0.85, borderRadius: 16, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
+                  <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', opacity: 0.85, borderRadius: 16, padding: '10px 12px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
+                    {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '2px 8px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                   </button>
                 ))}
               </div>
