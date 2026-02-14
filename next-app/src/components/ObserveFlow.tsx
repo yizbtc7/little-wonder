@@ -1477,7 +1477,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             <p style={{ margin: '0 0 14px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.whatHappeningNow}</p>
             {personalizedCards.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '14px 16px', marginBottom: 12 }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>We're building content for this age — check back soon!</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.ageEmpty}</p>
               </div>
             ) : null}
             {personalizedCards.map((card, idx) => {
@@ -1498,18 +1498,22 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             })}
 
             <div style={{ background: '#fff', border: `1px solid ${theme.colors.divider}`, borderRadius: 14, padding: '10px 12px', marginBottom: 16 }}>
-              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>📚 {exploreStats.total_read} of {exploreStats.total_available} read</p>
+              <p style={{ margin: '0 0 6px', fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.lightText }}>{t.learn.progressRead(exploreStats.total_read, exploreStats.total_available)}</p>
               <div style={{ width: '100%', height: 4, borderRadius: 3, background: '#E9E9E9' }}>
                 <div style={{ width: `${exploreStats.total_available > 0 ? Math.round((exploreStats.total_read / exploreStats.total_available) * 100) : 0}%`, height: '100%', borderRadius: 3, background: theme.colors.sage }} />
               </div>
             </div>
 
-            <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🆕 New for you</h2>
-            {newForYouArticles.length === 0 ? (
+            <h2 style={{ margin: '18px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.newForYou}</h2>
+            {exploreStats.total_available === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
-                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>✨ You're all caught up! New articles appear as {childName} grows.</p>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.ageEmpty}</p>
+              </div>
+            ) : newForYouArticles.length === 0 ? (
+              <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
+                <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.allCaughtUp(childName)}</p>
                 {comingNextArticles.length > 0 ? (
-                  <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>Explore articles for upcoming months 🔒</p>
+                  <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.lightText }}>{t.learn.upcomingLocked}</p>
                 ) : null}
               </div>
             ) : (
@@ -1520,7 +1524,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                     <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ minWidth: 230, background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '12px 12px', textAlign: 'left', cursor: 'pointer' }}>
                       <div style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, background: iconBackgrounds[idx % iconBackgrounds.length], marginBottom: 8 }}>{article.emoji}</div>
                       <p style={{ margin: '0 0 5px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
-                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{formatExploreTypeLabel(article.type)} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</p>
+                      <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{formatExploreTypeLabel(article.type)} • {article.read_time_minutes ? t.common.minRead(article.read_time_minutes) : estimateReadTime(article.body)}</p>
                     </button>
                   );
                 })}
@@ -1529,17 +1533,17 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
 
             {keepReadingArticles.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>📖 Keep reading</h2>
+                <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.keepReading}</h2>
                 {keepReadingArticles.map((article) => (
                   <button key={article.id} onClick={() => setOpenExploreArticle(article)} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: `1px solid ${theme.colors.divider}`, textAlign: 'left', cursor: 'pointer' }}>
                     <p style={{ margin: '0 0 4px', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</p>
-                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark }}>Continue reading →</p>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.roseDark }}>{t.learn.continueReading}</p>
                   </button>
                 ))}
               </>
             ) : null}
 
-            <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>🔬 Deep dives</h2>
+            <h2 style={{ margin: '16px 0 10px', fontFamily: theme.fonts.serif, fontSize: 18, fontWeight: 600, color: theme.colors.charcoal }}>{t.learn.deepDives}</h2>
             {deepDiveArticles.map((article, idx) => {
               const iconBackgrounds = [theme.colors.lavenderBg, theme.colors.sageBg, theme.colors.blush, '#FDF5E6'];
               return (
@@ -1547,7 +1551,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                   <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: iconBackgrounds[idx % iconBackgrounds.length] }}>{article.emoji}</span>
                   <span style={{ flex: 1 }}>
                     <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>{article.title}</span>
-                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? 'General'} • {article.read_time_minutes ? `${article.read_time_minutes} min read` : estimateReadTime(article.body)}</span>
+                    <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 11, color: theme.colors.lightText }}>{article.domain ?? t.learn.generalDomain} • {article.read_time_minutes ? t.common.minRead(article.read_time_minutes) : estimateReadTime(article.body)}</span>
                   </span>
                   {article.is_read ? <span style={{ color: theme.colors.sage, fontWeight: 700 }}>✓</span> : null}
                 </button>
@@ -1555,7 +1559,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
             })}
 
             <button onClick={() => setShowReadArticles((v) => !v)} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', padding: '8px 0', cursor: 'pointer' }}>
-              <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>📖 {recentlyReadArticles.length} articles read {showReadArticles ? '▾' : '▸'}</span>
+              <span style={{ fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.articlesRead(recentlyReadArticles.length)} {showReadArticles ? '▾' : '▸'}</span>
             </button>
             {showReadArticles ? (
               <div>

@@ -80,6 +80,9 @@ export const translations = {
       articlesRead: (count: number) => `📖 ${count} artículos leídos`,
       read: '✓ Leído',
       backToLearn: 'Volver a Aprender',
+      progressRead: (read: number, total: number) => `📚 ${read} de ${total} leídos`,
+      ageEmpty: 'Estamos creando contenido para esta edad — ¡vuelve pronto!',
+      generalDomain: 'General',
     },
     activities: {
       title: 'Actividades',
@@ -184,6 +187,9 @@ export const translations = {
       articlesRead: (count: number) => `📖 ${count} articles read`,
       read: '✓ Read',
       backToLearn: 'Back to Learn',
+      progressRead: (read: number, total: number) => `📚 ${read} of ${total} read`,
+      ageEmpty: "We're building content for this age — check back soon!",
+      generalDomain: 'General',
     },
     activities: {
       title: 'Activities',

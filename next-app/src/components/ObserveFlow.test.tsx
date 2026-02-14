@@ -27,6 +27,6 @@ describe('ObserveFlow v3 learn behavior', () => {
 
     fireEvent.click(screen.getByText(/Learn|Aprender/));
 
-    expect(screen.getByText("We're building content for this age — check back soon!")).toBeInTheDocument();
+    expect(screen.getAllByText("We're building content for this age — check back soon!").length).toBeGreaterThan(0);
   });
 });
