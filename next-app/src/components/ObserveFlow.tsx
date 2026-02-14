@@ -109,21 +109,36 @@ function parseInsightPayload(raw: string): InsightPayload {
     schemas_detected: [],
   };
 
+  const cleanJsonText = (input: string): string =>
+    input
+      .trim()
+      .replace(/^`{3,}\s*json\s*/i, '')
+      .replace(/^`{3,}\s*/i, '')
+      .replace(/^json\s*/i, '')
+      .replace(/`{3,}$/i, '')
+      .trim();
+
+  const looksStructured = (input: string): boolean => {
+    const text = input.trim();
+    return text.startsWith('{') || text.startsWith('```json') || text.startsWith('```') || text.includes('"wonder"') || text.includes('"reply"');
+  };
+
   const parseCandidate = (input: string): Partial<InsightPayload> | null => {
+    const cleanedInput = cleanJsonText(input);
     try {
-      const match = input.match(/\{[\s\S]*\}/);
-      if (!match) return null;
-      return JSON.parse(match[0]) as Partial<InsightPayload>;
+      return JSON.parse(cleanedInput) as Partial<InsightPayload>;
     } catch {
-      return null;
+      try {
+        const match = cleanedInput.match(/\{[\s\S]*\}/);
+        if (!match) return null;
+        return JSON.parse(match[0]) as Partial<InsightPayload>;
+      } catch {
+        return null;
+      }
     }
   };
 
-  const cleaned = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/^json\s*/i, '')
-    .replace(/```$/i, '')
-    .trim();
+  const cleaned = cleanJsonText(raw);
 
   let parsed =
     parseCandidate(cleaned) ??
@@ -136,11 +151,11 @@ function parseInsightPayload(raw: string): InsightPayload {
 
   if (!parsed) return fallback;
 
-  if (!parsed.wonder && typeof parsed.reply === 'string' && parsed.reply.includes('"wonder"')) {
-    const nested = parseCandidate(parsed.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
-    if (nested) {
-      parsed = { ...parsed, ...nested };
-    }
+  for (let i = 0; i < 3; i += 1) {
+    if (typeof parsed.reply !== 'string' || !looksStructured(parsed.reply)) break;
+    const nested = parseCandidate(parsed.reply) ?? parseCandidate(parsed.reply.replaceAll('\\"', '"').replaceAll('\\n', '\n'));
+    if (!nested) break;
+    parsed = { ...parsed, ...nested };
   }
 
   if (!parsed.wonder && parsed.title && (parsed as { article?: WonderPayload['article']; schemas_detected?: string[] }).article) {
@@ -152,7 +167,8 @@ function parseInsightPayload(raw: string): InsightPayload {
     };
   }
 
-  const replyText = (parsed.reply ?? fallback.reply ?? '').toString();
+  const replyBase = parsed.reply ?? parsed.revelation ?? fallback.reply ?? '';
+  const replyText = replyBase.toString().replace(/^`{3,}\s*json\s*/i, '').replace(/`{3,}$/i, '').trim();
   const conciseReply = replyText.length > 700 ? `${replyText.slice(0, 680).trim()}…` : replyText;
 
   return {
