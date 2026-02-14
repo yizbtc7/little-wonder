@@ -44,17 +44,42 @@ create index if not exists article_bookmarks_article_idx
 
 alter table public.article_bookmarks enable row level security;
 
-create policy if not exists article_bookmarks_select_own
-  on public.article_bookmarks
-  for select
-  using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'article_bookmarks'
+      and policyname = 'article_bookmarks_select_own'
+  ) then
+    create policy article_bookmarks_select_own
+      on public.article_bookmarks
+      for select
+      using (auth.uid() = user_id);
+  end if;
 
-create policy if not exists article_bookmarks_insert_own
-  on public.article_bookmarks
-  for insert
-  with check (auth.uid() = user_id);
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'article_bookmarks'
+      and policyname = 'article_bookmarks_insert_own'
+  ) then
+    create policy article_bookmarks_insert_own
+      on public.article_bookmarks
+      for insert
+      with check (auth.uid() = user_id);
+  end if;
 
-create policy if not exists article_bookmarks_delete_own
-  on public.article_bookmarks
-  for delete
-  using (auth.uid() = user_id);
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'article_bookmarks'
+      and policyname = 'article_bookmarks_delete_own'
+  ) then
+    create policy article_bookmarks_delete_own
+      on public.article_bookmarks
+      for delete
+      using (auth.uid() = user_id);
+  end if;
+end;
+$$;
