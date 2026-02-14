@@ -2303,7 +2303,7 @@ export default function ObserveFlow({ parentName, childName, childAgeLabel, chil
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{activitiesFeatured.emoji}</div>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontFamily: theme.fonts.serif, fontSize: 20, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{withChildName(cleanActivityTitle(activitiesFeatured.title), childName)}</h3>
+                    <h3 style={{ fontFamily: "'Nunito', sans-serif", fontSize: 20, fontWeight: 700, color: theme.colors.charcoal, margin: '0 0 4px', lineHeight: 1.25 }}>{withChildName(cleanActivityTitle(activitiesFeatured.title), childName)}</h3>
                     <p style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: theme.colors.midText, margin: '0 0 10px', lineHeight: 1.4, fontStyle: 'italic' }}>{childSchemas.includes(activitiesFeatured.schema_target) ? schemaContextLine(activitiesFeatured.schema_target, childName, locale) ?? withChildName(activitiesFeatured.subtitle, childName) : withChildName(activitiesFeatured.subtitle, childName)}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: theme.colors.midText, background: 'rgba(255,255,255,0.6)', padding: '3px 10px', borderRadius: 20, fontFamily: theme.fonts.sans, fontWeight: 600 }}>⏱ {activitiesFeatured.duration_minutes} min</span>
