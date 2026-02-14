@@ -2239,7 +2239,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             </div>
             ) : null}
 
-            <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
+            <h2 style={{ margin: '24px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
             <p style={{ margin: '0 4px 14px', fontFamily: theme.fonts.sans, fontSize: 13, color: '#8A8690' }}>{t.learn.whatHappeningNow}</p>
             {brainSectionCards.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
@@ -2255,7 +2255,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                     <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: accent.bg, flexShrink: 0 }}>{card.emoji || '📚'}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                        <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32' }}>{card.title}</p>
+                        <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 15, fontWeight: 400, color: '#2D2B32' }}>{card.title}</p>
                         <span style={{ fontSize: 11, fontFamily: theme.fonts.sans, fontWeight: 600, color: accent.color, background: accent.bg, padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', lineHeight: 1.1 }}>{formatBrainDomainLabel(card.domain, locale) || t.learn.generalDomain}</span>
                       </div>
                       <p style={{ margin: '6px 0 0', fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.5, color: '#8A8690', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.summary || card.body.slice(0, 160)}</p>
@@ -2267,7 +2267,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               })
             )}
 
-            <h2 style={{ margin: '28px 4px 14px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🆕 {t.learn.newForYou}</h2>
+            <h2 style={{ margin: '28px 4px 14px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🆕 {t.learn.newForYou}</h2>
             {newForYouSection.length === 0 ? (
               <div style={{ background: theme.colors.blushLight, borderRadius: 18, padding: '16px 14px', textAlign: 'center', marginBottom: 14 }}>
                 <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, color: theme.colors.midText }}>{t.learn.allCaughtUp(childName)}</p>
@@ -2283,7 +2283,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   <button key={article.id} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: 220, flexShrink: 0, background: '#FFFFFF', borderRadius: 16, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                     <div style={{ height: 6, background: accent.strip }} />
                     <div style={{ padding: '16px 16px 0', fontSize: 11, fontWeight: 600, fontFamily: theme.fonts.sans, textTransform: 'uppercase', color: accent.label }}>{formatExploreTypeLabel(article.type, locale)}</div>
-                    <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.sans, fontSize: 15, fontWeight: 700, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
+                    <p style={{ margin: '6px 16px 0', fontFamily: theme.fonts.display, fontSize: 15, fontWeight: 400, color: '#2D2B32', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.title}</p>
                     {article.is_read ? <span style={{ display: 'inline-flex', margin: '8px 16px 0', fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
                     <p style={{ margin: '10px 16px 16px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7} min</p>
                   </button>
@@ -2295,7 +2295,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
             {deepDiveSection.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
+                <h2 style={{ margin: '16px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🔬 {t.learn.deepDives}</h2>
                 <p style={{ margin: '0 4px 10px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#8A8690' }}>{locale === 'es' ? 'La ciencia detrás del desarrollo' : 'The science behind development'}</p>
                 {deepDiveSection
                   .slice(0, 3)
@@ -2303,7 +2303,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   <button key={`deep-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 16, padding: '12px 14px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}>
                     <span style={{ width: 34, height: 34, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#EDE5F5' }}>{article.emoji}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                      <span style={{ display: 'block', fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                         <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#8B6CAE', background: '#EDE5F5', padding: '3px 10px', borderRadius: 20 }}>{locale === 'es' ? 'INVESTIGACIÓN' : 'RESEARCH'}</span>
                         {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '3px 9px', borderRadius: 999 }}>{t.learn.read}</span> : null}
@@ -2318,13 +2318,13 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
             {moreForAgeSection.length > 0 ? (
               <>
-                <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.sans, fontSize: 18, fontWeight: 700, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
+                <h2 style={{ margin: '16px 4px 10px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Más artículos para esta edad' : 'More articles for this age'}</h2>
                 {moreForAgeSection
                   .slice(0, 8)
                   .map((article) => (
                   <button key={`more-${article.id}`} onClick={() => { setOpenArticleOriginTab('explore'); setOpenExploreArticle(article); }} style={{ width: '100%', background: '#fff', borderRadius: 14, padding: '10px 12px', marginBottom: 8, border: '1px solid #F0EDE8', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-                      <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
+                      <span style={{ fontFamily: theme.fonts.display, fontSize: 13, fontWeight: 400, color: '#2D2B32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{article.title}</span>
                       {article.is_read ? <span style={{ fontFamily: theme.fonts.sans, fontSize: 10.5, fontWeight: 700, color: '#2E7D32', background: '#EAF7ED', padding: '2px 8px', borderRadius: 999, width: 'fit-content' }}>{t.learn.read}</span> : null}
                     </span>
                     <span style={{ marginLeft: 10, fontFamily: theme.fonts.sans, fontSize: 11, color: '#8A8690' }}>📖 {article.read_time_minutes ?? 7}m</span>
