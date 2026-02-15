@@ -2318,20 +2318,6 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             ) : null}
             {!(exploreStats.total_available === 0 && brainSectionCards.length === 0 && !exploreDailyTip) ? (
             <>
-            {exploreStats.total_available > 0 ? (
-              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
-                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: dailyGoalCompleted ? '#2E7D32' : '#8A8690', fontWeight: dailyGoalCompleted ? 700 : 500, whiteSpace: 'nowrap' }}>{dailyGoalCompleted ? (locale === 'es' ? `${exploreStats.total_read} leídos hoy` : `${exploreStats.total_read} read today`) : (locale === 'es' ? `${dailyGoalProgress} de ${dailyGoalTarget} leídos` : `${dailyGoalProgress} of ${dailyGoalTarget} read`)}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#F0EDE8' }}>
-                    <div style={{ width: `${dailyGoalTarget > 0 ? Math.round((dailyGoalProgress / dailyGoalTarget) * 100) : 0}%`, height: 8, borderRadius: 999, background: dailyGoalCompleted ? theme.colors.sageDark : theme.colors.sage }} />
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
             {savedArticles.length > 0 ? (
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F0EDE8', padding: '14px 14px 8px', marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -2360,6 +2346,20 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.6, color: '#2D2B32' }}>{withChildName(exploreDailyTip?.article?.tip ?? '', childName)}</p>
               </div>
             </div>
+            ) : null}
+
+            {exploreStats.total_available > 0 ? (
+              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 14, fontWeight: 400, color: '#2D2B32' }}>📚 {locale === 'es' ? 'Meta de hoy' : "Today's goal"}</p>
+                  <span style={{ fontFamily: theme.fonts.sans, fontSize: 13, color: dailyGoalCompleted ? '#2E7D32' : '#8A8690', fontWeight: dailyGoalCompleted ? 700 : 500, whiteSpace: 'nowrap' }}>{dailyGoalCompleted ? (locale === 'es' ? `${exploreStats.total_read} leídos hoy` : `${exploreStats.total_read} read today`) : (locale === 'es' ? `${dailyGoalProgress} de ${dailyGoalTarget} leídos` : `${dailyGoalProgress} of ${dailyGoalTarget} read`)}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#F0EDE8' }}>
+                    <div style={{ width: `${dailyGoalTarget > 0 ? Math.round((dailyGoalProgress / dailyGoalTarget) * 100) : 0}%`, height: 8, borderRadius: 999, background: dailyGoalCompleted ? theme.colors.sageDark : theme.colors.sage }} />
+                  </div>
+                </div>
+              </div>
             ) : null}
 
             <h2 style={{ margin: '28px 4px 2px', fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32' }}>🧠 {t.learn.insideBrain(childName)}</h2>
