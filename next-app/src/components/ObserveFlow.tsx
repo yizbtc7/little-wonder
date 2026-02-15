@@ -2370,7 +2370,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   return (
                     <div style={{ background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '14px 16px', marginBottom: 22 }}>
                       <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                        🔬 {locale === 'es' ? 'Lo que esto entrena (30s)' : 'What this is building (30s)'}
+                        🔬 {locale === 'es' ? 'Lo que esto entrena' : 'What this is building'}
                       </p>
                       <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>
                         {locale === 'es' ? 'Esquema detectado:' : 'Detected schema:'} {scienceBits.schemaLabel}
