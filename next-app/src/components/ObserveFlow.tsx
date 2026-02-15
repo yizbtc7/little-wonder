@@ -499,6 +499,39 @@ function toWonderCardTitle(moment: { title?: string; observation?: string }, loc
   return collapsed.length > max ? `${collapsed.slice(0, max - 1).trimEnd()}…` : collapsed;
 }
 
+function trainingInsightToday(schemaName: string | undefined, locale: Language, childName: string): string {
+  const key = normalizeSchemaKey(schemaName);
+  if (!key) {
+    return locale === 'es'
+      ? `${childName} está fortaleciendo atención, lenguaje y conexión con el entorno.`
+      : `${childName} is strengthening attention, language, and connection with their environment.`;
+  }
+
+  const es: Record<SchemaKey, string> = {
+    trajectory: `${childName} está entrenando predicción y movimiento al seguir trayectorias en el espacio.`,
+    rotation: `${childName} está entrenando causa-efecto y pensamiento mecánico al explorar lo que gira.`,
+    enclosure: `${childName} está entrenando lógica espacial al explorar dentro/fuera y límites.`,
+    enveloping: `${childName} está entrenando secuencias y permanencia al cubrir y descubrir objetos.`,
+    transporting: `${childName} está entrenando planificación y memoria de trabajo al mover cosas con intención.`,
+    connecting: `${childName} está entrenando pensamiento de relaciones al unir y separar partes.`,
+    transforming: `${childName} está entrenando hipótesis y flexibilidad al transformar materiales y ver resultados.`,
+    positioning: `${childName} está entrenando precisión espacial al alinear, ordenar y ajustar posiciones.`,
+  };
+
+  const en: Record<SchemaKey, string> = {
+    trajectory: `${childName} is training prediction and motion by tracking trajectories in space.`,
+    rotation: `${childName} is training cause-effect and mechanical thinking by exploring spinning objects.`,
+    enclosure: `${childName} is training spatial logic through inside/outside boundaries.`,
+    enveloping: `${childName} is training sequencing and object permanence through covering and uncovering.`,
+    transporting: `${childName} is training planning and working memory by moving objects with intention.`,
+    connecting: `${childName} is training relationship thinking by joining and separating parts.`,
+    transforming: `${childName} is training hypothesis thinking and flexibility by transforming materials.`,
+    positioning: `${childName} is training spatial precision by aligning and adjusting positions.`,
+  };
+
+  return locale === 'es' ? es[key] : en[key];
+}
+
 function localizeKnownTimelinePrompt(text: string, locale: Language, childName: string): string {
   if (locale !== 'es') return text;
 
@@ -1264,6 +1297,9 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const schemaGardenMax = useMemo(() => {
     return schemaGardenSorted.reduce((max, item) => Math.max(max, item.count), 0);
   }, [schemaGardenSorted]);
+
+  const topProfileSchemaKey = schemaGardenSorted[0]?.key;
+  const profileTrainingInsight = trainingInsightToday(topProfileSchemaKey, locale, childName);
 
   const hasSavedArticles = savedArticles.length > 0;
   const dailyGoalTarget = Math.min(3, exploreStats.total_available);
@@ -3105,8 +3141,11 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                       <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: '#665286', fontWeight: 700, position: 'relative', zIndex: 1 }}>
                         💜 {locale === 'es' ? `En qué está ${childName} ahora` : `What is ${childName} into right now`}
                       </p>
-                      <p style={{ margin: '14px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.66, color: '#2F253D', position: 'relative', zIndex: 1 }}>
-                        {profileCuriosityQuote || (locale === 'es' ? `${childName} está construyendo su mundo, un momento a la vez.` : `${childName} is building a world, one moment at a time.`)}
+                      <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: '#7C6A99', position: 'relative', zIndex: 1 }}>
+                        {locale === 'es' ? 'Qué está entrenando hoy' : 'What they are training today'}
+                      </p>
+                      <p style={{ margin: '8px 0 0', fontFamily: theme.fonts.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.62, color: '#2F253D', position: 'relative', zIndex: 1 }}>
+                        {profileTrainingInsight || profileCuriosityQuote || (locale === 'es' ? `${childName} está construyendo su mundo, un momento a la vez.` : `${childName} is building a world, one moment at a time.`)}
                       </p>
                     </div>
 
