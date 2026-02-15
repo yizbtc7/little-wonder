@@ -12,6 +12,7 @@ import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type InsightRequestBody = {
   observation?: string;
+  auto_update_interests?: boolean;
 };
 
 type ChildRow = {
@@ -44,6 +45,7 @@ type WonderPayload = {
 type InsightPayload = {
   reply: string;
   wonder: WonderPayload | null;
+  auto_interest_added?: string | null;
 };
 
 let systemPromptCache: string | null = null;
@@ -214,7 +216,7 @@ function interestsAreSimilar(a: string, b: string): boolean {
   return aWords.some((word) => bWords.has(word));
 }
 
-function inferInterestFromObservation(observationText: string, language: 'es' | 'en'): string | null {
+function inferInterestFromObservation(observationText: string, language: 'es' | 'en'): { interest: string; score: number } | null {
   const text = normalizeInterestValue(observationText);
 
   const rules: Array<{ interestKey: string; hints: string[] }> = [
@@ -228,8 +230,15 @@ function inferInterestFromObservation(observationText: string, language: 'es' | 
     { interestKey: 'how', hints: ['como funciona', 'how works', 'mecan', 'experimento', 'experiment'] },
   ];
 
-  const matched = rules.find((rule) => rule.hints.some((hint) => text.includes(hint)));
-  if (!matched) return null;
+  const scored = rules
+    .map((rule) => ({
+      rule,
+      score: rule.hints.reduce((acc, hint) => (text.includes(hint) ? acc + 1 : acc), 0),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const best = scored[0];
+  if (!best || best.score < 2) return null;
 
   const options = getChildInterestOptions(language);
   const map: Record<string, number> = {
@@ -243,8 +252,9 @@ function inferInterestFromObservation(observationText: string, language: 'es' | 
     how: 7,
   };
 
-  const index = map[matched.interestKey];
-  return typeof index === 'number' ? String(options[index]) : null;
+  const index = map[best.rule.interestKey];
+  const interest = typeof index === 'number' ? String(options[index]) : null;
+  return interest ? { interest, score: best.score } : null;
 }
 
 function buildNoWonderReply(params: {
@@ -296,6 +306,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as InsightRequestBody;
     const observationText = body.observation?.trim();
+    const autoUpdateInterests = body.auto_update_interests !== false;
 
     if (!observationText) {
       return NextResponse.json({ error: 'Observation is empty.' }, { status: 400 });
@@ -447,7 +458,7 @@ export async function POST(request: Request) {
 
           const insightText = normalizedPayload.reply;
 
-          const { error: insightError } = await db.from('insights').insert({
+          const { data: insertedInsight, error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
             content: insightText,
             insight_text: insightText,
@@ -458,10 +469,10 @@ export async function POST(request: Request) {
             },
             schema_detected: null,
             domain: null,
-          });
+          }).select('id').single<{ id: string }>();
 
-          if (insightError) {
-            controller.error(new Error(`Error saving insight: ${insightError.message}`));
+          if (insightError || !insertedInsight?.id) {
+            controller.error(new Error(`Error saving insight: ${insightError?.message ?? 'unknown'}`));
             return;
           }
 
@@ -480,26 +491,83 @@ export async function POST(request: Request) {
               return;
             }
 
-            const inferredInterest = inferInterestFromObservation(observationText, preferredLanguage);
-            if (inferredInterest) {
-              const { data: existingInterestRows } = await db
-                .from('child_interests')
-                .select('interest')
-                .eq('child_id', child.id);
+            if (autoUpdateInterests) {
+              const inferredInterestResult = inferInterestFromObservation(observationText, preferredLanguage);
+              if (inferredInterestResult) {
+                const inferredInterest = inferredInterestResult.interest;
 
-              const existingInterests = (existingInterestRows ?? [])
-                .map((row) => (row as { interest?: string | null }).interest ?? '')
-                .filter((value): value is string => value.trim().length > 0);
+                const { data: existingInterestRows } = await db
+                  .from('child_interests')
+                  .select('interest')
+                  .eq('child_id', child.id);
 
-              const alreadyExists = existingInterests.some((existing) => interestsAreSimilar(existing, inferredInterest));
+                const existingInterests = (existingInterestRows ?? [])
+                  .map((row) => (row as { interest?: string | null }).interest ?? '')
+                  .filter((value): value is string => value.trim().length > 0);
 
-              if (!alreadyExists) {
-                await db.from('child_interests').insert({
-                  child_id: child.id,
-                  interest: inferredInterest,
-                });
+                const alreadyExists = existingInterests.some((existing) => interestsAreSimilar(existing, inferredInterest));
+
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+
+                const { data: todaysObservationRows } = await db
+                  .from('observations')
+                  .select('id')
+                  .eq('user_id', user.id)
+                  .eq('child_id', child.id)
+                  .gte('created_at', startOfDay.toISOString())
+                  .order('created_at', { ascending: false })
+                  .limit(200);
+
+                const todaysObservationIds = (todaysObservationRows ?? []).map((row) => row.id).filter(Boolean);
+
+                let autoAddedToday = 0;
+                if (todaysObservationIds.length > 0) {
+                  const { data: todaysInsightsRows } = await db
+                    .from('insights')
+                    .select('json_response,observation_id')
+                    .in('observation_id', todaysObservationIds as string[]);
+
+                  autoAddedToday = (todaysInsightsRows ?? []).reduce((count, row) => {
+                    const payload = row.json_response as { payload?: { auto_interest_added?: string | null } } | null;
+                    return payload?.payload?.auto_interest_added ? count + 1 : count;
+                  }, 0);
+                }
+
+                const canAutoAddToday = autoAddedToday < 2;
+
+                if (!alreadyExists && canAutoAddToday) {
+                  const { error: addInterestError } = await db.from('child_interests').insert({
+                    child_id: child.id,
+                    interest: inferredInterest,
+                  });
+
+                  if (!addInterestError) {
+                    normalizedPayload.auto_interest_added = inferredInterest;
+                    if (preferredLanguage === 'es') {
+                      normalizedPayload.reply = `${normalizedPayload.reply}\n\n✨ Agregué “${inferredInterest}” a los intereses de ${child.name}. Si quieres, lo puedes quitar luego desde Perfil.`;
+                    } else {
+                      normalizedPayload.reply = `${normalizedPayload.reply}\n\n✨ I added “${inferredInterest}” to ${child.name}'s interests. You can remove it later from Profile.`;
+                    }
+                  }
+                }
               }
             }
+          }
+
+          if (normalizedPayload.reply !== insightText || normalizedPayload.auto_interest_added) {
+            await db
+              .from('insights')
+              .update({
+                content: normalizedPayload.reply,
+                insight_text: normalizedPayload.reply,
+                json_response: {
+                  source: 'anthropic_stream',
+                  model: 'claude-sonnet-4-5-20250929',
+                  payload: normalizedPayload,
+                },
+              })
+              .eq('id', insertedInsight.id);
           }
 
           controller.enqueue(encoder.encode(JSON.stringify(normalizedPayload)));

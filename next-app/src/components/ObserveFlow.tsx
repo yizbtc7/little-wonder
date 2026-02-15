@@ -29,6 +29,7 @@ type WonderPayload = {
 type InsightPayload = {
   reply?: string;
   wonder?: WonderPayload | null;
+  auto_interest_added?: string | null;
 };
 
 type ChatMessage =
@@ -342,6 +343,7 @@ function parseInsightPayload(raw: string): InsightPayload {
   return {
     reply: replyText.length > 0 ? replyText : fallback.reply,
     wonder,
+    auto_interest_added: typeof parsedPayload.auto_interest_added === 'string' ? parsedPayload.auto_interest_added : null,
   };
 }
 
@@ -1005,6 +1007,10 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [profileMomentsCount, setProfileMomentsCount] = useState(0);
   const [locale, setLocale] = useState<Language>(initialLanguage);
   const [settingsParentRole, setSettingsParentRole] = useState<string>(() => normalizeParentRoleValue(parentRole));
+  const [autoUpdateInterests, setAutoUpdateInterests] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('auto_update_interests') !== 'false';
+  });
   const t = translations[locale];
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1868,7 +1874,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     const response = await fetch('/api/insight', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ observation: text }),
+      body: JSON.stringify({ observation: text, auto_update_interests: autoUpdateInterests }),
     });
 
     if (!response.ok || !response.body) {
@@ -1934,6 +1940,34 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     }
     setSettingsStatus(t.settings.saved);
     setTimeout(() => setSettingsStatus(''), 2000);
+  };
+
+  const saveAutoUpdateInterests = (enabled: boolean) => {
+    setAutoUpdateInterests(enabled);
+    localStorage.setItem('auto_update_interests', enabled ? 'true' : 'false');
+    setSettingsStatus(locale === 'es' ? 'Preferencia guardada' : 'Preference saved');
+    setTimeout(() => setSettingsStatus(''), 1800);
+  };
+
+  const removeInterestFromProfile = async (interest: string) => {
+    try {
+      const response = await fetch(apiUrl(`/api/children/${childId}/interests`));
+      if (!response.ok) return;
+      const payload = (await response.json()) as { interests?: string[] };
+      const current = payload.interests ?? [];
+      const next = current.filter((value) => value.trim().toLowerCase() !== interest.trim().toLowerCase());
+
+      const updateResponse = await fetch(apiUrl(`/api/children/${childId}/interests`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interests: next }),
+      });
+
+      if (!updateResponse.ok) return;
+      setProfileInterests(next);
+    } catch {
+      // best effort
+    }
   };
 
   if (savedArticlesViewOrigin) {
@@ -2206,6 +2240,15 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                         <FadeUp delay={120}>
                           <div style={{ background: '#fff', borderRadius: '20px 20px 20px 4px', padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 10 }}>
                             <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.7, color: theme.colors.darkText }}>{msg.insight.reply ?? ''}</p>
+                            {msg.insight.auto_interest_added ? (
+                              <button
+                                type='button'
+                                onClick={() => void removeInterestFromProfile(msg.insight.auto_interest_added ?? '')}
+                                style={{ marginTop: 10, border: 'none', background: theme.colors.blushLight, color: theme.colors.roseDark, borderRadius: 999, padding: '6px 10px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                {locale === 'es' ? `↩︎ Quitar “${msg.insight.auto_interest_added}”` : `↩︎ Remove “${msg.insight.auto_interest_added}”`}
+                              </button>
+                            ) : null}
                           </div>
                         </FadeUp>
                         {msg.insight.wonder ? (
@@ -2689,6 +2732,25 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   <option value='es'>{t.settings.spanish}</option>
                   <option value='en'>{t.settings.english}</option>
                 </select>
+              </div>
+
+              <div style={{ marginBottom: 16, background: '#fff', borderRadius: 16, border: `1px solid ${theme.colors.divider}`, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <div>
+                  <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 14, fontWeight: 700, color: theme.colors.darkText }}>
+                    {locale === 'es' ? 'Auto-actualizar intereses' : 'Auto-update interests'}
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.midText }}>
+                    {locale === 'es' ? 'Desde observaciones del chat' : 'From chat observations'}
+                  </p>
+                </div>
+                <button
+                  type='button'
+                  onClick={() => saveAutoUpdateInterests(!autoUpdateInterests)}
+                  style={{ border: 'none', borderRadius: 999, width: 56, height: 30, background: autoUpdateInterests ? theme.colors.sage : theme.colors.divider, position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease' }}
+                  aria-label={locale === 'es' ? 'Activar auto-actualización de intereses' : 'Toggle auto-update interests'}
+                >
+                  <span style={{ position: 'absolute', top: 3, left: autoUpdateInterests ? 30 : 4, width: 24, height: 24, borderRadius: '50%', background: '#fff', transition: 'left 0.2s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+                </button>
               </div>
 
               <div style={{ background: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, border: `1px solid ${theme.colors.divider}` }}>
