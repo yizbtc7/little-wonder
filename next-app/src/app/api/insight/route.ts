@@ -173,7 +173,7 @@ function parseInsightPayload(raw: string): InsightPayload {
 
 function shouldGenerateWonderFromObservation(observationText: string, childName: string): boolean {
   const text = observationText.toLowerCase().trim();
-  if (text.length < 12) return false;
+  if (text.length < 10) return false;
 
   const irrelevantPatterns = [
     /^hola\b/, /^hello\b/, /^hi\b/, /^test\b/, /^prueba\b/, /^ok\b/, /^gracias\b/, /^thanks\b/,
@@ -183,13 +183,17 @@ function shouldGenerateWonderFromObservation(observationText: string, childName:
 
   const behaviorVerbs = [
     'hace', 'hizo', 'está', 'esta', 'jugó', 'jugo', 'dijo', 'preguntó', 'pregunto', 'lloró', 'lloro', 'corrió', 'corrio',
-    'played', 'said', 'asked', 'cried', 'ran', 'stacked', 'pointed', 'noticed', 'tantrum',
+    'señala', 'senala', 'miró', 'miro', 'observa', 'atiende', 'atencion', 'le gusta', 'le encant', 'encanta',
+    'played', 'said', 'asked', 'cried', 'ran', 'stacked', 'pointed', 'noticed', 'tantrum', 'likes', 'loves',
   ];
 
   const childSignals = ['mi hijo', 'mi hija', 'my child', 'bebé', 'bebe', childName.toLowerCase()];
 
   const hasChildSignal = childSignals.some((signal) => signal && text.includes(signal));
   const hasBehaviorSignal = behaviorVerbs.some((verb) => text.includes(verb));
+
+  // If parent clearly refers to child and gives enough context, allow wonder generation.
+  if (hasChildSignal && text.length >= 35) return true;
 
   return hasChildSignal && hasBehaviorSignal;
 }
