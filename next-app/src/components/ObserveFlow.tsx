@@ -357,6 +357,38 @@ function cleanWonderSectionText(text: string): string {
     .trim();
 }
 
+function getSchemaScienceBits(schema: string | undefined, locale: Language): { schemaLabel: string; bullets: string[] } | null {
+  const key = normalizeSchemaKey(schema);
+  if (!key) return null;
+
+  const schemaLabel = SCHEMA_INFO[key].label;
+
+  const esMap: Record<string, string[]> = {
+    trajectory: ['Entrena predicción y causa-efecto.', 'Afina atención al movimiento y al espacio.', 'Base futura para física cotidiana y deporte.'],
+    rotation: ['Entrena patrones de giro y movimiento.', 'Fortalece observación de variables clave.', 'Base futura para pensamiento mecánico y STEM.'],
+    enclosure: ['Entrena límites, dentro/fuera y organización.', 'Fortalece lógica espacial temprana.', 'Base futura para geometría y planificación.'],
+    enveloping: ['Entrena secuencias y permanencia del objeto.', 'Fortalece control fino y anticipación.', 'Base futura para resolución de problemas.'],
+    transporting: ['Entrena clasificación y relaciones entre objetos.', 'Fortalece memoria de trabajo en acción.', 'Base futura para matemáticas prácticas.'],
+    connecting: ['Entrena relaciones y estructuras.', 'Fortalece pensamiento de sistemas.', 'Base futura para ingeniería y diseño.'],
+    transforming: ['Entrena hipótesis tipo “si hago X, pasa Y”.', 'Fortalece flexibilidad cognitiva.', 'Base futura para método científico.'],
+    positioning: ['Entrena precisión espacial y comparación.', 'Fortalece coordinación ojo-mano.', 'Base futura para escritura y geometría.'],
+  };
+
+  const enMap: Record<string, string[]> = {
+    trajectory: ['Builds prediction and cause-effect.', 'Sharpens attention to motion and space.', 'Future foundation for everyday physics and sports.'],
+    rotation: ['Builds pattern detection in spinning motion.', 'Strengthens observation of key variables.', 'Future foundation for mechanical thinking and STEM.'],
+    enclosure: ['Builds boundary logic (inside/outside).', 'Strengthens early spatial reasoning.', 'Future foundation for geometry and planning.'],
+    enveloping: ['Builds sequencing and object permanence.', 'Strengthens fine-motor anticipation.', 'Future foundation for problem solving.'],
+    transporting: ['Builds grouping and object relations.', 'Strengthens working memory in action.', 'Future foundation for practical math.'],
+    connecting: ['Builds relationship and structure thinking.', 'Strengthens systems thinking.', 'Future foundation for engineering and design.'],
+    transforming: ['Builds hypothesis thinking: “if I do X, Y happens”.', 'Strengthens cognitive flexibility.', 'Future foundation for scientific method.'],
+    positioning: ['Builds spatial precision and comparison.', 'Strengthens hand-eye coordination.', 'Future foundation for writing and geometry.'],
+  };
+
+  const bullets = locale === 'es' ? esMap[key] : enMap[key];
+  return bullets ? { schemaLabel, bullets } : null;
+}
+
 function serializeAssistantInsight(insight: InsightPayload): string {
   return JSON.stringify(insight);
 }
@@ -2209,6 +2241,26 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
               </div>
               <div style={{ padding: '0 24px calc(124px + env(safe-area-inset-bottom))' }}>
                 <p style={{ margin: '0 0 24px', fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.75, color: theme.colors.darkText }}>{openWonder.article.lead}</p>
+                {(() => {
+                  const scienceBits = getSchemaScienceBits(openWonder.schemas_detected?.[0], locale);
+                  if (!scienceBits) return null;
+
+                  return (
+                    <div style={{ background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '14px 16px', marginBottom: 22 }}>
+                      <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                        🔬 {locale === 'es' ? 'La ciencia del esquema (30s)' : 'Schema science (30s)'}
+                      </p>
+                      <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>
+                        {locale === 'es' ? 'Esquema detectado:' : 'Detected schema:'} {scienceBits.schemaLabel}
+                      </p>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {scienceBits.bullets.map((line, idx) => (
+                          <p key={idx} style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 13, lineHeight: 1.55, color: theme.colors.darkText }}>• {line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {(openWonder.article.signs ?? []).filter((sign) => String(sign ?? '').trim()).length > 0 ? (
                   <>
                     <p style={{ margin: '0 0 12px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.rose, textTransform: 'uppercase', letterSpacing: 0.8 }}>✨ {locale === 'es' ? 'Lo reconocerás cuando…' : 'You\'ll recognize it when…'}</p>
