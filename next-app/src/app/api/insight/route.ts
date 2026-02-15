@@ -168,6 +168,37 @@ function parseInsightPayload(raw: string): InsightPayload {
   };
 }
 
+function shouldGenerateWonderFromObservation(observationText: string, childName: string): boolean {
+  const text = observationText.toLowerCase().trim();
+  if (text.length < 12) return false;
+
+  const irrelevantPatterns = [
+    /^hola\b/, /^hello\b/, /^hi\b/, /^test\b/, /^prueba\b/, /^ok\b/, /^gracias\b/, /^thanks\b/,
+    /que puedes hacer/, /what can you do/, /funciona\?$/, /are you there\?$/,
+  ];
+  if (irrelevantPatterns.some((pattern) => pattern.test(text))) return false;
+
+  const behaviorVerbs = [
+    'hace', 'hizo', 'está', 'esta', 'jugó', 'jugo', 'dijo', 'preguntó', 'pregunto', 'lloró', 'lloro', 'corrió', 'corrio',
+    'played', 'said', 'asked', 'cried', 'ran', 'stacked', 'pointed', 'noticed', 'tantrum',
+  ];
+
+  const childSignals = ['mi hijo', 'mi hija', 'my child', 'bebé', 'bebe', childName.toLowerCase()];
+
+  const hasChildSignal = childSignals.some((signal) => signal && text.includes(signal));
+  const hasBehaviorSignal = behaviorVerbs.some((verb) => text.includes(verb));
+
+  return hasChildSignal && hasBehaviorSignal;
+}
+
+function buildNoWonderReply(language: 'es' | 'en', childName: string): string {
+  if (language === 'es') {
+    return `¡Te leo! Para darte un Wonder útil, cuéntame una observación concreta de ${childName} (por ejemplo: “apiló bloques y luego los tumbó” o “señaló algo y dijo una palabra nueva”).`;
+  }
+
+  return `I’m here with you. To generate a useful Wonder, share one specific observation about ${childName} (for example: “stacked blocks and knocked them down” or “pointed at something and said a new word”).`;
+}
+
 export async function POST(request: Request) {
   try {
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
@@ -285,12 +316,13 @@ export async function POST(request: Request) {
       '      "curiosity_closer": "One sentence connecting to long-term curiosity"',
       '    },',
       '    "schemas_detected": ["trajectory", "connecting"]',
-      '  }',
+      '  } // or null when the message is not a concrete child observation',
       '}',
       'Do NOT return top-level keys like title, revelation, brain_science_gem, activity, observe_next, or schemas_detected.',
       `Allowed schemas_detected values only: ${VALID_SCHEMA_KEYS.join(', ')}.`,
       'Never invent or output schema labels outside that list; map legacy wording to the closest allowed value.',
-      'Always include both reply and wonder.',
+      'Only generate wonder when the parent shares a specific real behavior/moment of the child.',
+      'If input is greeting/test/meta/unclear, set wonder to null and ask for a concrete observation.',
       'Use the child\'s name naturally and keep the tone warm and specific.',
       preferredLanguage === 'es' ? 'Write every value in Spanish.' : 'Write every value in English.',
     ].join('\n');
@@ -315,13 +347,20 @@ export async function POST(request: Request) {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
               const textChunk = event.delta.text;
               fullResponse += textChunk;
-              controller.enqueue(encoder.encode(textChunk));
             }
           }
 
           const parsedPayload = parseInsightPayload(fullResponse);
+          const shouldGenerateWonder = shouldGenerateWonderFromObservation(observationText, child.name);
 
-          const insightText = parsedPayload.reply;
+          const normalizedPayload: InsightPayload = shouldGenerateWonder
+            ? parsedPayload
+            : {
+                reply: buildNoWonderReply(preferredLanguage, child.name),
+                wonder: null,
+              };
+
+          const insightText = normalizedPayload.reply;
 
           const { error: insightError } = await db.from('insights').insert({
             observation_id: observationRow.id,
@@ -330,7 +369,7 @@ export async function POST(request: Request) {
             json_response: {
               source: 'anthropic_stream',
               model: 'claude-sonnet-4-5-20250929',
-              payload: parsedPayload,
+              payload: normalizedPayload,
             },
             schema_detected: null,
             domain: null,
@@ -341,13 +380,13 @@ export async function POST(request: Request) {
             return;
           }
 
-          if (parsedPayload.wonder) {
+          if (normalizedPayload.wonder) {
             const { error: wonderError } = await db.from('wonders').insert({
               child_id: child.id,
               observation_text: observationText,
-              title: parsedPayload.wonder.title,
-              article: parsedPayload.wonder.article,
-              schemas_detected: parsedPayload.wonder.schemas_detected ?? [],
+              title: normalizedPayload.wonder.title,
+              article: normalizedPayload.wonder.article,
+              schemas_detected: normalizedPayload.wonder.schemas_detected ?? [],
               language: preferredLanguage,
             });
 
@@ -357,6 +396,7 @@ export async function POST(request: Request) {
             }
           }
 
+          controller.enqueue(encoder.encode(JSON.stringify(normalizedPayload)));
           controller.close();
         } catch (streamError) {
           controller.error(streamError);
