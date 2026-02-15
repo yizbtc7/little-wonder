@@ -372,6 +372,44 @@ export async function POST(request: Request) {
     const childAgeMonths = getAgeInMonths(child.birthdate);
     const childAgeLabel = formatAgeLabel(childAgeMonths);
     const preferredLanguage = await getUserLanguage(user.id, 'es');
+    const shouldGenerateWonder = shouldGenerateWonderFromObservation(observationText, child.name);
+
+    if (!shouldGenerateWonder) {
+      const quickPayload: InsightPayload = {
+        reply: buildNoWonderReply({
+          language: preferredLanguage,
+          childName: child.name,
+          childAgeLabel,
+          childInterests: Array.isArray(child.interests) ? child.interests : [],
+          detectedSchemas,
+        }),
+        wonder: null,
+      };
+
+      const { error: insightError } = await db.from('insights').insert({
+        observation_id: observationRow.id,
+        content: quickPayload.reply,
+        insight_text: quickPayload.reply,
+        json_response: {
+          source: 'rule_based_no_wonder',
+          model: 'none',
+          payload: quickPayload,
+        },
+        schema_detected: null,
+        domain: null,
+      });
+
+      if (insightError) {
+        return NextResponse.json({ error: `Error saving insight: ${insightError.message}` }, { status: 500 });
+      }
+
+      return new Response(JSON.stringify(quickPayload), {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+        },
+      });
+    }
 
     const promptTemplate = await getSystemPrompt();
     const systemPrompt = buildPromptContext({
@@ -441,20 +479,7 @@ export async function POST(request: Request) {
           }
 
           const parsedPayload = parseInsightPayload(fullResponse);
-          const shouldGenerateWonder = shouldGenerateWonderFromObservation(observationText, child.name);
-
-          const normalizedPayload: InsightPayload = shouldGenerateWonder
-            ? parsedPayload
-            : {
-                reply: buildNoWonderReply({
-                  language: preferredLanguage,
-                  childName: child.name,
-                  childAgeLabel,
-                  childInterests: Array.isArray(child.interests) ? child.interests : [],
-                  detectedSchemas,
-                }),
-                wonder: null,
-              };
+          const normalizedPayload: InsightPayload = parsedPayload;
 
           const insightText = normalizedPayload.reply;
 

@@ -34,7 +34,7 @@ type InsightPayload = {
 
 type ChatMessage =
   | { role: 'user'; text: string }
-  | { role: 'ai'; insight: InsightPayload };
+  | { role: 'ai'; insight: InsightPayload; pending?: boolean };
 
 type BrowserSpeechRecognitionResult = {
   isFinal: boolean;
@@ -1852,11 +1852,50 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     setIsRecordingVoice(false);
   };
 
+  const updateLastPendingAssistant = (updater: (message: ChatMessage) => ChatMessage) => {
+    setMessages((prev) => {
+      const next = [...prev];
+      for (let i = next.length - 1; i >= 0; i -= 1) {
+        const message = next[i];
+        if (message.role === 'ai' && message.pending) {
+          next[i] = updater(message);
+          break;
+        }
+      }
+      return next;
+    });
+  };
+
+  const streamReplyIntoPendingBubble = async (reply: string) => {
+    const full = reply.trim();
+    if (!full) return;
+
+    const step = Math.max(3, Math.ceil(full.length / 40));
+    for (let i = step; i <= full.length; i += step) {
+      const partial = full.slice(0, i);
+      updateLastPendingAssistant((message) => {
+        if (message.role !== 'ai') return message;
+        return {
+          ...message,
+          insight: {
+            ...message.insight,
+            reply: partial,
+          },
+        };
+      });
+      // tiny delay to simulate real-time text streaming perception
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 22));
+    }
+  };
+
   const sendMessage = async (directText?: string) => {
     const text = (directText ?? input).trim();
     if (!text) return;
 
-    setMessages((prev) => [...prev, { role: 'user', text }]);
+    const optimisticReply = locale === 'es' ? `Te leo 👀\nAnalizando lo que observaste de ${childName}...` : `I’m reading you 👀\nAnalyzing what you observed about ${childName}...`;
+
+    setMessages((prev) => [...prev, { role: 'user', text }, { role: 'ai', insight: { reply: optimisticReply, wonder: null }, pending: true }]);
     setInput('');
     setTyping(true);
     requestAnimationFrame(autoResizeTextArea);
@@ -1878,6 +1917,18 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     });
 
     if (!response.ok || !response.body) {
+      updateLastPendingAssistant((message) => {
+        if (message.role !== 'ai') return message;
+        return {
+          ...message,
+          pending: false,
+          insight: {
+            ...message.insight,
+            reply: locale === 'es' ? 'No pude responder ahora. Inténtalo de nuevo en un momento.' : 'I could not respond right now. Please try again in a moment.',
+            wonder: null,
+          },
+        };
+      });
       setTyping(false);
       return;
     }
@@ -1893,11 +1944,46 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     }
 
     const parsed = parseInsightPayload(raw);
-    setTyping(false);
-    setMessages((prev) => [...prev, { role: 'ai', insight: parsed }]);
+
+    await streamReplyIntoPendingBubble(parsed.reply ?? '');
+
+    updateLastPendingAssistant((message) => {
+      if (message.role !== 'ai') return message;
+      return {
+        ...message,
+        pending: false,
+        insight: {
+          ...message.insight,
+          ...parsed,
+          wonder: null,
+        },
+      };
+    });
+
     if (parsed.wonder) {
       setActivitiesLoaded(false);
+      setTimeout(() => {
+        setMessages((prev) => {
+          const next = [...prev];
+          for (let i = next.length - 1; i >= 0; i -= 1) {
+            const message = next[i];
+            if (message.role === 'ai' && !message.insight.wonder) {
+              next[i] = {
+                ...message,
+                insight: {
+                  ...message.insight,
+                  wonder: parsed.wonder,
+                },
+              };
+              break;
+            }
+          }
+          return next;
+        });
+      }, 280);
     }
+
+    setTyping(false);
 
     if (convId) {
       await fetch(apiUrl(`/api/conversations/${convId}/messages`), {
