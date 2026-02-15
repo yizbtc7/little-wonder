@@ -11,7 +11,11 @@ export default function SignInButton() {
   const handleGoogleSignIn = async () => {
     setError('');
 
-    const oauthRedirectBase = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE?.trim() || 'https://littlewonder.ai';
+    const configuredRedirectBase = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE?.trim();
+    const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    const isLittleWonderHost = /(^https?:\/\/(www\.)?littlewonder\.ai(?::\d+)?$)/i.test(browserOrigin);
+    const isLocalLikeHost = browserOrigin.startsWith('http://') && !isLittleWonderHost;
+    const oauthRedirectBase = isLocalLikeHost ? browserOrigin : (configuredRedirectBase || 'https://littlewonder.ai');
 
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
