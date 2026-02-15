@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Nunito, Young_Serif } from 'next/font/google';
 import './globals.css';
 import AppProviders from '@/components/AppProviders';
@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   title: 'Little Wonder — Curiosity Companion',
   description: 'Nurturing the scientist in every child',
   manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Little Wonder',
+  },
   openGraph: {
     title: 'Little Wonder',
     description: 'Nurturing the scientist in every child',
@@ -41,6 +46,11 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#FAF5EF',
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
