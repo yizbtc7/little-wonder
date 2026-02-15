@@ -11,8 +11,7 @@ export default function SignInButton() {
   const handleGoogleSignIn = async () => {
     setError('');
 
-    const origin = window.location.origin;
-    const oauthRedirectBase = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE?.trim() || origin;
+    const oauthRedirectBase = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE?.trim() || 'https://littlewonder.ai';
 
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: 'google',

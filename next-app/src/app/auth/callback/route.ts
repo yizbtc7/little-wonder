@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
   }
 
   const safePath = nextPath && nextPath.startsWith('/') ? nextPath : '/home';
-  const redirectUrl = new URL(safePath, requestUrl.origin);
+  const canonicalOrigin = requestUrl.hostname === 'www.littlewonder.ai' ? 'https://littlewonder.ai' : requestUrl.origin;
+  const redirectUrl = new URL(safePath, canonicalOrigin);
   const response = NextResponse.redirect(redirectUrl);
 
   const supabase = createServerClient(
@@ -24,7 +25,16 @@ export async function GET(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+            const host = requestUrl.hostname;
+            const isLittleWonderHost = host === 'littlewonder.ai' || host === 'www.littlewonder.ai';
+
+            response.cookies.set(name, value, {
+              ...options,
+              ...(isLittleWonderHost ? { domain: '.littlewonder.ai' } : {}),
+              path: '/',
+              sameSite: 'lax',
+              secure: requestUrl.protocol === 'https:',
+            });
           });
         },
       },
