@@ -2175,7 +2175,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             </div>
           </div>
 
-          <div ref={chatScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
+          <div ref={chatScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 16px calc(190px + env(safe-area-inset-bottom))' }}>
             {messages.length === 0 ? (
               <div style={{ textAlign: 'center', paddingTop: 48 }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>✨</div>
@@ -2259,7 +2259,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             )}
           </div>
 
-          <div style={{ padding: '12px 16px 28px', borderTop: `1px solid ${theme.colors.divider}` }}>
+          <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(78px + env(safe-area-inset-bottom))', width: '100%', maxWidth: 390, zIndex: 95, padding: '10px 16px 12px', borderTop: `1px solid ${theme.colors.divider}`, background: 'rgba(250,245,239,0.96)', backdropFilter: 'blur(10px)' }}>
             {isRecordingVoice ? (
               <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>
                 {locale === 'es' ? '🎤 Dictando… toca ■ para detener.' : '🎤 Dictating… tap ■ to stop.'}
