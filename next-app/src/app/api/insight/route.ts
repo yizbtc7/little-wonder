@@ -7,6 +7,7 @@ import { formatAgeLabel, getAgeInMonths } from '@/lib/childAge';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { getUserLanguage } from '@/lib/language';
 import { VALID_SCHEMA_KEYS, normalizeSchemaList } from '@/lib/schemas';
+import { getChildInterestOptions } from '@/lib/interest-options';
 import { resolveAccessibleChild } from '@/lib/childAccess';
 
 type InsightRequestBody = {
@@ -189,6 +190,61 @@ function shouldGenerateWonderFromObservation(observationText: string, childName:
   const hasBehaviorSignal = behaviorVerbs.some((verb) => text.includes(verb));
 
   return hasChildSignal && hasBehaviorSignal;
+}
+
+function normalizeInterestValue(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function interestsAreSimilar(a: string, b: string): boolean {
+  const aNorm = normalizeInterestValue(a);
+  const bNorm = normalizeInterestValue(b);
+  if (!aNorm || !bNorm) return false;
+  if (aNorm === bNorm) return true;
+  if (aNorm.includes(bNorm) || bNorm.includes(aNorm)) return true;
+
+  const aWords = aNorm.split(' ').filter((w) => w.length >= 4);
+  const bWords = new Set(bNorm.split(' ').filter((w) => w.length >= 4));
+  return aWords.some((word) => bWords.has(word));
+}
+
+function inferInterestFromObservation(observationText: string, language: 'es' | 'en'): string | null {
+  const text = normalizeInterestValue(observationText);
+
+  const rules: Array<{ interestKey: string; hints: string[] }> = [
+    { interestKey: 'music', hints: ['musica', 'music', 'cantar', 'song', 'ritmo', 'sonido'] },
+    { interestKey: 'stacking', hints: ['apilar', 'bloque', 'stack', 'tower', 'constru'] },
+    { interestKey: 'water', hints: ['agua', 'water', 'salpicar', 'splash'] },
+    { interestKey: 'animals', hints: ['animal', 'insect', 'bicho', 'bug'] },
+    { interestKey: 'books', hints: ['libro', 'cuento', 'book', 'read'] },
+    { interestKey: 'movement', hints: ['trepar', 'correr', 'saltar', 'climb', 'run', 'movement'] },
+    { interestKey: 'drawing', hints: ['dibuj', 'pint', 'arte', 'draw', 'paint', 'messy'] },
+    { interestKey: 'how', hints: ['como funciona', 'how works', 'mecan', 'experimento', 'experiment'] },
+  ];
+
+  const matched = rules.find((rule) => rule.hints.some((hint) => text.includes(hint)));
+  if (!matched) return null;
+
+  const options = getChildInterestOptions(language);
+  const map: Record<string, number> = {
+    music: 0,
+    stacking: 1,
+    water: 2,
+    animals: 3,
+    books: 4,
+    movement: 5,
+    drawing: 6,
+    how: 7,
+  };
+
+  const index = map[matched.interestKey];
+  return typeof index === 'number' ? String(options[index]) : null;
 }
 
 function buildNoWonderReply(params: {
@@ -422,6 +478,27 @@ export async function POST(request: Request) {
             if (wonderError) {
               controller.error(new Error(`Error saving wonder: ${wonderError.message}`));
               return;
+            }
+
+            const inferredInterest = inferInterestFromObservation(observationText, preferredLanguage);
+            if (inferredInterest) {
+              const { data: existingInterestRows } = await db
+                .from('child_interests')
+                .select('interest')
+                .eq('child_id', child.id);
+
+              const existingInterests = (existingInterestRows ?? [])
+                .map((row) => (row as { interest?: string | null }).interest ?? '')
+                .filter((value): value is string => value.trim().length > 0);
+
+              const alreadyExists = existingInterests.some((existing) => interestsAreSimilar(existing, inferredInterest));
+
+              if (!alreadyExists) {
+                await db.from('child_interests').insert({
+                  child_id: child.id,
+                  interest: inferredInterest,
+                });
+              }
             }
           }
 
