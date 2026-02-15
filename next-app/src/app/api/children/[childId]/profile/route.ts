@@ -14,6 +14,13 @@ type TimelineRow = {
   title: string;
   observation_text: string;
   schemas_detected: string[] | null;
+  article: {
+    lead?: string;
+    pull_quote?: string;
+    signs?: string[];
+    how_to_be_present?: string;
+    curiosity_closer?: string;
+  } | null;
 };
 
 type SavedArticle = {
@@ -58,7 +65,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
 
   const [{ data: interests }, { data: timeline }, observationCountResult, { data: savedArticlesRows }] = await Promise.all([
     db.from('child_interests').select('interest').eq('child_id', childId).order('interest', { ascending: true }),
-    db.from('wonders').select('id,created_at,title,observation_text,schemas_detected').eq('child_id', childId).order('created_at', { ascending: false }).limit(50),
+    db.from('wonders').select('id,created_at,title,observation_text,schemas_detected,article').eq('child_id', childId).order('created_at', { ascending: false }).limit(50),
     db.from('observations').select('id', { count: 'exact', head: true }).eq('child_id', childId),
     db
       .from('article_bookmarks')
@@ -99,7 +106,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
   return NextResponse.json({
     child: {
       ...child,
-      moments_count: observationCountResult.count ?? 0,
+      moments_count: timelineRows.length,
     },
     interests: (interests ?? []).map((row) => row.interest).filter((v): v is string => typeof v === 'string' && v.length > 0),
     schema_stats,
@@ -111,6 +118,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
       title: row.title,
       observation: row.observation_text,
       schemas: normalizeSchemaList(row.schemas_detected ?? []),
+      article: row.article,
     })),
     recent_moments: timelineRows.slice(0, 3).map((row) => ({
       id: row.id,
@@ -118,6 +126,7 @@ export async function GET(_: Request, context: { params: Promise<{ childId: stri
       observation: row.observation_text,
       created_at: row.created_at,
       schemas: normalizeSchemaList(row.schemas_detected ?? []),
+      article: row.article,
     })),
     savedArticles,
   });

@@ -142,6 +142,7 @@ type ProfileWonderTimelineEntry = {
   title: string;
   observation: string;
   schemas: string[];
+  article?: WonderPayload['article'] | null;
 };
 
 type ProfileSchemaStat = {
@@ -164,7 +165,7 @@ type ChildProfilePayload = {
   top_schema?: ProfileSchemaStat | null;
   top_schemas?: ProfileSchemaStat[];
   timeline?: ProfileWonderTimelineEntry[];
-  recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>;
+  recent_moments?: Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[]; article?: WonderPayload['article'] | null }>;
   savedArticles?: ExploreArticleRow[];
 };
 
@@ -486,6 +487,16 @@ function pickRecentMomentBody(moment: { title?: string; observation?: string }, 
   if (nonEnglish) return nonEnglish;
 
   return candidates[0];
+}
+
+function toWonderCardTitle(moment: { title?: string; observation?: string }, locale: Language, childName: string): string {
+  const preferred = localizeKnownTimelinePrompt(pickRecentMomentBody(moment, locale), locale, childName).trim();
+  const source = preferred || moment.title?.trim() || moment.observation?.trim() || '';
+  const collapsed = source.replace(/\s+/g, ' ').trim();
+  if (!collapsed) return locale === 'es' ? 'Nuevo Wonder' : 'New Wonder';
+
+  const max = 72;
+  return collapsed.length > max ? `${collapsed.slice(0, max - 1).trimEnd()}…` : collapsed;
 }
 
 function localizeKnownTimelinePrompt(text: string, locale: Language, childName: string): string {
@@ -1037,7 +1048,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [interestError, setInterestError] = useState('');
   const [showInterestPicker, setShowInterestPicker] = useState(false);
-  const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[] }>>([]);
+  const [profileRecentMoments, setProfileRecentMoments] = useState<Array<{ id: string; title: string; observation: string; created_at: string; schemas?: string[]; article?: WonderPayload['article'] | null }>>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profilePhotoError, setProfilePhotoError] = useState<string>('');
   const [profilePhotoUploading, setProfilePhotoUploading] = useState(false);
@@ -1086,6 +1097,26 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
     'Connecting to developmental science...',
     'Preparing your insight...',
   ];
+
+  const openStoredWonder = useCallback((entry: { id: string; title: string; observation: string; schemas?: string[]; article?: WonderPayload['article'] | null }) => {
+    const fallbackArticle: WonderPayload['article'] = {
+      lead: entry.observation || entry.title,
+      pull_quote: '',
+      signs: [],
+      how_to_be_present: '',
+      curiosity_closer: '',
+    };
+
+    setActiveTab('chat');
+    setOpenWonder({
+      title: entry.title || toWonderCardTitle(entry, locale, childName),
+      schemas_detected: normalizeSchemaList(entry.schemas ?? []),
+      article: {
+        ...fallbackArticle,
+        ...(entry.article ?? {}),
+      },
+    });
+  }, [childName, locale]);
 
   const quoteOfTheDay = t.chat.quoteLine;
   const maxPhotoSizeBytes = 5 * 1024 * 1024;
@@ -3015,7 +3046,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 16, position: 'relative', zIndex: 1 }}>
                   {[
-                    { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Momentos' : 'Moments' },
+                    { n: profileMomentsCount || profileTimeline.length, l: locale === 'es' ? 'Wonders' : 'Wonders' },
                     { n: profileSchemaStats.length, l: locale === 'es' ? 'Esquemas' : 'Schemas' },
                     { n: profileInterests.length, l: locale === 'es' ? 'Intereses' : 'Interests' },
                   ].map((s) => (
@@ -3194,7 +3225,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 18, lineHeight: 1 }}>📝</span>
                           <h3 style={{ margin: 0, fontFamily: theme.fonts.display, fontSize: 18, fontWeight: 400, color: '#2D2B32', lineHeight: 1.2 }}>
-                            {locale === 'es' ? 'Últimos momentos' : 'Latest moments'}
+                            {locale === 'es' ? 'Wonders' : 'Wonders'}
                           </h3>
                         </div>
                         {profileRecentMoments.length > 3 ? (
@@ -3224,20 +3255,28 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                       ) : (showAllRecentMoments ? profileRecentMoments : profileRecentMoments.slice(0, 3)).map((moment) => {
                         const normalizedSchemas = normalizeSchemaList(moment.schemas ?? []);
                         const schemaForChip = normalizedSchemas[0] ?? SPANISH_SCHEMA_FALLBACK;
-                        const momentBody = pickRecentMomentBody(moment, locale);
+                        const wonderTitle = toWonderCardTitle(moment, locale, childName);
                         return (
-                          <div key={moment.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '13px 14px 14px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                          <button
+                            key={moment.id}
+                            type='button'
+                            onClick={() => openStoredWonder(moment)}
+                            style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 18, border: '1px solid #E9DFDA', padding: '13px 14px 14px', marginBottom: 9, boxShadow: '0 1px 4px rgba(0,0,0,0.03)', cursor: 'pointer' }}
+                          >
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: theme.fonts.sans, fontSize: 11, fontWeight: 700, color: '#A99A96', lineHeight: 1.1 }}>
                                 <span style={{ width: 6, height: 6, borderRadius: 999, background: '#E7A89A', display: 'inline-block' }} />
                                 {formatRelativeMomentDate(moment.created_at, locale)}
                               </span>
-                              <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
-                                {formatSchemaChipLabel(schemaForChip)}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 10.5, color: '#A35D51', background: '#FFF0ED', padding: '3px 9px', borderRadius: 999, fontFamily: theme.fonts.sans, fontWeight: 800, lineHeight: 1, flexShrink: 0 }}>
+                                  {formatSchemaChipLabel(schemaForChip)}
+                                </span>
+                                <span style={{ fontSize: 14, color: '#B89C96' }}>›</span>
                               </span>
                             </div>
-                            <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.display, fontSize: 16, fontWeight: 400, lineHeight: 1.38, color: '#3E302C' }}>{momentBody}</p>
-                          </div>
+                            <p style={{ margin: '10px 0 0', fontFamily: theme.fonts.display, fontSize: 16, fontWeight: 400, lineHeight: 1.34, color: '#3E302C' }}>{wonderTitle}</p>
+                          </button>
                         );
                       })}
                     </div>
@@ -3460,7 +3499,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                                 />
                               </div>
 
-                              <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 16, border: '1px solid #E9DFDB', padding: '12px 14px 13px', minWidth: 0 }}>
+                              <div onClick={() => openStoredWonder(entry)} role='button' style={{ flex: 1, background: '#FFFFFF', borderRadius: 16, border: '1px solid #E9DFDB', padding: '12px 14px 13px', minWidth: 0, cursor: 'pointer' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                                   <span style={{ fontFamily: theme.fonts.sans, fontSize: 11.5, fontWeight: 700, color: '#9B8D88' }}>
                                     {formatRelativeMomentDate(entry.created_at, locale)}
