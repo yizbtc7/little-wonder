@@ -717,32 +717,91 @@ function schemaBadgeColor(schema: string): string {
 }
 
 function schemaContextLine(schema: string, childName: string, locale: Language): string | null {
+  const copy = schemaCardCopy(schema, childName, locale);
+  return copy?.behavior ?? null;
+}
+
+function schemaCardCopy(schema: string, childName: string, locale: Language): {
+  behavior: string;
+  insight: string;
+  nextSignal: string;
+  trainChip: string;
+  homeChip: string;
+} | null {
   const key = normalizeSchemaKey(schema);
   if (!key) return null;
 
-  const mapEs: Record<SchemaKey, string> = {
-    trajectory: `Porque a ${childName} le encanta lanzar y dejar caer cosas`,
-    transporting: `Porque ${childName} transporta cosas de un lugar a otro`,
-    rotation: `Porque a ${childName} le fascina lo que gira`,
-    enclosure: `Porque a ${childName} le encanta meter cosas dentro de otras`,
-    connecting: `Porque ${childName} quiere conectar y desconectar todo`,
-    transforming: `Porque a ${childName} le encanta mezclar y transformar cosas`,
-    positioning: `Porque ${childName} alinea todo con precisión`,
-    enveloping: `Porque a ${childName} le encanta envolver y esconder cosas`,
+  const es: Record<SchemaKey, { behavior: string; insight: string; nextSignal: string; trainChip: string; homeChip: string }> = {
+    rotation: {
+      behavior: `${childName} busca ruedas y objetos que giran.`,
+      insight: 'Está construyendo intuición de causa-efecto y movimiento.',
+      nextSignal: 'Empezará a comparar qué gira más rápido o lento.',
+      trainChip: 'Ahora entrena: predicción + causalidad',
+      homeChip: 'En casa prueba: gira una tapa y nómbrala',
+    },
+    transporting: {
+      behavior: `${childName} lleva objetos de un lugar a otro con intención.`,
+      insight: 'Está practicando planificación, secuencia y memoria de trabajo.',
+      nextSignal: 'Armará mini-rutinas: llevar, dejar y volver por más.',
+      trainChip: 'Ahora entrena: planificación + memoria',
+      homeChip: 'En casa prueba: “lleva esto a la cesta”',
+    },
+    trajectory: {
+      behavior: `${childName} observa y repite trayectorias con objetos.`,
+      insight: 'Está afinando predicción espacial y control del movimiento.',
+      nextSignal: 'Buscará repetir la misma ruta para comprobar qué pasa.',
+      trainChip: 'Ahora entrena: atención + predicción',
+      homeChip: 'En casa prueba: lanzar suave y nombrar dirección',
+    },
+    enclosure: {
+      behavior: `${childName} mete y saca objetos en contenedores.`,
+      insight: 'Está consolidando lógica espacial (dentro/fuera).',
+      nextSignal: 'Empezará a clasificar por tamaño y encaje.',
+      trainChip: 'Ahora entrena: lógica espacial',
+      homeChip: 'En casa prueba: juego de cajas y tapas',
+    },
+    connecting: {
+      behavior: `${childName} une y separa piezas para probar relaciones.`,
+      insight: 'Está construyendo pensamiento de estructuras y relaciones.',
+      nextSignal: 'Intentará crear combinaciones cada vez más complejas.',
+      trainChip: 'Ahora entrena: pensamiento de sistemas',
+      homeChip: 'En casa prueba: unir dos piezas y describir',
+    },
+    transforming: {
+      behavior: `${childName} cambia materiales para ver nuevos resultados.`,
+      insight: 'Está formando hipótesis del tipo “si hago X, pasa Y”.',
+      nextSignal: 'Repetirá transformaciones para validar su idea.',
+      trainChip: 'Ahora entrena: hipótesis + flexibilidad',
+      homeChip: 'En casa prueba: mezclar agua+arena y observar',
+    },
+    positioning: {
+      behavior: `${childName} alinea, ordena y ajusta objetos con precisión.`,
+      insight: 'Está afinando coordinación ojo-mano y comparación espacial.',
+      nextSignal: 'Corregirá posiciones por sí mismo hasta “que quede bien”.',
+      trainChip: 'Ahora entrena: precisión espacial',
+      homeChip: 'En casa prueba: alinear 3 objetos por tamaño',
+    },
+    enveloping: {
+      behavior: `${childName} envuelve, tapa o cubre para luego descubrir.`,
+      insight: 'Está fortaleciendo secuencia, permanencia y anticipación.',
+      nextSignal: 'Comenzará juegos de esconder/descubrir más intencionales.',
+      trainChip: 'Ahora entrena: secuencia + permanencia',
+      homeChip: 'En casa prueba: tapar y destapar con pausa',
+    },
   };
 
-  const mapEn: Record<SchemaKey, string> = {
-    trajectory: `Because ${childName} loves throwing and dropping things`,
-    transporting: `Because ${childName} carries everything everywhere`,
-    rotation: `Because ${childName} is fascinated by things that spin`,
-    enclosure: `Because ${childName} loves putting things inside other things`,
-    connecting: `Because ${childName} wants to connect and disconnect everything`,
-    transforming: `Because ${childName} loves mixing and changing things`,
-    positioning: `Because ${childName} lines everything up just right`,
-    enveloping: `Because ${childName} loves hiding and wrapping things`,
+  const en: Record<SchemaKey, { behavior: string; insight: string; nextSignal: string; trainChip: string; homeChip: string }> = {
+    rotation: { behavior: `${childName} seeks wheels and spinning objects.`, insight: 'Building cause-effect and motion intuition.', nextSignal: 'Will start comparing what spins faster/slower.', trainChip: 'Training now: prediction + causality', homeChip: 'Try at home: spin a lid and name it' },
+    transporting: { behavior: `${childName} moves objects with clear intention.`, insight: 'Practicing planning, sequencing, and working memory.', nextSignal: 'Will build mini-routines: carry, drop, return.', trainChip: 'Training now: planning + memory', homeChip: 'Try at home: “take this to the basket”' },
+    trajectory: { behavior: `${childName} tracks and repeats object paths.`, insight: 'Refining spatial prediction and motion control.', nextSignal: 'Will repeat the same path to test outcomes.', trainChip: 'Training now: attention + prediction', homeChip: 'Try at home: gentle toss + name direction' },
+    enclosure: { behavior: `${childName} puts things in/out containers.`, insight: 'Consolidating inside/outside spatial logic.', nextSignal: 'Will start sorting by size and fit.', trainChip: 'Training now: spatial logic', homeChip: 'Try at home: box-and-lid play' },
+    connecting: { behavior: `${childName} joins and separates parts.`, insight: 'Building structure and relationship thinking.', nextSignal: 'Will attempt more complex combinations.', trainChip: 'Training now: systems thinking', homeChip: 'Try at home: connect two pieces and describe' },
+    transforming: { behavior: `${childName} changes materials to test results.`, insight: 'Building “if I do X, Y happens” hypotheses.', nextSignal: 'Will repeat transformations to verify ideas.', trainChip: 'Training now: hypotheses + flexibility', homeChip: 'Try at home: mix water+sand and observe' },
+    positioning: { behavior: `${childName} aligns and adjusts objects precisely.`, insight: 'Refining hand-eye and spatial comparison skills.', nextSignal: 'Will self-correct positions until they “feel right”.', trainChip: 'Training now: spatial precision', homeChip: 'Try at home: align 3 objects by size' },
+    enveloping: { behavior: `${childName} covers objects and uncovers them again.`, insight: 'Strengthening sequencing, permanence, and anticipation.', nextSignal: 'Will make hiding/revealing games intentional.', trainChip: 'Training now: sequence + permanence', homeChip: 'Try at home: cover/uncover with a pause' },
   };
 
-  return (locale === 'es' ? mapEs : mapEn)[key];
+  return (locale === 'es' ? es : en)[key];
 }
 
 
@@ -790,33 +849,29 @@ function TopSchemaCards({ schemaStats, childName, locale }: { schemaStats: Schem
     <div style={{ display: 'grid', gap: 10 }}>
       {schemaStats.slice(0, 2).map(({ key, count }) => {
         const info = SCHEMA_INFO[key];
-        const contextLine = schemaContextLine(key, childName, locale);
+        const copy = schemaCardCopy(key, childName, locale);
         return (
           <div key={key} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${theme.colors.divider}`, padding: '13px 14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 10,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: info.bg,
-                    border: `1px solid ${info.color}33`,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
-                    flexShrink: 0,
-                  }}
-                >
+                <span aria-hidden style={{ width: 26, height: 26, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: info.bg, border: `1px solid ${info.color}33`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)', flexShrink: 0 }}>
                   <span style={{ fontSize: 15, lineHeight: 1 }}>{info.emoji}</span>
                 </span>
                 <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 800, color: '#3E302C' }}>{info.label}</p>
               </div>
-              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '4px 10px', minWidth: 30, textAlign: 'center' }}>{`${count} veces`}</span>
+              <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10, fontWeight: 800, color: info.color, background: `${info.bg}`, borderRadius: 999, padding: '4px 10px', minWidth: 30, textAlign: 'center' }}>{`${count} ${locale === 'es' ? 'veces' : 'times'}`}</span>
             </div>
-            {contextLine ? <p style={{ margin: '5px 0 0', fontFamily: "'Nunito', sans-serif", fontSize: 12, color: '#8E8891' }}>{contextLine}</p> : null}
+            {copy ? (
+              <div style={{ marginTop: 7, display: 'grid', gap: 4 }}>
+                <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#5E4E4A' }}><strong>{locale === 'es' ? 'Conducta:' : 'Behavior:'}</strong> {copy.behavior}</p>
+                <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#5E4E4A' }}><strong>{locale === 'es' ? 'Insight:' : 'Insight:'}</strong> {copy.insight}</p>
+                <p style={{ margin: 0, fontFamily: "'Nunito', sans-serif", fontSize: 12.5, color: '#5E4E4A' }}><strong>{locale === 'es' ? 'Próxima señal:' : 'Next signal:'}</strong> {copy.nextSignal}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                  <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10.5, fontWeight: 700, color: '#6E5C58', background: '#F8F2E7', borderRadius: 999, padding: '4px 8px' }}>{copy.trainChip}</span>
+                  <span style={{ fontFamily: "'Nunito', sans-serif", fontSize: 10.5, fontWeight: 700, color: '#5F6A57', background: '#ECF6EC', borderRadius: 999, padding: '4px 8px' }}>{copy.homeChip}</span>
+                </div>
+              </div>
+            ) : null}
           </div>
         );
       })}
