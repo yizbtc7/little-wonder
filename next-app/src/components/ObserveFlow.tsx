@@ -351,6 +351,12 @@ function withChildName(text: string, childName: string): string {
   return replaceChildName(text, childName).replaceAll('Leo', childName);
 }
 
+function cleanWonderSectionText(text: string): string {
+  return text
+    .replace(/^\s*(?:🤲|🧡)?\s*(?:CÓMO\s+ESTAR\s+PRESENTE|Cómo\s+estar\s+presente|How\s+to\s+be\s+present)\s*[:\-–—]?\s*/i, '')
+    .trim();
+}
+
 function serializeAssistantInsight(insight: InsightPayload): string {
   return JSON.stringify(insight);
 }
@@ -2224,7 +2230,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                 {String(openWonder.article.how_to_be_present ?? '').trim() ? (
                   <div style={{ background: `linear-gradient(135deg, ${theme.colors.blush} 0%, ${theme.colors.warmWhite} 100%)`, borderRadius: 24, padding: '24px 22px' }}>
                     <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.sage, textTransform: 'uppercase', letterSpacing: 0.8 }}>{locale === 'es' ? '🧡 Sé su cómplice' : '🧡 Be their co-explorer'}</p>
-                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{openWonder.article.how_to_be_present}</p>
+                    <p style={{ margin: 0, fontFamily: theme.fonts.sans, fontSize: 16, lineHeight: 1.7, color: theme.colors.darkText }}>{cleanWonderSectionText(openWonder.article.how_to_be_present)}</p>
                   </div>
                 ) : null}
                 {openWonder.article.curiosity_closer ? (
