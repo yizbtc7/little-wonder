@@ -2302,45 +2302,47 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
             )}
           </div>
 
-          <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(78px + env(safe-area-inset-bottom))', width: '100%', maxWidth: 390, zIndex: 95, padding: '10px 16px 12px', borderTop: `1px solid ${theme.colors.divider}`, background: 'rgba(250,245,239,0.96)', backdropFilter: 'blur(10px)' }}>
-            {isRecordingVoice ? (
-              <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>
-                {locale === 'es' ? '🎤 Dictando… toca ■ para detener.' : '🎤 Dictating… tap ■ to stop.'}
-              </p>
-            ) : null}
-            {voiceError ? <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B34747' }}>{voiceError}</p> : null}
+          {!openWonder ? (
+            <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(78px + env(safe-area-inset-bottom))', width: '100%', maxWidth: 390, zIndex: 95, padding: '10px 16px 12px', borderTop: `1px solid ${theme.colors.divider}`, background: 'rgba(250,245,239,0.96)', backdropFilter: 'blur(10px)' }}>
+              {isRecordingVoice ? (
+                <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: theme.colors.sageDark }}>
+                  {locale === 'es' ? '🎤 Dictando… toca ■ para detener.' : '🎤 Dictating… tap ■ to stop.'}
+                </p>
+              ) : null}
+              {voiceError ? <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, color: '#B34747' }}>{voiceError}</p> : null}
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, background: '#fff', borderRadius: 24, padding: '10px 12px 10px 18px', border: `1.5px solid ${theme.colors.blushMid}` }}>
-              <button
-                type='button'
-                onClick={isRecordingVoice ? stopVoiceRecording : () => void startVoiceRecording()}
-                disabled={typing}
-                style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : speechRecognitionAvailable ? theme.colors.sageLight : theme.colors.divider, color: isRecordingVoice ? '#fff' : speechRecognitionAvailable ? theme.colors.sageDark : theme.colors.midText, cursor: typing ? 'not-allowed' : 'pointer', flexShrink: 0 }}
-                aria-label={locale === 'es' ? 'Grabar nota de voz' : 'Record voice note'}
-                title={speechRecognitionAvailable ? (locale === 'es' ? 'Dictado por voz' : 'Voice dictation') : (locale === 'es' ? 'Navegador sin soporte de dictado Web Speech' : 'Browser without Web Speech support')}
-              >
-                {isRecordingVoice ? '■' : '🎤'}
-              </button>
-              <textarea
-                ref={textAreaRef}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  autoResizeTextArea();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void sendMessage();
-                  }
-                }}
-                placeholder={t.chat.inputPlaceholder(childName)}
-                rows={1}
-                style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.45, maxHeight: 140, minHeight: 24, padding: '4px 0', background: 'transparent', overflowY: 'hidden' }}
-              />
-              <button onClick={() => void sendMessage()} disabled={!input.trim() || typing} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: input.trim() ? theme.colors.charcoal : theme.colors.blushMid, color: '#fff', cursor: input.trim() ? 'pointer' : 'default' }}>↑</button>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, background: '#fff', borderRadius: 24, padding: '10px 12px 10px 18px', border: `1.5px solid ${theme.colors.blushMid}` }}>
+                <button
+                  type='button'
+                  onClick={isRecordingVoice ? stopVoiceRecording : () => void startVoiceRecording()}
+                  disabled={typing}
+                  style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: isRecordingVoice ? '#B34747' : speechRecognitionAvailable ? theme.colors.sageLight : theme.colors.divider, color: isRecordingVoice ? '#fff' : speechRecognitionAvailable ? theme.colors.sageDark : theme.colors.midText, cursor: typing ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                  aria-label={locale === 'es' ? 'Grabar nota de voz' : 'Record voice note'}
+                  title={speechRecognitionAvailable ? (locale === 'es' ? 'Dictado por voz' : 'Voice dictation') : (locale === 'es' ? 'Navegador sin soporte de dictado Web Speech' : 'Browser without Web Speech support')}
+                >
+                  {isRecordingVoice ? '■' : '🎤'}
+                </button>
+                <textarea
+                  ref={textAreaRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    autoResizeTextArea();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void sendMessage();
+                    }
+                  }}
+                  placeholder={t.chat.inputPlaceholder(childName)}
+                  rows={1}
+                  style={{ flex: 1, border: 'none', outline: 'none', resize: 'none', fontFamily: theme.fonts.sans, fontSize: 15, lineHeight: 1.45, maxHeight: 140, minHeight: 24, padding: '4px 0', background: 'transparent', overflowY: 'hidden' }}
+                />
+                <button onClick={() => void sendMessage()} disabled={!input.trim() || typing} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: input.trim() ? theme.colors.charcoal : theme.colors.blushMid, color: '#fff', cursor: input.trim() ? 'pointer' : 'default' }}>↑</button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </>
       ) : null}
 
