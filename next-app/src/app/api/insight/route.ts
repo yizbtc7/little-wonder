@@ -191,12 +191,35 @@ function shouldGenerateWonderFromObservation(observationText: string, childName:
   return hasChildSignal && hasBehaviorSignal;
 }
 
-function buildNoWonderReply(language: 'es' | 'en', childName: string): string {
+function buildNoWonderReply(params: {
+  language: 'es' | 'en';
+  childName: string;
+  childAgeLabel: string;
+  childInterests: string[];
+  detectedSchemas: string[];
+}): string {
+  const { language, childName, childAgeLabel, childInterests, detectedSchemas } = params;
+
+  const topInterest = childInterests[0]?.trim();
+  const topSchema = detectedSchemas[0]?.trim();
+
   if (language === 'es') {
-    return `¡Te leo! Para darte un Wonder útil, cuéntame una observación concreta de ${childName} (por ejemplo: “apiló bloques y luego los tumbó” o “señaló algo y dijo una palabra nueva”).`;
+    const contextBits = [
+      `${childName} (${childAgeLabel})`,
+      topInterest ? `interés: ${topInterest}` : null,
+      topSchema ? `esquema frecuente: ${topSchema}` : null,
+    ].filter(Boolean).join(' · ');
+
+    return `¡Te leo! Para darte un Wonder útil, cuéntame una observación concreta de hoy sobre ${contextBits}. Ejemplos: qué hizo con un objeto, cómo se movió, qué dijo o cómo reaccionó ante algo.`;
   }
 
-  return `I’m here with you. To generate a useful Wonder, share one specific observation about ${childName} (for example: “stacked blocks and knocked them down” or “pointed at something and said a new word”).`;
+  const contextBits = [
+    `${childName} (${childAgeLabel})`,
+    topInterest ? `interest: ${topInterest}` : null,
+    topSchema ? `frequent schema: ${topSchema}` : null,
+  ].filter(Boolean).join(' · ');
+
+  return `I’m here with you. To generate a useful Wonder, share one concrete observation from today about ${contextBits}. For example: what your child did with an object, how they moved, what they said, or how they reacted to something.`;
 }
 
 export async function POST(request: Request) {
@@ -356,7 +379,13 @@ export async function POST(request: Request) {
           const normalizedPayload: InsightPayload = shouldGenerateWonder
             ? parsedPayload
             : {
-                reply: buildNoWonderReply(preferredLanguage, child.name),
+                reply: buildNoWonderReply({
+                  language: preferredLanguage,
+                  childName: child.name,
+                  childAgeLabel,
+                  childInterests: Array.isArray(child.interests) ? child.interests : [],
+                  detectedSchemas,
+                }),
                 wonder: null,
               };
 
