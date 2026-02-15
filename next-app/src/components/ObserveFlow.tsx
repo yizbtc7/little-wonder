@@ -365,14 +365,14 @@ function getSchemaScienceBits(schema: string | undefined, locale: Language): { s
   const schemaLabel = SCHEMA_INFO[key].label;
 
   const esMap: Record<string, string[]> = {
-    trajectory: ['Entrena predicción y causa-efecto.', 'Afina atención al movimiento y al espacio.', 'Base futura para física cotidiana y deporte.'],
-    rotation: ['Entrena patrones de giro y movimiento.', 'Fortalece observación de variables clave.', 'Base futura para pensamiento mecánico y STEM.'],
-    enclosure: ['Entrena límites, dentro/fuera y organización.', 'Fortalece lógica espacial temprana.', 'Base futura para geometría y planificación.'],
-    enveloping: ['Entrena secuencias y permanencia del objeto.', 'Fortalece control fino y anticipación.', 'Base futura para resolución de problemas.'],
-    transporting: ['Entrena clasificación y relaciones entre objetos.', 'Fortalece memoria de trabajo en acción.', 'Base futura para matemáticas prácticas.'],
-    connecting: ['Entrena relaciones y estructuras.', 'Fortalece pensamiento de sistemas.', 'Base futura para ingeniería y diseño.'],
-    transforming: ['Entrena hipótesis tipo “si hago X, pasa Y”.', 'Fortalece flexibilidad cognitiva.', 'Base futura para método científico.'],
-    positioning: ['Entrena precisión espacial y comparación.', 'Fortalece coordinación ojo-mano.', 'Base futura para escritura y geometría.'],
+    trajectory: ['Está aprendiendo a anticipar hacia dónde va algo.', 'Su atención se vuelve más fina cuando algo se mueve.', 'Esto luego ayuda en juego físico, deporte y seguridad.'],
+    rotation: ['Está descubriendo que girar cambia cómo se mueven las cosas.', 'Su cerebro empieza a notar “detalles clave” (como ruedas).', 'Esta base luego ayuda para resolver problemas prácticos.'],
+    enclosure: ['Está entendiendo mejor ideas como dentro y fuera.', 'Su cerebro organiza espacios y límites con más claridad.', 'Eso después le facilita ordenar, clasificar y planear.'],
+    enveloping: ['Está practicando secuencias: tapar, destapar, volver a intentar.', 'También fortalece anticipación (“sé qué viene ahora”).', 'Esta base ayuda mucho para aprender rutinas y resolver retos.'],
+    transporting: ['Está practicando llevar cosas con intención.', 'Eso entrena memoria en acción y pequeños planes.', 'Luego se nota en autonomía y tareas del día a día.'],
+    connecting: ['Está explorando cómo unas cosas se unen con otras.', 'Su cerebro practica relaciones y estructura.', 'Eso después ayuda en construcción, lógica y diseño.'],
+    transforming: ['Está probando “si hago esto, pasa esto otro”.', 'Eso es pensamiento científico en versión infantil.', 'Más adelante ayuda a experimentar sin frustrarse tan rápido.'],
+    positioning: ['Está afinando dónde va cada cosa.', 'Su coordinación ojo-mano se vuelve más precisa.', 'Luego se refleja en escritura, orden y actividades finas.'],
   };
 
   const enMap: Record<string, string[]> = {
@@ -2370,7 +2370,7 @@ export default function ObserveFlow({ parentName, parentRole, childName, childAg
                   return (
                     <div style={{ background: '#fff', borderRadius: 18, border: `1px solid ${theme.colors.divider}`, padding: '14px 16px', marginBottom: 22 }}>
                       <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 12, fontWeight: 700, color: theme.colors.roseDark, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                        🔬 {locale === 'es' ? 'La ciencia del esquema (30s)' : 'Schema science (30s)'}
+                        🔬 {locale === 'es' ? 'Lo que esto entrena (30s)' : 'What this is building (30s)'}
                       </p>
                       <p style={{ margin: '0 0 8px', fontFamily: theme.fonts.sans, fontSize: 13, fontWeight: 700, color: theme.colors.charcoal }}>
                         {locale === 'es' ? 'Esquema detectado:' : 'Detected schema:'} {scienceBits.schemaLabel}
